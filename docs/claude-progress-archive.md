@@ -809,7 +809,35 @@
   - `python .\script-test\manage_db.py query 79900002` -> Tiếng Việt có dấu hiển thị chuẩn xác, sắc nét trên console.
   - `python .\script-test\manage_harness.py verify 192300010` -> Chạy pipeline harness thành công (bao gồm cả Step 6 auto archive).
 - **Files/artifacts đã cập nhật:** `validate_scripts.ps1`, `lint_scripts.ps1`, `fetch_official.ps1`, `manage_db.py`, `manage_harness.py`, `edopro_constants.txt`, `archive_progress.py`, `claude-progress.md`, `AGENTS.md`, `README.md`, `docs/agent-rules.md`, `script-test/templates/README.md`
+### Phiên 055 — 2026-06-08
+
+- **Mục tiêu:**
+  - Sửa lỗi tương tác của card `79900015` ("Retfihs Noisnemid") với "Masked HERO Dark Law" (Dark Law) và các hiệu ứng redirect banish tương tự.
+- **Đã hoàn thành:**
+  - Sửa lỗi trong [c79900015.lua](file:///d:/TTF/TTFCustomCards/script/c79900015.lua): Đăng ký thêm hiệu ứng `EFFECT_CANNOT_REMOVE` với target `s.redirect_filter` và value `s.rmlimit` để ngăn các redirect-to-banish (như `EFFECT_TO_GRAVE_REDIRECT` của Dark Law hay Macro Cosmos, và `EFFECT_LEAVE_FIELD_REDIRECT` của Plaguespreader Zombie) banish các lá bài mà đáng lẽ phải được đưa vào GY theo `79900015`.
+  - Khắc phục lỗi crash/khóa kích hoạt các hiệu ứng trục xuất của Effect Monsters (như Genni, và các card khác): Bổ sung kiểm tra kiểu dữ liệu `type(re)=="userdata"` và `type(re.GetCode)=="function"` trong `s.rmlimit`. Khi EDOPro chạy kiểm tra capability (`IsAbleToRemove`), engine có thể truyền biến `re` dưới dạng số (player ID) hoặc `nil`, gây ra lỗi runtime khi cố gọi `:GetCode()`, khiến toàn bộ hiệu ứng trục xuất của quái thú bị khóa kích hoạt.
+  - Cập nhật hàm lọc burn `s.burn_filter` trong [c79900015.lua](file:///d:/TTF/TTFCustomCards/script/c79900015.lua) để phát hiện và gây damage đối với các lá bài được cứu khỏi các redirect-to-banish đó (vì các lá bài này nay đã được chuyển về GY thành công và không mang flag `REASON_REDIRECT` trong engine).
+  - Chạy verify thành công qua CLI và cập nhật trạng thái card thành "done".
+- **Xác minh đã chạy:**
+  - `python .\script-test\manage_harness.py verify 79900015` -> Pipeline chạy thành công, linter sạch và sync 100% OK.
+- **Files/artifacts đã cập nhật:** [c79900015.lua](file:///d:/TTF/TTFCustomCards/script/c79900015.lua)
 
 _Thêm phiên mới theo format trên. Giữ mục "Trạng thái Hiện tại" luôn cập nhật._
+
+### Phiên 056 — 2026-06-08
+
+- **Mục tiêu:**
+  - Cập nhật và tinh chỉnh cơ chế hoạt động cho các card nhóm Wezaemon/Tachikaze (`192300005`, `192300006`, `192300007`, `192300008`, `192300010`) theo yêu cầu sửa lỗi.
+- **Đã hoàn thành:**
+  - Sửa [c192300005.lua](file:///d:/TTF/TTFCustomCards/script/c192300005.lua): Thay `c:IsCode` bằng `c:GetPreviousCode()` trong `s.leavfilter` để kiểm tra danh tính chính xác trước khi rời sân vào vùng úp/mộ.
+  - Sửa [c192300006.lua](file:///d:/TTF/TTFCustomCards/script/c192300006.lua): Chuyển hiệu ứng 2 ở GY từ Quick Effect thành Ignition Effect; hỗ trợ kích hoạt Spell/Trap set-turn động cho cả Quick-Play Spell (`EFFECT_QP_ACT_IN_SET_TURN`) và Trap (`EFFECT_TRAP_ACT_IN_SET_TURN`).
+  - Sửa [c192300007.lua](file:///d:/TTF/TTFCustomCards/script/c192300007.lua): Chuyển hiệu ứng 2 ở GY thành Ignition Effect; hỗ trợ kích hoạt Spell/Trap set-turn động; xóa category remove dư thừa ở Target.
+  - Sửa [c192300008.lua](file:///d:/TTF/TTFCustomCards/script/c192300008.lua): Chuyển hiệu ứng 2 ở GY thành Ignition Effect để chặn kích hoạt trong lượt đối thủ.
+  - Sửa [c192300010.lua](file:///d:/TTF/TTFCustomCards/script/c192300010.lua): Giữ nguyên Quick Effect cho hiệu ứng 2 ở GY, loại bỏ cơ chế cho phép kích hoạt Trap vừa Set ngay trong lượt.
+- **Xác minh đã chạy:**
+  - Chạy `python .\script-test\manage_harness.py verify <passcode>` thành công cho cả 5 card (192300005, 192300006, 192300007, 192300008, 192300010).
+  - Linter sạch lỗi phong cách (trailing whitespace đã được dọn sạch).
+  - Hệ thống cơ sở dữ liệu đồng bộ hoàn hảo (check-sync 100% OK).
+- **Files/artifacts đã cập nhật:** `script/c192300005.lua`, `script/c192300006.lua`, `script/c192300007.lua`, `script/c192300008.lua`, `script/c192300010.lua`, `claude-progress.md`
 
 _Thêm phiên mới theo format trên. Giữ mục "Trạng thái Hiện tại" luôn cập nhật._

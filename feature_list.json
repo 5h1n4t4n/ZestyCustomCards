@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-06-12",
+  "last_updated": "2026-06-23",
   "note": "Trạng thái: pending(p) | working(w) | review(r) | done(d) | skipped(x). Phản ánh prefix trong docs/queues/<archetype>/",
   "archetypes": {
     "Blue_Eye": {
@@ -922,6 +922,27 @@
           "status": "done",
           "queue_file": "docs/queues/Common/d_The_Journeying_Three_Magi.jpg",
           "script": "script/c79900019.lua"
+        },
+        {
+          "name": "Contrary Fushion",
+          "passcode": "79900020",
+          "status": "done",
+          "queue_file": "docs/queues/Common/d_contrary_fushion.jpg",
+          "script": "script/c79900020.lua"
+        },
+        {
+          "name": "Serperior the Snake Eye Emperor",
+          "passcode": "79900021",
+          "status": "done",
+          "queue_file": "docs/queues/Common/d_serperior_the_snake_eye_emperor.jpg",
+          "script": "script/c79900021.lua"
+        },
+        {
+          "name": "Snivy the Snake Eye",
+          "passcode": "79900022",
+          "status": "done",
+          "queue_file": "docs/queues/Common/d_snivy_the_snake_eye.jpg",
+          "script": "script/c79900022.lua"
         }
       ]
     },

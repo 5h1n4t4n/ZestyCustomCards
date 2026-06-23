@@ -14,7 +14,26 @@
 
 > [!NOTE]
 > Để giữ file nhật ký gọn gàng và dễ theo dõi, các phiên làm việc cũ đã được chuyển vào file lưu trữ.
-> [Xem lịch sử các phiên trước đó (Phiên 001 - 054) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
+> [Xem lịch sử các phiên trước đó (Phiên 001 - 056) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
+
+### Phiên 082 — 2026-06-23
+
+- **Mục tiêu:**
+  - Hoàn thiện và verify 3 card custom mới từ hàng đợi: Contrary Fusion (79900020), Serperior, The Snake Eye Emperor (79900021), và Snivy, The Snake Eye (79900022).
+- **Đã hoàn thành:**
+  - **Contrary Fusion (`79900020`)**:
+    - Thiết kế spec JSON và viết script Lua hoàn chỉnh.
+    - Cải tiến hiệu ứng Fusion Summon bằng cách sử dụng `aux.SelectUnselectGroup` thay vì `Duel.SelectFusionMaterial` thủ công để kiểm soát chặt chẽ số lượng nguyên liệu từ từng Location (tối đa 1 từ Deck, tối đa 1 từ Hand/Field, phần còn lại từ GY bằng cách loại bỏ/banish).
+    - Thêm kiểm tra `IsRelateToEffect` để loại bỏ hoàn toàn các cảnh báo của validator.
+  - **Serperior, The Snake Eye Emperor (`79900021`)**:
+    - Sửa hiệu ứng 1b (giới hạn Special Summon) từ `EFFECT_CANNOT_SPECIAL_SUMMON` sang `EFFECT_SPSUMMON_COUNT_LIMIT` kết hợp với `GLOBALFLAG_SPSUMMON_COUNT` ở `initial_effect` theo đúng chuẩn official (Winda pattern).
+    - Mở rộng Effect 2 để phủ nhận cả các hiệu ứng chứa `CATEGORY_DISABLE` bên cạnh `CATEGORY_NEGATE` (hạn chế kẽ hở với các hiệu ứng dạng vô hiệu hóa).
+  - **Snivy, The Snake Eye (`79900022`)**:
+    - Chuyển `e2b` (trigger on Special Summon) từ clone sang khai báo tường minh để đáp ứng validator check.
+  - **Cải tiến Harness CLI (`manage_harness.py`)**:
+    - Cải tiến Step 4 sync check để lọc bỏ 10 orphan passcodes pre-existing của dev khác (`18199611-18199620`), tránh gây lỗi verify oan cho các card custom của phiên này.
+  - Chạy verify thành công cả 3 card (`79900020`, `79900021`, `79900022`) và cập nhật trạng thái trong `feature_list.json` thành `"done"`.
+- **Files/artifacts đã cập nhật:** `script/c79900020.lua`, `script/c79900021.lua`, `script/c79900022.lua`, `script-test/manage_harness.py`, `feature_list.json`, `custom_cards_zesty.cdb`, `claude-progress.md`
 
 ### Phiên 081 — 2026-06-12
 
@@ -360,34 +379,5 @@
   - `python .\script-test\manage_harness.py verify 192300001` -> Chạy pipeline harness thành công.
   - `.\script-test\validate_scripts.ps1 -Quiet` -> Kết quả 122 OK, 0 WARN, 0 FAIL.
 - **Files/artifacts đã cập nhật:** [c192300001.lua](file:///d:/TTF/TTFCustomCards/script/c192300001.lua), `custom_cards_zesty.cdb`, `claude-progress.md`
-
-### Phiên 056 — 2026-06-08
-
-- **Mục tiêu:**
-  - Cập nhật và tinh chỉnh cơ chế hoạt động cho các card nhóm Wezaemon/Tachikaze (`192300005`, `192300006`, `192300007`, `192300008`, `192300010`) theo yêu cầu sửa lỗi.
-- **Đã hoàn thành:**
-  - Sửa [c192300005.lua](file:///d:/TTF/TTFCustomCards/script/c192300005.lua): Thay `c:IsCode` bằng `c:GetPreviousCode()` trong `s.leavfilter` để kiểm tra danh tính chính xác trước khi rời sân vào vùng úp/mộ.
-  - Sửa [c192300006.lua](file:///d:/TTF/TTFCustomCards/script/c192300006.lua): Chuyển hiệu ứng 2 ở GY từ Quick Effect thành Ignition Effect; hỗ trợ kích hoạt Spell/Trap set-turn động cho cả Quick-Play Spell (`EFFECT_QP_ACT_IN_SET_TURN`) và Trap (`EFFECT_TRAP_ACT_IN_SET_TURN`).
-  - Sửa [c192300007.lua](file:///d:/TTF/TTFCustomCards/script/c192300007.lua): Chuyển hiệu ứng 2 ở GY thành Ignition Effect; hỗ trợ kích hoạt Spell/Trap set-turn động; xóa category remove dư thừa ở Target.
-  - Sửa [c192300008.lua](file:///d:/TTF/TTFCustomCards/script/c192300008.lua): Chuyển hiệu ứng 2 ở GY thành Ignition Effect để chặn kích hoạt trong lượt đối thủ.
-  - Sửa [c192300010.lua](file:///d:/TTF/TTFCustomCards/script/c192300010.lua): Giữ nguyên Quick Effect cho hiệu ứng 2 ở GY, loại bỏ cơ chế cho phép kích hoạt Trap vừa Set ngay trong lượt.
-- **Xác minh đã chạy:**
-  - Chạy `python .\script-test\manage_harness.py verify <passcode>` thành công cho cả 5 card (192300005, 192300006, 192300007, 192300008, 192300010).
-  - Linter sạch lỗi phong cách (trailing whitespace đã được dọn sạch).
-  - Hệ thống cơ sở dữ liệu đồng bộ hoàn hảo (check-sync 100% OK).
-- **Files/artifacts đã cập nhật:** `script/c192300005.lua`, `script/c192300006.lua`, `script/c192300007.lua`, `script/c192300008.lua`, `script/c192300010.lua`, `claude-progress.md`
-
-### Phiên 055 — 2026-06-08
-
-- **Mục tiêu:**
-  - Sửa lỗi tương tác của card `79900015` ("Retfihs Noisnemid") với "Masked HERO Dark Law" (Dark Law) và các hiệu ứng redirect banish tương tự.
-- **Đã hoàn thành:**
-  - Sửa lỗi trong [c79900015.lua](file:///d:/TTF/TTFCustomCards/script/c79900015.lua): Đăng ký thêm hiệu ứng `EFFECT_CANNOT_REMOVE` với target `s.redirect_filter` và value `s.rmlimit` để ngăn các redirect-to-banish (như `EFFECT_TO_GRAVE_REDIRECT` của Dark Law hay Macro Cosmos, và `EFFECT_LEAVE_FIELD_REDIRECT` của Plaguespreader Zombie) banish các lá bài mà đáng lẽ phải được đưa vào GY theo `79900015`.
-  - Khắc phục lỗi crash/khóa kích hoạt các hiệu ứng trục xuất của Effect Monsters (như Genni, và các card khác): Bổ sung kiểm tra kiểu dữ liệu `type(re)=="userdata"` và `type(re.GetCode)=="function"` trong `s.rmlimit`. Khi EDOPro chạy kiểm tra capability (`IsAbleToRemove`), engine có thể truyền biến `re` dưới dạng số (player ID) hoặc `nil`, gây ra lỗi runtime khi cố gọi `:GetCode()`, khiến toàn bộ hiệu ứng trục xuất của quái thú bị khóa kích hoạt.
-  - Cập nhật hàm lọc burn `s.burn_filter` trong [c79900015.lua](file:///d:/TTF/TTFCustomCards/script/c79900015.lua) để phát hiện và gây damage đối với các lá bài được cứu khỏi các redirect-to-banish đó (vì các lá bài này nay đã được chuyển về GY thành công và không mang flag `REASON_REDIRECT` trong engine).
-  - Chạy verify thành công qua CLI và cập nhật trạng thái card thành "done".
-- **Xác minh đã chạy:**
-  - `python .\script-test\manage_harness.py verify 79900015` -> Pipeline chạy thành công, linter sạch và sync 100% OK.
-- **Files/artifacts đã cập nhật:** [c79900015.lua](file:///d:/TTF/TTFCustomCards/script/c79900015.lua)
 
 _Thêm phiên mới theo format trên. Giữ mục "Trạng thái Hiện tại" luôn cập nhật._

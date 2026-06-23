@@ -1,0 +1,18 @@
+{
+  "id": 79900020,
+  "ot": 32,
+  "alias": 0,
+  "type": 2,
+  "setcode": 0,
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 39854596,
+  "name": "Contrary Fusion",
+  "desc": "Fusion Summon 1 Plant monster from your Extra Deck to your field by using 1 monster from your Deck and 1 monster in your hand/field. You can also banish monsters in your GY as Fusion material. Monsters Fusion Summoned by this card's effect have their ATK and DEF swapped. Also take control of 1 monster your opponent controls.",
+  "strings": [
+    "Fusion Summon, swap ATK/DEF, and take control"
+  ]
+}
