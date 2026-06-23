@@ -35,13 +35,14 @@ end
 -- ============================================================
 function s.fusfilter(c,e,tp,mg)
     if not (c:IsRace(RACE_PLANT) and c:IsType(TYPE_FUSION)
-        and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)) then
+        and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
+        and Duel.GetLocationCountFromEx(tp,tp,mg,c)>0) then
         return false
     end
     local rescon=function(sg,e,tp,mg)
         return c:CheckFusionMaterial(sg,nil,tp)
-            and sg:FilterCount(Card.IsLocation,nil,LOCATION_DECK)<=1
-            and sg:FilterCount(Card.IsLocation,nil,LOCATION_HAND+LOCATION_MZONE)<=1
+            and sg:FilterCount(Card.IsLocation,nil,LOCATION_DECK)==1
+            and sg:FilterCount(Card.IsLocation,nil,LOCATION_HAND+LOCATION_MZONE)==1
     end
     return aux.SelectUnselectGroup(mg,e,tp,2,#mg,rescon,0)
 end
@@ -50,21 +51,21 @@ end
 -- Material filter — Deck materials (1 monster from Deck)
 -- ============================================================
 function s.deckmatfilter(c)
-    return c:IsMonster() and c:IsAbleToGrave()
+    return c:IsType(TYPE_MONSTER) and c:IsAbleToGrave()
 end
 
 -- ============================================================
 -- Material filter — Hand/field materials (1 monster)
 -- ============================================================
 function s.hfmatfilter(c)
-    return c:IsMonster() and (c:IsAbleToGrave() or c:IsFaceup())
+    return c:IsType(TYPE_MONSTER) and c:IsCanBeFusionMaterial()
 end
 
 -- ============================================================
 -- Material filter — GY materials (banish as alternative)
 -- ============================================================
 function s.gymatfilter(c)
-    return c:IsMonster() and c:IsAbleToRemove()
+    return c:IsType(TYPE_MONSTER) and c:IsAbleToRemove()
 end
 
 -- ============================================================
@@ -104,7 +105,7 @@ end
 -- Steal filter — opponent's monster that can change control
 -- ============================================================
 function s.stealfilter(c)
-    return c:IsFaceup() and c:IsControlerCanBeChanged()
+    return c:IsControlerCanBeChanged()
 end
 
 -- ============================================================
@@ -124,8 +125,8 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
     -- Step 3: Select Fusion Materials
     local rescon=function(sg,e,tp,mg)
         return sc:CheckFusionMaterial(sg,nil,tp)
-            and sg:FilterCount(Card.IsLocation,nil,LOCATION_DECK)<=1
-            and sg:FilterCount(Card.IsLocation,nil,LOCATION_HAND+LOCATION_MZONE)<=1
+            and sg:FilterCount(Card.IsLocation,nil,LOCATION_DECK)==1
+            and sg:FilterCount(Card.IsLocation,nil,LOCATION_HAND+LOCATION_MZONE)==1
     end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FMATERIAL)
     local mat=aux.SelectUnselectGroup(mg,e,tp,2,#mg,rescon,1,tp,HINTMSG_FMATERIAL)
@@ -145,7 +146,6 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
     end
     Duel.BreakEffect()
     -- Step 5: Special Summon the Fusion Monster
-    if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
     if Duel.SpecialSummon(sc,SUMMON_TYPE_FUSION,tp,tp,
         false,false,POS_FACEUP)==0 then return end
     sc:CompleteProcedure()

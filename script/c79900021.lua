@@ -118,7 +118,7 @@ end
 -- Only allows Fusion Summon via the effect of Contrary Fusion
 -- ============================================================
 function s.splimit(e,se,sp,st,tp)
-    return st&SUMMON_TYPE_FUSION==SUMMON_TYPE_FUSION
+    return st&SUMMON_TYPE_FUSION==SUMMON_TYPE_FUSION and se and se:GetHandler():IsCode(79900020)
 end
 
 -- ============================================================

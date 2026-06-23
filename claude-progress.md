@@ -16,6 +16,23 @@
 > Để giữ file nhật ký gọn gàng và dễ theo dõi, các phiên làm việc cũ đã được chuyển vào file lưu trữ.
 > [Xem lịch sử các phiên trước đó (Phiên 001 - 057) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
 
+### Phiên 083 — 2026-06-23
+
+- **Mục tiêu:**
+  - Sửa lỗi Contrary Fusion (79900020) và Serperior, The Snake Eye Emperor (79900021) khi vận hành thực tế trong game theo báo cáo của user.
+- **Đã hoàn thành:**
+  - **Contrary Fusion (`79900020`)**:
+    - Sửa logic kiểm tra vật liệu Fusion: Ràng buộc chính xác phải dùng đúng 1 quái thú từ Deck và đúng 1 từ Hand/Field (`== 1`), tránh tình trạng game cho phép Fusion Summon mà không cần dùng tài nguyên đúng địa điểm.
+    - Sửa hàm lọc `deckmatfilter`, `hfmatfilter`, và `gymatfilter` sử dụng `IsType(TYPE_MONSTER)` cho an toàn.
+    - Sửa `s.hfmatfilter` dùng `IsCanBeFusionMaterial()` để xử lý chính xác quái thú úp trên sân và quái trên tay.
+    - Thêm kiểm tra `GetLocationCountFromEx` trong `s.fusfilter` để xác nhận vùng trống trước khi triệu hồi từ Extra Deck.
+    - Bỏ lọc `c:IsFaceup()` trong `s.stealfilter` để Contrary Fusion cướp được cả quái thú úp của đối thủ đúng theo mô tả.
+    - Loại bỏ check `GetLocationCount` Main Monster Zone dư thừa trong `s.fusop` vốn gây lỗi chặn triệu hồi vào Extra Monster Zone.
+  - **Serperior, The Snake Eye Emperor (`79900021`)**:
+    - Sửa hàm `s.splimit` của `EFFECT_SPSUMMON_CONDITION` kiểm tra `se:GetHandler():IsCode(79900020)` để bắt buộc chỉ được triệu hồi bằng "Contrary Fusion" đúng theo thiết kế.
+  - Chạy verify thành công cả 2 card (`79900020`, `79900021`) và chạy sync check OK.
+- **Files/artifacts đã cập nhật:** `script/c79900020.lua`, `script/c79900021.lua`, `custom_cards_zesty.cdb`, `claude-progress.md`
+
 ### Phiên 082 — 2026-06-23
 
 - **Mục tiêu:**
