@@ -14,7 +14,7 @@
 
 > [!NOTE]
 > Để giữ file nhật ký gọn gàng và dễ theo dõi, các phiên làm việc cũ đã được chuyển vào file lưu trữ.
-> [Xem lịch sử các phiên trước đó (Phiên 001 - 056) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
+> [Xem lịch sử các phiên trước đó (Phiên 001 - 057) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
 
 ### Phiên 082 — 2026-06-23
 
@@ -364,20 +364,6 @@
     - Đơn giản hóa filter trong `setcon_set`: tái sử dụng `s.mentionfilter` thay vì closure cục bộ kiểm tra `IsControler`.
 - **Xác minh đã chạy:**
   - `python .\script-test\manage_harness.py verify 192300001` → Pipeline thành công, sync 100% OK.
-- **Files/artifacts đã cập nhật:** [c192300001.lua](file:///d:/TTF/TTFCustomCards/script/c192300001.lua), `custom_cards_zesty.cdb`, `claude-progress.md`
-
-### Phiên 057 — 2026-06-09
-
-- **Mục tiêu:**
-  - Sửa lỗi effect 4 của [c192300001.lua](file:///d:/TTF/TTFCustomCards/script/c192300001.lua) ("Wezaemon the Tombguard"): Ngăn không cho đối thủ kích hoạt hiệu ứng của Wezaemon khi người chơi sở hữu Wezaemon thực hiện hành động Set bài hoặc kích hoạt Spell/Trap liên quan.
-- **Đã hoàn thành:**
-  - Sửa lỗi trong [c192300001.lua](file:///d:/TTF/TTFCustomCards/script/c192300001.lua):
-    - Thay thế hoàn toàn việc sử dụng tham số `tp` nhận từ hàm trigger (vốn có thể bị sai lệch hoặc không nhất quán trong các engine simulator khi xử lý sự kiện phức tạp) bằng cách gọi trực tiếp `e:GetHandler():GetControler()` để lấy chính xác controller `hc` của quái thú Wezaemon đang kích hoạt hiệu ứng.
-    - So sánh trực tiếp `rp == hc or ep == hc` để xác thực người chơi thực hiện hành động Set/Kích hoạt Spell/Trap.
-    - Sử dụng Lua function closure cục bộ `f` truyền vào `eg:IsExists` để so sánh chính xác `c:IsControler(hc)` và loại bỏ lỗi truyền tham số `tp` tùy chọn trong API C++.
-- **Xác minh đã chạy:**
-  - `python .\script-test\manage_harness.py verify 192300001` -> Chạy pipeline harness thành công.
-  - `.\script-test\validate_scripts.ps1 -Quiet` -> Kết quả 122 OK, 0 WARN, 0 FAIL.
 - **Files/artifacts đã cập nhật:** [c192300001.lua](file:///d:/TTF/TTFCustomCards/script/c192300001.lua), `custom_cards_zesty.cdb`, `claude-progress.md`
 
 _Thêm phiên mới theo format trên. Giữ mục "Trạng thái Hiện tại" luôn cập nhật._

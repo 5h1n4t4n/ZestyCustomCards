@@ -6,7 +6,7 @@
 -- Level    : 4
 -- ATK/DEF  : 0 / 0
 -- Race     : Plant
--- Archetype: Snake Eye (0x205)
+-- Archetype: N/A
 -- ============================================================
 -- Effect 1 : If you control a Plant monster, you can Special
 --            Summon this card (from your hand).

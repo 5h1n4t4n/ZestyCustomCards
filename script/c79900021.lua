@@ -6,7 +6,7 @@
 -- Level    : 8
 -- ATK/DEF  : 0 / 3000
 -- Race     : Plant
--- Archetype: Snake Eye (0x205)
+-- Archetype: N/A
 -- Materials: 2 Plant monsters
 -- ============================================================
 -- Effect 1a: While Fusion Summoned and on field: All monsters
