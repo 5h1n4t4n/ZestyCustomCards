@@ -1,6 +1,6 @@
 -- ============================================================
 -- Card Name: Serperior, The Snake Eye Emperor
--- Passcode : 079900021
+-- Passcode : 79900021
 -- Type     : Monster / Fusion / Effect
 -- Attribute: EARTH
 -- Level    : 8

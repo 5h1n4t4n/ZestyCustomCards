@@ -1,6 +1,6 @@
 -- ============================================================
 -- Card Name: Snivy, The Snake Eye
--- Passcode : 079900022
+-- Passcode : 79900022
 -- Type     : Monster / Effect
 -- Attribute: EARTH
 -- Level    : 4
