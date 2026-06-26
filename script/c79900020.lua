@@ -5,8 +5,8 @@
 -- Archetype: N/A
 -- ============================================================
 -- Effect 1 : Fusion Summon 1 Plant Fusion monster from Extra Deck
---            using 1 monster from Deck + 1 monster from hand/field.
---            Can also banish monsters from GY as Fusion material.
+--            using 1 Plant monster from Deck + 1 Plant monster from hand/field,
+--            or by banishing 1 Plant monster from GY.
 --            The Fusion Summoned monster has its ATK/DEF swapped.
 --            Also take control of 1 opponent's monster.
 -- ============================================================
@@ -42,30 +42,30 @@ function s.fusfilter(c,e,tp,mg)
     local rescon=function(sg,e,tp,mg)
         return c:CheckFusionMaterial(sg,nil,tp)
             and sg:FilterCount(Card.IsLocation,nil,LOCATION_DECK)==1
-            and sg:FilterCount(Card.IsLocation,nil,LOCATION_HAND+LOCATION_MZONE)==1
+            and sg:FilterCount(Card.IsLocation,nil,LOCATION_HAND+LOCATION_MZONE+LOCATION_GRAVE)==1
     end
-    return aux.SelectUnselectGroup(mg,e,tp,2,#mg,rescon,0)
+    return aux.SelectUnselectGroup(mg,e,tp,2,2,rescon,0)
 end
 
 -- ============================================================
--- Material filter — Deck materials (1 monster from Deck)
+-- Material filter — Deck materials (1 Plant monster from Deck)
 -- ============================================================
 function s.deckmatfilter(c)
-    return c:IsType(TYPE_MONSTER) and c:IsAbleToGrave()
+    return c:IsRace(RACE_PLANT) and c:IsType(TYPE_MONSTER) and c:IsAbleToGrave()
 end
 
 -- ============================================================
--- Material filter — Hand/field materials (1 monster)
+-- Material filter — Hand/field materials (1 Plant monster)
 -- ============================================================
 function s.hfmatfilter(c)
-    return c:IsType(TYPE_MONSTER) and c:IsCanBeFusionMaterial()
+    return c:IsRace(RACE_PLANT) and c:IsType(TYPE_MONSTER) and c:IsCanBeFusionMaterial()
 end
 
 -- ============================================================
--- Material filter — GY materials (banish as alternative)
+-- Material filter — GY materials (banish 1 Plant monster as alternative)
 -- ============================================================
 function s.gymatfilter(c)
-    return c:IsType(TYPE_MONSTER) and c:IsAbleToRemove()
+    return c:IsRace(RACE_PLANT) and c:IsType(TYPE_MONSTER) and c:IsAbleToRemove()
 end
 
 -- ============================================================
@@ -126,10 +126,10 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
     local rescon=function(sg,e,tp,mg)
         return sc:CheckFusionMaterial(sg,nil,tp)
             and sg:FilterCount(Card.IsLocation,nil,LOCATION_DECK)==1
-            and sg:FilterCount(Card.IsLocation,nil,LOCATION_HAND+LOCATION_MZONE)==1
+            and sg:FilterCount(Card.IsLocation,nil,LOCATION_HAND+LOCATION_MZONE+LOCATION_GRAVE)==1
     end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FMATERIAL)
-    local mat=aux.SelectUnselectGroup(mg,e,tp,2,#mg,rescon,1,tp,HINTMSG_FMATERIAL)
+    local mat=aux.SelectUnselectGroup(mg,e,tp,2,2,rescon,1,tp,HINTMSG_FMATERIAL)
     if not mat or #mat==0 then return end
     sc:SetMaterial(mat)
     -- Step 4: Send materials to GY or banish

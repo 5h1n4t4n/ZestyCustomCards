@@ -14,7 +14,19 @@
 
 > [!NOTE]
 > Để giữ file nhật ký gọn gàng và dễ theo dõi, các phiên làm việc cũ đã được chuyển vào file lưu trữ.
-> [Xem lịch sử các phiên trước đó (Phiên 001 - 057) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
+> [Xem lịch sử các phiên trước đó (Phiên 001 - 059) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
+
+### Phiên 084 — 2026-06-26
+
+- **Mục tiêu:**
+  - Chỉnh lại effect của Contrary Fusion (79900020) bắt buộc phải dùng nguyên liệu là quái thú tộc Plant (1 từ Deck và 1 từ hand/field, hoặc có thể banish 1 từ GY thay thế).
+- **Đã hoàn thành:**
+  - **Contrary Fusion (`79900020`)**:
+    - Sửa đổi các filter `deckmatfilter`, `hfmatfilter`, và `gymatfilter` để giới hạn chỉ cho phép quái thú Plant.
+    - Sửa đổi `rescon` trong cả target (`fusfilter`) và operation (`fusop`) để hỗ trợ việc chọn đúng 1 Plant từ Deck, và 1 Plant khác từ Hand, Field, hoặc GY (banish).
+    - Cập nhật phần Header Block trong script Lua và `"desc"` trong file specs JSON để phản ánh đúng hiệu ứng mới.
+    - Kiểm tra linter và chạy verify pipeline thành công hoàn toàn, cập nhật database nhị phân `custom_cards_zesty.cdb`.
+- **Files/artifacts đã cập nhật:** `script/c79900020.lua`, `card-data/c79900020.json`, `custom_cards_zesty.cdb`, `claude-progress.md`
 
 ### Phiên 083 — 2026-06-23
 
@@ -357,30 +369,5 @@
 - **Xác minh đã chạy:**
   - Chạy `python .\script-test\manage_harness.py verify 192300005` thành công, pipeline harness và check-sync 100% OK.
 - **Files/artifacts đã cập nhật:** [c192300005.lua](file:///d:/TTF/TTFCustomCards/script/c192300005.lua), `claude-progress.md`
-
-### Phiên 059 — 2026-06-09
-
-- **Mục tiêu:**
-  - Sửa lỗi runtime error khi quái thú "Wezaemon the Tombguard" rời sân trên card [c192300005.lua](file:///d:/TTF/TTFCustomCards/script/c192300005.lua) ("The End of Greatest Warrior").
-- **Đã hoàn thành:**
-  - Sửa lỗi gọi hàm không tồn tại `c:GetPreviousCode()` thành hàm EDOPro chuẩn `c:GetPreviousCodeOnField()` trong function `s.leavfilter`.
-- **Xác minh đã chạy:**
-  - `python .\script-test\manage_harness.py verify 192300005` → Pipeline chạy thành công, database biên dịch chuẩn, sync check 100% OK.
-- **Files/artifacts đã cập nhật:** [c192300005.lua](file:///d:/TTF/TTFCustomCards/script/c192300005.lua), `custom_cards_zesty.cdb`, `claude-progress.md`
-
-### Phiên 058 — 2026-06-09
-
-- **Mục tiêu:**
-  - Sửa lỗi mirror match của [c192300001.lua](file:///d:/TTF/TTFCustomCards/script/c192300001.lua) ("Wezaemon the Tombguard"): Khi cả 2 người chơi đều control Wezaemon, nếu 1 bên set/activate Spell/Trap mentioning Wezaemon thì bên còn lại cũng kích hoạt được Effect 4.
-- **Đã hoàn thành:**
-  - Viết lại hoàn toàn condition cho Effect 4a (`setcon_chain`) và Effect 4b (`setcon_set`) trong [c192300001.lua](file:///d:/TTF/TTFCustomCards/script/c192300001.lua):
-    - Loại bỏ cách tiếp cận `e:GetHandler():GetControler()` + `(rp==hc or ep==hc)` (logic OR dư thừa với 2 biến có thể gây edge-case).
-    - Áp dụng **pattern chuẩn official** (Altergeist Multifaker, Tragoedia): sử dụng trực tiếp tham số `tp` (controller của effect) để so sánh.
-    - Effect 4a (EVENT_CHAINING): `rp~=tp then return false` — chỉ trigger khi **chính** người chơi sở hữu Wezaemon (`tp`) activate chain (`rp`).
-    - Effect 4b (EVENT_SSET): `ep~=tp then return false` — chỉ trigger khi **chính** người chơi sở hữu Wezaemon (`tp`) thực hiện set (`ep`).
-    - Đơn giản hóa filter trong `setcon_set`: tái sử dụng `s.mentionfilter` thay vì closure cục bộ kiểm tra `IsControler`.
-- **Xác minh đã chạy:**
-  - `python .\script-test\manage_harness.py verify 192300001` → Pipeline thành công, sync 100% OK.
-- **Files/artifacts đã cập nhật:** [c192300001.lua](file:///d:/TTF/TTFCustomCards/script/c192300001.lua), `custom_cards_zesty.cdb`, `claude-progress.md`
 
 _Thêm phiên mới theo format trên. Giữ mục "Trạng thái Hiện tại" luôn cập nhật._
