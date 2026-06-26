@@ -1,8 +1,8 @@
 -- ============================================================
 -- Card Name: Contrary Fusion
 -- Passcode : 79900020
--- Type     : Spell / Normal
--- Archetype: N/A
+-- Type     : Spell / Quick-Play
+-- Archetype: Fusion (0x46)
 -- ============================================================
 -- Effect 1 : Fusion Summon 1 Plant Fusion monster from Extra Deck
 --            using 1 Plant monster from Deck + 1 Plant monster from hand/field,
@@ -25,6 +25,7 @@ function s.initial_effect(c)
     e1:SetType(EFFECT_TYPE_ACTIVATE)
     e1:SetCode(EVENT_FREE_CHAIN)
     e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
+    e1:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
     e1:SetTarget(s.fustg)
     e1:SetOperation(s.fusop)
     c:RegisterEffect(e1)
@@ -93,9 +94,13 @@ end
 -- ============================================================
 function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then
+        local c=e:GetHandler()
+        local effs=s.register_extra_materials(c,tp)
         local mg=s.buildmatgroup(tp)
-        return Duel.IsExistingMatchingCard(
+        local res=Duel.IsExistingMatchingCard(
             s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,mg)
+        s.reset_extra_materials(effs)
+        return res
     end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,
         LOCATION_EXTRA)
@@ -113,15 +118,23 @@ end
 -- ============================================================
 function s.fusop(e,tp,eg,ep,ev,re,r,rp)
     if not e:GetHandler():IsRelateToEffect(e) then return end
+    local c=e:GetHandler()
+    local effs=s.register_extra_materials(c,tp)
     -- Step 1: Build material group
     local mg=s.buildmatgroup(tp)
-    if #mg<2 then return end
+    if #mg<2 then
+        s.reset_extra_materials(effs)
+        return
+    end
     -- Step 2: Select Fusion Monster
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
     local sg=Duel.SelectMatchingCard(tp,s.fusfilter,tp,
         LOCATION_EXTRA,0,1,1,nil,e,tp,mg)
     local sc=sg:GetFirst()
-    if not sc then return end
+    if not sc then
+        s.reset_extra_materials(effs)
+        return
+    end
     -- Step 3: Select Fusion Materials
     local rescon=function(sg,e,tp,mg)
         return sc:CheckFusionMaterial(sg,nil,tp)
@@ -130,8 +143,15 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
     end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FMATERIAL)
     local mat=aux.SelectUnselectGroup(mg,e,tp,2,2,rescon,1,tp,HINTMSG_FMATERIAL)
-    if not mat or #mat==0 then return end
+    if not mat or #mat==0 then
+        s.reset_extra_materials(effs)
+        return
+    end
     sc:SetMaterial(mat)
+    
+    -- Reset effects before we move the cards!
+    s.reset_extra_materials(effs)
+    
     -- Step 4: Send materials to GY or banish
     for tc in aux.Next(mat) do
         if tc:IsLocation(LOCATION_GRAVE) then
@@ -166,5 +186,40 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
         if tc then
             Duel.GetControl(tc,tp)
         end
+    end
+end
+
+-- ============================================================
+-- Register temporary EFFECT_EXTRA_FUSION_MATERIAL for Deck & GY cards
+-- ============================================================
+function s.register_extra_materials(c,tp)
+    local g1=Duel.GetMatchingGroup(s.deckmatfilter,tp,LOCATION_DECK,0,nil)
+    local g2=Duel.GetMatchingGroup(s.gymatfilter,tp,LOCATION_GRAVE,0,nil)
+    local g=g1:Clone()
+    g:Merge(g2)
+    local effs={}
+    for tc in aux.Next(g) do
+        local e1=Effect.CreateEffect(c)
+        e1:SetType(EFFECT_TYPE_SINGLE)
+        e1:SetCode(EFFECT_EXTRA_FUSION_MATERIAL)
+        e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+        e1:SetRange(tc:GetLocation())
+        e1:SetValue(s.extraval)
+        tc:RegisterEffect(e1)
+        table.insert(effs, {tc, e1})
+    end
+    return effs
+end
+
+function s.extraval(chk,summon_player,fustype)
+    return true
+end
+
+-- ============================================================
+-- Reset registered temporary effects
+-- ============================================================
+function s.reset_extra_materials(effs)
+    for _,val in ipairs(effs) do
+        val[2]:Reset()
     end
 end

@@ -875,6 +875,33 @@
 - **Xác minh đã chạy:**
   - `python .\script-test\manage_harness.py verify 192300005` → Pipeline chạy thành công, database biên dịch chuẩn, sync check 100% OK.
 - **Files/artifacts đã cập nhật:** [c192300005.lua](file:///d:/TTF/TTFCustomCards/script/c192300005.lua), `custom_cards_zesty.cdb`, `claude-progress.md`
+### Phiên 060 — 2026-06-09
+
+- **Mục tiêu:**
+  - Sửa lỗi effect 2 của [c192300005.lua](file:///d:/TTF/TTFCustomCards/script/c192300005.lua) ("The End of Greatest Warrior") không kích hoạt khi Wezaemon bị đánh bại (destroyed by battle) hoặc dùng làm nguyên liệu (used as material).
+- **Đã hoàn thành:**
+  - Bổ sung `EFFECT_FLAG_DAMAGE_STEP` và `EFFECT_FLAG_DELAY` vào effect property của e2 (`EVENT_LEAVE_FIELD`).
+    - `EFFECT_FLAG_DAMAGE_STEP`: Cho phép kích hoạt trong Damage Step (khi quái thú bị tiêu diệt bằng chiến đấu).
+    - `EFFECT_FLAG_DELAY`: Ngăn chặn việc lỡ thời điểm (miss the timing) khi quái thú được dùng làm nguyên liệu Triệu hồi đặc biệt (Fusion/Synchro/Link).
+- **Xác minh đã chạy:**
+  - Chạy `python .\script-test\manage_harness.py verify 192300005` thành công, pipeline harness và check-sync 100% OK.
+- **Files/artifacts đã cập nhật:** [c192300005.lua](file:///d:/TTF/TTFCustomCards/script/c192300005.lua), `claude-progress.md`
+### Phiên 061 — 2026-06-10
+
+- **Mục tiêu:**
+  - Quét hàng đợi, tìm và đăng ký các card pending (`p_`) mới trong `docs/queues/` vào `feature_list.json` để chuẩn bị code.
+- **Đã hoàn thành:**
+  - Phát hiện và đăng ký 9 card pending mới vào `feature_list.json` dưới các archetype tương ứng.
+  - Cập nhật ngày `last_updated` trong `feature_list.json` thành `"2026-06-10"`.
+  - Cải tiến `manage_harness.py`:
+    - Cho phép lệnh `start` nhận diện và cập nhật trực tiếp các card đã đăng ký ở trạng thái `pending` sang `working`.
+    - Tích hợp thêm subcommand `scan` vào Harness CLI: Tự động phát hiện các file `p_` trong queues chưa được đăng ký, tự động gán passcode phù hợp, chuyển đổi định dạng tên và thêm chúng vào `feature_list.json` ở trạng thái `"pending"`.
+  - Cập nhật tài liệu hướng dẫn `AGENTS.md` và `docs/agent-workflow.md` để mô tả cách dùng và quy tắc của lệnh `scan` cho các AI agent tiếp theo.
+- **Xác minh đã chạy:**
+  - `python .\script-test\manage_harness.py scan` -> Chạy thử nghiệm thành công, nhận diện đúng các card đã được đăng ký và không sinh bản ghi trùng lặp.
+  - `python .\script-test\manage_db.py check-sync` -> 100% khớp cấu trúc.
+  - `.\script-test\validate_scripts.ps1` -> Hoạt động bình thường (76 OK, 46 WARN, 0 FAIL).
+- **Files/artifacts đã cập nhật:** `feature_list.json`, `script-test/manage_harness.py`, `AGENTS.md`, `docs/agent-workflow.md`, `claude-progress.md`
 
 _Thêm phiên mới theo format trên. Giữ mục "Trạng thái Hiện tại" luôn cập nhật._
 
