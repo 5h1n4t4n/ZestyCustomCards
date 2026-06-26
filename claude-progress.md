@@ -5,7 +5,7 @@
 - **Thư mục gốc:** `d:\TTF\TTFCustomCards`
 - **Lệnh validate:** `.\script-test\validate_scripts.ps1`
 - **Lệnh check sync:** `python .\script-test\manage_db.py check-sync`
-- **Tác vụ ưu tiên tiếp theo:** Tiếp tục theo dõi các yêu cầu bổ sung hoặc phản hồi từ phía user về các tính năng/card mới.
+- **Tác vụ ưu tiên tiếp theo:** Hỗ trợ người dùng kiểm tra hoặc thực hiện các thay đổi tiếp theo cho bộ thẻ custom.
 - **Sự cố chặn hiện tại:** Không có blocker.
 
 ---
@@ -15,6 +15,19 @@
 > [!NOTE]
 > Để giữ file nhật ký gọn gàng và dễ theo dõi, các phiên làm việc cũ đã được chuyển vào file lưu trữ.
 > [Xem lịch sử các phiên trước đó (Phiên 001 - 059) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
+
+### Phiên 085 — 2026-06-26
+
+- **Mục tiêu:**
+  - Sửa lỗi hiển thị khi chọn cost cho hiệu ứng Quick Effect của Serperior, The Snake Eye Emperor (79900021) khi cả hai tùy chọn đều hiện cùng một mô tả.
+- **Đã hoàn thành:**
+  - Đọc và phân tích ảnh thiết kế gốc của card Serperior (`docs/queues/Common/d_serperior_the_snake_eye_emperor.jpg`) để xác nhận lại mô tả hiệu ứng.
+  - Cập nhật specs JSON `card-data/c79900021.json` để thêm hai chuỗi mô tả cụ thể:
+    - `"Send 1 face-up Plant monster on the field to the GY"`
+    - `"Banish 1 Plant monster in your GY face-down"`
+  - Cập nhật Lua script `script/c79900021.lua` để sử dụng hai chuỗi mô tả tương ứng (`aux.Stringid(id,1)` và `aux.Stringid(id,2)`) khi hiển thị lựa chọn cho người chơi.
+  - Chạy verify thành công qua Harness CLI và biên dịch cơ sở dữ liệu `custom_cards_zesty.cdb`.
+- **Files/artifacts đã cập nhật:** `script/c79900021.lua`, `card-data/c79900021.json`, `custom_cards_zesty.cdb`, `claude-progress.md`
 
 ### Phiên 084 — 2026-06-26
 

@@ -200,7 +200,7 @@ function s.descost(e,tp,eg,ep,ev,re,r,rp,chk)
     local op=0
     if canSend and canBanish then
         op=Duel.SelectOption(tp,
-            aux.Stringid(id,0),aux.Stringid(id,0))
+            aux.Stringid(id,1),aux.Stringid(id,2))
     elseif canSend then
         op=0
     else
