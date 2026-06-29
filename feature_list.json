@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-06-23",
+  "last_updated": "2026-06-29",
   "note": "Trạng thái: pending(p) | working(w) | review(r) | done(d) | skipped(x). Phản ánh prefix trong docs/queues/<archetype>/",
   "archetypes": {
     "Blue_Eye": {
@@ -376,6 +376,24 @@
           "status": "done",
           "queue_file": "docs/queues/Rikka/d_Rikka_Vow.jpg",
           "script": "script/c32100009.lua"
+        },
+        {
+          "name": "Rikka Beauty",
+          "passcode": "32100010",
+          "status": "pending",
+          "queue_file": "docs/queues/Rikka/p_Rikka_Beauty.jpg"
+        },
+        {
+          "name": "Rikka Bloom",
+          "passcode": "32100011",
+          "status": "pending",
+          "queue_file": "docs/queues/Rikka/p_Rikka_Bloom.jpg"
+        },
+        {
+          "name": "Rikka Stems",
+          "passcode": "32100012",
+          "status": "pending",
+          "queue_file": "docs/queues/Rikka/p_Rikka_Stems.jpg"
         }
       ]
     },
