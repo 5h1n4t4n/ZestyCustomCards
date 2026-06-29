@@ -16,6 +16,18 @@
 > Để giữ file nhật ký gọn gàng và dễ theo dõi, các phiên làm việc cũ đã được chuyển vào file lưu trữ.
 > [Xem lịch sử các phiên trước đó (Phiên 001 - 061) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
 
+### Phiên 087 — 2026-06-29
+
+- **Mục tiêu:**
+  - Thêm 3 card Rikka mới vào feature list: Rikka Beauty, Rikka Bloom, và Rikka Stems.
+- **Đã hoàn thành:**
+  - Chạy Harness CLI `scan` phát hiện và tự động đăng ký 3 card pending mới vào `feature_list.json`:
+    - **Rikka Beauty** (Passcode: `32100010`)
+    - **Rikka Bloom** (Passcode: `32100011`)
+    - **Rikka Stems** (Passcode: `32100012`)
+  - Commit các tệp ảnh pending mới và `feature_list.json`.
+- **Files/artifacts đã cập nhật:** `feature_list.json`, `claude-progress.md`
+
 ### Phiên 086 — 2026-06-26
 
 - **Mục tiêu:**
