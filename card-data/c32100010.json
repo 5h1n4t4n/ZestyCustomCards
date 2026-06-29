@@ -1,0 +1,24 @@
+{
+  "id": 32100010,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcodes": [
+    321
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 4,
+  "race": 1024,
+  "attribute": 1,
+  "category": 131594,
+  "name": "Rikka Beauty",
+  "desc": "If a card is Tributed: You can Special Summon this card from your hand in Defense Position. You can only use this effect of \"Rikka Beauty\" once per turn.\r\n(Quick Effect): You can Tribute this card you control; add 1 \"Rikka\" Spell/Trap from your Deck to your hand, or Set 1 \"Rikka\" Spell/Trap directly from your Deck to your Spell & Trap Zone, and you can activate that card this turn. You can only use this effect of \"Rikka Beauty\" once per turn.\r\nIf this card is sent to the GY: You can add this card to your hand, then, if this card was Tributed this turn, Special Summon 1 \"Rikka\" monster from your Deck in Defense Position. You can only use this effect of \"Rikka Beauty\" once per turn.",
+  "strings": [
+    "Special Summon this card from your hand in Defense Position?",
+    "Add 1 \"Rikka\" Spell/Trap from Deck to hand or Set it",
+    "Add this card to hand, then Special Summon 1 \"Rikka\" monster?",
+    "Add to hand",
+    "Set to Spell & Trap Zone"
+  ]
+}

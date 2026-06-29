@@ -14,9 +14,29 @@
 
 > [!NOTE]
 > Để giữ file nhật ký gọn gàng và dễ theo dõi, các phiên làm việc cũ đã được chuyển vào file lưu trữ.
-> [Xem lịch sử các phiên trước đó (Phiên 001 - 061) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
+> [Xem lịch sử các phiên trước đó (Phiên 001 - 062) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
 
-### Phiên 087 — 2026-06-29
+### Phiên 088 — 2026-06-29
+
+- **Mục tiêu:**
+  - Thiết kế specs JSON và lập trình Lua hoàn chỉnh cho card Rikka Beauty (`32100010`).
+- **Đã hoàn thành:**
+  - Khởi tạo card qua Harness CLI `start`, copy artwork vào `pics/32100010.jpg`.
+  - Viết specs JSON đầy đủ: Level 4, EARTH, Plant/Effect, ATK 0 / DEF 0, archetype Rikka (0x141).
+  - Viết script Lua với 3 hiệu ứng:
+    - **Effect 1**: `EVENT_RELEASE` trigger — SS từ tay ở DEF khi card bị Tribute (tham khảo official Kanzashi pattern).
+    - **Effect 2**: Quick Effect — Tribute self, add/set 1 Rikka Spell/Trap từ Deck (set cho phép activate cùng turn).
+    - **Effect 3**: `EVENT_TO_GRAVE` trigger — add card này lên tay, nếu bị Tribute turn này thì SS 1 Rikka monster từ Deck ở DEF.
+  - Cải tiến `manage_harness.py` Step 4: Loại trừ card ở trạng thái `pending` khỏi sync check.
+  - Chạy verify thành công qua Harness CLI, cập nhật CDB và chuyển trạng thái sang `done`.
+- **Xác minh đã chạy:**
+  - Validator: `[ ] OK c32100010.lua`
+  - Linter: All clean!
+  - Check-sync: system sync verified successfully (pending + orphan filtered).
+  - `manage_db.py query 32100010` xác nhận dữ liệu chính xác.
+- **Files/artifacts đã cập nhật:** `card-data/c32100010.json`, `script/c32100010.lua`, `pics/32100010.jpg`, `custom_cards_zesty.cdb`, `feature_list.json`, `script-test/manage_harness.py`, `claude-progress.md`
+
+
 
 - **Mục tiêu:**
   - Thêm 3 card Rikka mới vào feature list: Rikka Beauty, Rikka Bloom, và Rikka Stems.
@@ -359,22 +379,5 @@
   - `python .\script-test\manage_db.py check-sync` -> 100% đồng bộ hoàn hảo (100% OK).
   - `.\script-test\validate_scripts.ps1` -> Kết quả: 82 OK, 49 WARN, 0 FAIL.
 - **Files/artifacts đã cập nhật:** `pics/192200016.jpg`, `docs/queues/Common/d_Iris_Wand_Dream_Magical.jpg`, `feature_list.json`, `claude-progress.md`
-
-### Phiên 062 — 2026-06-10
-
-- **Mục tiêu:**
-  - Thiết kế cấu hình specs JSON và viết script Lua hoàn chỉnh cho 9 card đang ở trạng thái `pending` trong `feature_list.json`.
-- **Đã hoàn thành:**
-  - Thiết lập cấu hình specs JSON và lập trình Lua hoàn thiện cho 9 card mới:
-    - Castle of Dreams: `192200015` (Wandering Fairy), `192200016` (Iris Wand)
-    - Rikka: `32100002` (Kanzashi), `32100003` (Rikka Blizzard), `32100004` (Rikka Fleurness), `32100005` (Rikka Foliage)
-    - Common: `79900017` (Ghost Ogre & Rabbit Spirit), `79900018` (Possessed Bond), `79900019` (The Journeying Three Magi)
-  - Khởi chạy và hoàn thành quy trình verify tự động của Harness CLI cho cả 9 card, cập nhật trạng thái trong `feature_list.json` thành `"done"` và đổi tên các file queue tương ứng.
-- **Xác minh đã chạy:**
-  - `python .\script-test\manage_db.py compile` -> Thành công biên dịch 131 card.
-  - `.\script-test\validate_scripts.ps1` -> Kết quả: 82 OK, 49 WARN, 0 FAIL.
-  - `python .\script-test\manage_db.py check-sync` -> 100% đồng bộ hoàn hảo (100% OK).
-- **Files/artifacts đã cập nhật:** `claude-progress.md`, `feature_list.json`, `custom_cards_zesty.cdb`, `card-data/c*.json`, `script/c*.lua`, `docs/queues/`
-- **Artifacts quy trình:** [implementation_plan.md](file:///C:/Users/dinhd/.gemini/antigravity-ide/brain/3104bbe4-0402-42ef-a4a7-445ee0b813be/implementation_plan.md), [task.md](file:///C:/Users/dinhd/.gemini/antigravity-ide/brain/3104bbe4-0402-42ef-a4a7-445ee0b813be/task.md), [walkthrough.md](file:///C:/Users/dinhd/.gemini/antigravity-ide/brain/3104bbe4-0402-42ef-a4a7-445ee0b813be/walkthrough.md)
 
 _Thêm phiên mới theo format trên. Giữ mục "Trạng thái Hiện tại" luôn cập nhật._

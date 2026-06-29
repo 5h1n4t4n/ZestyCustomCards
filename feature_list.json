@@ -380,8 +380,9 @@
         {
           "name": "Rikka Beauty",
           "passcode": "32100010",
-          "status": "pending",
-          "queue_file": "docs/queues/Rikka/p_Rikka_Beauty.jpg"
+          "status": "done",
+          "queue_file": "docs/queues/Rikka/d_Rikka_Beauty.jpg",
+          "script": "script/c32100010.lua"
         },
         {
           "name": "Rikka Bloom",

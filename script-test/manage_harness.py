@@ -397,15 +397,30 @@ def verify_card(passcode):
     print("Step 4: Running system sync check...")
     rc, stdout, stderr = run_command(["python", "script-test/manage_db.py", "check-sync"], paths["root"])
     print(stdout.strip())
-    # Filter out pre-existing orphan passcodes (18199611-18199620) from sync issues check
+    # Build set of pending passcodes from feature_list.json (not yet started)
+    pending_passcodes = set()
+    try:
+        with open(paths["feature_list"], "r", encoding="utf-8") as f:
+            fl = json.load(f)
+        for arch_info in fl.get("archetypes", {}).values():
+            for card in arch_info.get("cards", []):
+                if card.get("status") == "pending":
+                    pending_passcodes.add(card.get("passcode", ""))
+    except Exception:
+        pass
+    # Filter out pre-existing orphan passcodes (18199611-18199620)
+    # and pending cards (not yet started) from sync issues check
     lines = (stdout or "").splitlines()
     actual_issues = []
     for line in lines:
         parts = line.strip().split()
         if len(parts) >= 2 and parts[0] == "-" and parts[1].isdigit():
             passcode_str = parts[1]
-            if not (18199611 <= int(passcode_str) <= 18199620):
-                actual_issues.append(line)
+            if (18199611 <= int(passcode_str) <= 18199620):
+                continue
+            if passcode_str in pending_passcodes:
+                continue
+            actual_issues.append(line)
     if len(actual_issues) > 0:
         print("Error: System synchronization has mismatches. Cannot declare passing.", file=sys.stderr)
         return False
