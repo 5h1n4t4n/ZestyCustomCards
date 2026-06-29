@@ -14,7 +14,7 @@
 
 > [!NOTE]
 > Để giữ file nhật ký gọn gàng và dễ theo dõi, các phiên làm việc cũ đã được chuyển vào file lưu trữ.
-> [Xem lịch sử các phiên trước đó (Phiên 001 - 062) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
+> [Xem lịch sử các phiên trước đó (Phiên 001 - 063) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
 
 ### Phiên 088 — 2026-06-29
 
@@ -35,6 +35,25 @@
   - Check-sync: system sync verified successfully (pending + orphan filtered).
   - `manage_db.py query 32100010` xác nhận dữ liệu chính xác.
 - **Files/artifacts đã cập nhật:** `card-data/c32100010.json`, `script/c32100010.lua`, `pics/32100010.jpg`, `custom_cards_zesty.cdb`, `feature_list.json`, `script-test/manage_harness.py`, `claude-progress.md`
+
+### Phiên 089 — 2026-06-29
+
+- **Mục tiêu:**
+  - Thiết kế specs JSON và lập trình Lua hoàn chỉnh cho card Rikka Bloom (`32100011`).
+- **Đã hoàn thành:**
+  - Khởi tạo card qua Harness CLI `start` cho Rikka Bloom (`32100011`).
+  - Viết specs JSON đầy đủ: Level 2, WATER, Plant/Effect, ATK 0 / DEF 0, archetype Rikka (0x141). (Ghi chú: Ảnh queue gốc có viền khung EARTH/Effect nhưng không có icon Attribute, nên chuẩn hóa theo hệ WATER/Plant của archetype).
+  - Viết script Lua với 3 hiệu ứng:
+    - **Effect 1**: `EVENT_RELEASE` trigger — SS từ tay nếu có card bị Tribute.
+    - **Effect 2**: Trigger on Normal/Special Summon — Add 1 "Rikka" card từ Deck lên tay, sau đó có thể Tribute 1 monster trên field (giống cơ chế Teardrop, có thể tribute card đối thủ).
+    - **Effect 3**: `EVENT_PHASE+PHASE_END` trigger trong GY — Thêm lại bài này lên tay nếu bị Tribute trong turn này, HOẶC nếu 1 Rikka Xyz monster được gửi xuống GY trong turn này.
+  - Sao chép artwork vào `pics/32100011.jpg` và đổi tên queue status thành `d_Rikka_Bloom.jpg`.
+  - Chạy verify thành công qua Harness CLI (linter sạch lỗi), cập nhật CDB và chuyển trạng thái sang `done`.
+- **Xác minh đã chạy:**
+  - Validator: `[ ] OK c32100011.lua`
+  - Linter: All clean!
+  - Check-sync: system sync verified successfully.
+- **Files/artifacts đã cập nhật:** `card-data/c32100011.json`, `script/c32100011.lua`, `pics/32100011.jpg`, `docs/queues/Rikka/d_Rikka_Bloom.jpg`, `custom_cards_zesty.cdb`, `feature_list.json`, `claude-progress.md`
 
 
 
@@ -366,18 +385,5 @@
   - `.\script-test\validate_scripts.ps1` -> Kết quả: 82 OK, 49 WARN, 0 FAIL.
   - `python .\script-test\manage_db.py check-sync` -> 100% đồng bộ hoàn hảo (100% OK).
 - **Files/artifacts đã cập nhật:** [c192200015.json](file:///d:/TTF/TTFCustomCards/card-data/c192200015.json), `custom_cards_zesty.cdb`, `claude-progress.md`
-
-### Phiên 063 — 2026-06-10
-
-- **Mục tiêu:**
-  - Sửa lỗi card picture của `192200016` (Iris Wand) mang phần mở rộng `.jpeg` không load được trong game.
-- **Đã hoàn thành:**
-  - Đổi tên tệp ảnh `pics/192200016.jpeg` thành `pics/192200016.jpg` để game (EDOPro) có thể tải ảnh bình thường.
-  - Đổi tên tệp ảnh hàng đợi `docs/queues/Common/d_Iris_Wand_Dream_Magical.jpeg` thành `docs/queues/Common/d_Iris_Wand_Dream_Magical.jpg`.
-  - Cập nhật thông tin `queue_file` tương ứng của card `192200016` trong `feature_list.json` thành đuôi `.jpg`.
-- **Xác minh đã chạy:**
-  - `python .\script-test\manage_db.py check-sync` -> 100% đồng bộ hoàn hảo (100% OK).
-  - `.\script-test\validate_scripts.ps1` -> Kết quả: 82 OK, 49 WARN, 0 FAIL.
-- **Files/artifacts đã cập nhật:** `pics/192200016.jpg`, `docs/queues/Common/d_Iris_Wand_Dream_Magical.jpg`, `feature_list.json`, `claude-progress.md`
 
 _Thêm phiên mới theo format trên. Giữ mục "Trạng thái Hiện tại" luôn cập nhật._

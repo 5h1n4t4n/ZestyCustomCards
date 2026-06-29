@@ -918,6 +918,18 @@
   - `python .\script-test\manage_db.py check-sync` -> 100% đồng bộ hoàn hảo (100% OK).
 - **Files/artifacts đã cập nhật:** `claude-progress.md`, `feature_list.json`, `custom_cards_zesty.cdb`, `card-data/c*.json`, `script/c*.lua`, `docs/queues/`
 - **Artifacts quy trình:** [implementation_plan.md](file:///C:/Users/dinhd/.gemini/antigravity-ide/brain/3104bbe4-0402-42ef-a4a7-445ee0b813be/implementation_plan.md), [task.md](file:///C:/Users/dinhd/.gemini/antigravity-ide/brain/3104bbe4-0402-42ef-a4a7-445ee0b813be/task.md), [walkthrough.md](file:///C:/Users/dinhd/.gemini/antigravity-ide/brain/3104bbe4-0402-42ef-a4a7-445ee0b813be/walkthrough.md)
+### Phiên 063 — 2026-06-10
+
+- **Mục tiêu:**
+  - Sửa lỗi card picture của `192200016` (Iris Wand) mang phần mở rộng `.jpeg` không load được trong game.
+- **Đã hoàn thành:**
+  - Đổi tên tệp ảnh `pics/192200016.jpeg` thành `pics/192200016.jpg` để game (EDOPro) có thể tải ảnh bình thường.
+  - Đổi tên tệp ảnh hàng đợi `docs/queues/Common/d_Iris_Wand_Dream_Magical.jpeg` thành `docs/queues/Common/d_Iris_Wand_Dream_Magical.jpg`.
+  - Cập nhật thông tin `queue_file` tương ứng của card `192200016` trong `feature_list.json` thành đuôi `.jpg`.
+- **Xác minh đã chạy:**
+  - `python .\script-test\manage_db.py check-sync` -> 100% đồng bộ hoàn hảo (100% OK).
+  - `.\script-test\validate_scripts.ps1` -> Kết quả: 82 OK, 49 WARN, 0 FAIL.
+- **Files/artifacts đã cập nhật:** `pics/192200016.jpg`, `docs/queues/Common/d_Iris_Wand_Dream_Magical.jpg`, `feature_list.json`, `claude-progress.md`
 
 _Thêm phiên mới theo format trên. Giữ mục "Trạng thái Hiện tại" luôn cập nhật._
 

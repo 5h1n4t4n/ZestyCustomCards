@@ -387,14 +387,16 @@
         {
           "name": "Rikka Bloom",
           "passcode": "32100011",
-          "status": "pending",
-          "queue_file": "docs/queues/Rikka/p_Rikka_Bloom.jpg"
+          "status": "done",
+          "queue_file": "docs/queues/Rikka/w_Rikka_Bloom.jpg",
+          "script": "script/c32100011.lua"
         },
         {
           "name": "Rikka Stems",
           "passcode": "32100012",
-          "status": "pending",
-          "queue_file": "docs/queues/Rikka/p_Rikka_Stems.jpg"
+          "status": "done",
+          "queue_file": "docs/queues/Rikka/d_Rikka_Stems.jpg",
+          "script": "script/c32100012.lua"
         }
       ]
     },

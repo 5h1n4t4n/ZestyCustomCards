@@ -1,0 +1,21 @@
+{
+  "id": 32100012,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcodes": [
+    321
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 1,
+  "race": 1024,
+  "attribute": 1,
+  "category": 8226,
+  "name": "Rikka Stems",
+  "desc": "During the Main Phase (Quick Effect): You can reveal this card in your hand; Tribute 2 cards from your hand and/or field, and if you do, add 1 \"Rikka\" card from your Deck to your hand.\r\nDuring the End Phase, if this card is in the GY because it was Tributed this turn: You can Special Summon it.\r\nYou can only use each effect of \"Rikka Stems\" once per turn.",
+  "strings": [
+    "Reveal this card to Tribute 2 cards and add 1 \"Rikka\" card",
+    "Special Summon this card from the GY"
+  ]
+}
