@@ -68,13 +68,8 @@ end
 -- ============================================================
 -- Effect 1: Condition — A card was Tributed
 -- ============================================================
-function s.confilter(c)
-    return c:IsMonster()
-        or c:GetPreviousTypeOnField()&TYPE_MONSTER==TYPE_MONSTER
-end
-
 function s.sscon(e,tp,eg,ep,ev,re,r,rp)
-    return eg:IsExists(s.confilter,1,nil)
+    return true -- EVENT_RELEASE implies a card was tributed
 end
 
 -- ============================================================
@@ -147,7 +142,11 @@ function s.stop(e,tp,eg,ep,ev,re,r,rp)
     local op=0
     if can_add and can_set then
         op=Duel.SelectOption(tp,aux.Stringid(id,3),aux.Stringid(id,4))
-    elseif can_set then
+    elseif can_add then
+        Duel.SelectOption(tp,aux.Stringid(id,3))
+        op=0
+    else
+        Duel.SelectOption(tp,aux.Stringid(id,4))
         op=1
     end
     if op==0 then
@@ -202,10 +201,10 @@ end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
     if not c:IsRelateToEffect(e) then return end
+    -- Check if this card was Tributed this turn before it moves locations
+    local was_tributed=c:IsReason(REASON_RELEASE)
     if Duel.SendtoHand(c,nil,REASON_EFFECT)==0
         or not c:IsLocation(LOCATION_HAND) then return end
-    -- Check if this card was Tributed this turn
-    local was_tributed=c:IsReason(REASON_RELEASE)
     if was_tributed
         and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
         and Duel.IsExistingMatchingCard(
