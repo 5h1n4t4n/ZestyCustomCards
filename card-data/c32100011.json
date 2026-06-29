@@ -13,10 +13,11 @@
   "attribute": 2,
   "category": 42139648,
   "name": "Rikka Bloom",
-  "desc": "If a card(s) is Tributed: You can Special Summon this card from your hand. You can only use this effect of \"Rikka Bloom\" once per turn.\r\nIf this card is Normal or Special Summoned: You can add 1 \"Rikka\" card from your Deck to your hand, then Tribute 1 card on the field. You can only use this effect of \"Rikka Bloom\" once per turn.\r\nDuring the End Phase, if this card is in your GY because it was Tributed and sent there this turn, or if a \"Rikka\" Xyz Monster was sent to your GY this turn: You can add this card to your hand. You can only use this effect of \"Rikka Bloom\" once per turn.",
+  "desc": "If a card(s) is Tributed: You can Special Summon this card from your hand. You can only use this effect of \"Rikka Bloom\" once per turn.\r\nIf this card is Normal or Special Summoned: You can add 1 \"Rikka\" card from your Deck to your hand, then you can Tribute 1 monster on the field. You can only use this effect of \"Rikka Bloom\" once per turn.\r\nDuring the End Phase, if this card is in your GY because it was Tributed and sent there this turn, or if a \"Rikka\" Xyz Monster was sent to your GY this turn: You can add this card to your hand. You can only use this effect of \"Rikka Bloom\" once per turn.",
   "strings": [
     "Special Summon this card from your hand?",
-    "Add 1 \"Rikka\" card to hand, then Tribute 1 card?",
-    "Add this card to your hand?"
+    "Add 1 \"Rikka\" card to hand, then Tribute 1 monster?",
+    "Add this card to your hand?",
+    "Tribute 1 monster?"
   ]
 }

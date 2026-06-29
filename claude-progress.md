@@ -16,6 +16,18 @@
 > Để giữ file nhật ký gọn gàng và dễ theo dõi, các phiên làm việc cũ đã được chuyển vào file lưu trữ.
 > [Xem lịch sử các phiên trước đó (Phiên 001 - 063) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
 
+### Phiên 090 — 2026-06-29
+
+- **Mục tiêu:**
+  - Sửa lỗi hiển thị sai hiệu ứng của "Rikka Bloom" (`32100011`) khi được triệu hồi đặc biệt, trong đó người chơi bị bắt buộc phải Tribute mọi loại thẻ (kể cả Spell/Trap) trên sân thay vì Tribute 1 monster theo dạng optional (có thể chọn có hoặc không).
+- **Đã hoàn thành:**
+  - Sửa đổi kịch bản [c32100011.lua](file:///d:/TTF/TTFCustomCards/script/c32100011.lua) để biến thao tác Tribute ở Effect 2 (kích hoạt khi Normal/Special Summon) thành tuỳ chọn (`SelectYesNo`), và giới hạn việc chọn Tribute chỉ cho monster trên MZONE.
+  - Cập nhật văn bản trong [c32100011.json](file:///d:/TTF/TTFCustomCards/card-data/c32100011.json) cho chuẩn xác (`"then you can Tribute 1 monster on the field."`) và thêm thông điệp hỏi tương ứng (`"Tribute 1 monster?"`).
+  - Chạy `verify` pipeline bằng CLI và biên dịch lại CSDL.
+- **Xác minh đã chạy:**
+  - Lệnh verify thành công, 100% OK. Đồng bộ dữ liệu sạch không lỗi.
+- **Files/artifacts đã cập nhật:** `script/c32100011.lua`, `card-data/c32100011.json`, `custom_cards_zesty.cdb`, `claude-progress.md`
+
 ### Phiên 088 — 2026-06-29
 
 - **Mục tiêu:**

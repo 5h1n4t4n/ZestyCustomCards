@@ -111,7 +111,7 @@ end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
     Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
-    Duel.SetOperationInfo(0,CATEGORY_RELEASE,nil,1,0,LOCATION_ONFIELD)
+    Duel.SetPossibleOperationInfo(0,CATEGORY_RELEASE,nil,1,0,LOCATION_MZONE)
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
@@ -119,11 +119,12 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
     if #g>0 and Duel.SendtoHand(g,nil,REASON_EFFECT)>0 then
         Duel.ConfirmCards(1-tp,g)
         Duel.ShuffleDeck(tp)
-        -- Then tribute 1 card on the field
-        if Duel.IsExistingMatchingCard(Card.IsReleasableByEffect,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) then
+        -- Then you can tribute 1 monster on the field
+        if Duel.IsExistingMatchingCard(Card.IsReleasableByEffect,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
+            and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
             Duel.BreakEffect()
             Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RELEASE)
-            local rg=Duel.SelectMatchingCard(tp,Card.IsReleasableByEffect,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
+            local rg=Duel.SelectMatchingCard(tp,Card.IsReleasableByEffect,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
             if #rg>0 then
                 Duel.Release(rg,REASON_EFFECT)
             end
