@@ -29,7 +29,6 @@ function s.initial_effect(c)
     e1:SetProperty(EFFECT_FLAG_DELAY)
     e1:SetRange(LOCATION_HAND)
     e1:SetCountLimit(1,id)
-    e1:SetCondition(s.sscon)
     e1:SetTarget(s.sstg)
     e1:SetOperation(s.ssop)
     c:RegisterEffect(e1)
@@ -63,13 +62,6 @@ function s.initial_effect(c)
     e3:SetTarget(s.thtg)
     e3:SetOperation(s.thop)
     c:RegisterEffect(e3)
-end
-
--- ============================================================
--- Effect 1: Condition — A card was Tributed
--- ============================================================
-function s.sscon(e,tp,eg,ep,ev,re,r,rp)
-    return true -- EVENT_RELEASE implies a card was tributed
 end
 
 -- ============================================================
