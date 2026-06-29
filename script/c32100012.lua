@@ -26,7 +26,6 @@ function s.initial_effect(c)
     e1:SetRange(LOCATION_HAND)
     e1:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_MAIN_END)
     e1:SetCountLimit(1,id)
-    e1:SetCondition(s.thcon)
     e1:SetCost(s.thcost)
     e1:SetTarget(s.thtg)
     e1:SetOperation(s.thop)
@@ -51,9 +50,6 @@ end
 -- ============================================================
 -- Effect 1: Add 1 Rikka card
 -- ============================================================
-function s.thcon(e,tp,eg,ep,ev,re,r,rp)
-    return Duel.IsMainPhase()
-end
 function s.costfilter(c)
     return c:IsReleasable()
 end
