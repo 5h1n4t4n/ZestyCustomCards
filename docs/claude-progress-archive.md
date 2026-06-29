@@ -930,6 +930,22 @@
   - `python .\script-test\manage_db.py check-sync` -> 100% đồng bộ hoàn hảo (100% OK).
   - `.\script-test\validate_scripts.ps1` -> Kết quả: 82 OK, 49 WARN, 0 FAIL.
 - **Files/artifacts đã cập nhật:** `pics/192200016.jpg`, `docs/queues/Common/d_Iris_Wand_Dream_Magical.jpg`, `feature_list.json`, `claude-progress.md`
+### Phiên 064 — 2026-06-10
+
+
+- **Mục tiêu:**
+  - Sửa lỗi Link markers (ô link) chỉ sai vị trí trên card `192200015` ("Wandering Fairy in the Castle of Dreams").
+- **Đã hoàn thành:**
+  - Xác định các Link markers chính xác trên hình ảnh gốc `docs/queues/Common/d_Wandering_Fairy_in_the_Castle_of_Dreams.jpg`: Bottom-Left, Bottom, Bottom-Right.
+  - Sửa đổi giá trị `def` từ `13` (Left, Bottom-Left, Bottom-Right) thành `7` (Bottom-Left, Bottom, Bottom-Right) trong [c192200015.json](file:///d:/TTF/TTFCustomCards/card-data/c192200015.json).
+  - Biên dịch và đồng bộ thành công vào cơ sở dữ liệu `custom_cards_zesty.cdb` qua Harness CLI.
+  - Commit các file thay đổi theo đúng quy chuẩn `[Doanh] [Fix]: fix link markers for Wandering Fairy in the Castle of Dreams`.
+- **Xác minh đã chạy:**
+  - `python .\script-test\manage_harness.py verify 192200015` -> Thành công.
+  - `python .\script-test\manage_db.py query 192200015` -> DEF trả về `7` chính xác.
+  - `.\script-test\validate_scripts.ps1` -> Kết quả: 82 OK, 49 WARN, 0 FAIL.
+  - `python .\script-test\manage_db.py check-sync` -> 100% đồng bộ hoàn hảo (100% OK).
+- **Files/artifacts đã cập nhật:** [c192200015.json](file:///d:/TTF/TTFCustomCards/card-data/c192200015.json), `custom_cards_zesty.cdb`, `claude-progress.md`
 
 _Thêm phiên mới theo format trên. Giữ mục "Trạng thái Hiện tại" luôn cập nhật._
 

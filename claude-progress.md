@@ -14,7 +14,7 @@
 
 > [!NOTE]
 > Để giữ file nhật ký gọn gàng và dễ theo dõi, các phiên làm việc cũ đã được chuyển vào file lưu trữ.
-> [Xem lịch sử các phiên trước đó (Phiên 001 - 063) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
+> [Xem lịch sử các phiên trước đó (Phiên 001 - 064) tại đây](file:///d:/TTF/TTFCustomCards/docs/claude-progress-archive.md).
 
 ### Phiên 090 — 2026-06-29
 
@@ -380,22 +380,5 @@
 - **Xác minh đã chạy:**
   - `python .\script-test\manage_harness.py verify 192200015` -> Thành công (Script validation checked out, DB compiled & synced successfully).
 - **Files/artifacts đã cập nhật:** [c192200015.lua](file:///d:/TTF/TTFCustomCards/script/c192200015.lua), `claude-progress.md`
-
-### Phiên 064 — 2026-06-10
-
-
-- **Mục tiêu:**
-  - Sửa lỗi Link markers (ô link) chỉ sai vị trí trên card `192200015` ("Wandering Fairy in the Castle of Dreams").
-- **Đã hoàn thành:**
-  - Xác định các Link markers chính xác trên hình ảnh gốc `docs/queues/Common/d_Wandering_Fairy_in_the_Castle_of_Dreams.jpg`: Bottom-Left, Bottom, Bottom-Right.
-  - Sửa đổi giá trị `def` từ `13` (Left, Bottom-Left, Bottom-Right) thành `7` (Bottom-Left, Bottom, Bottom-Right) trong [c192200015.json](file:///d:/TTF/TTFCustomCards/card-data/c192200015.json).
-  - Biên dịch và đồng bộ thành công vào cơ sở dữ liệu `custom_cards_zesty.cdb` qua Harness CLI.
-  - Commit các file thay đổi theo đúng quy chuẩn `[Doanh] [Fix]: fix link markers for Wandering Fairy in the Castle of Dreams`.
-- **Xác minh đã chạy:**
-  - `python .\script-test\manage_harness.py verify 192200015` -> Thành công.
-  - `python .\script-test\manage_db.py query 192200015` -> DEF trả về `7` chính xác.
-  - `.\script-test\validate_scripts.ps1` -> Kết quả: 82 OK, 49 WARN, 0 FAIL.
-  - `python .\script-test\manage_db.py check-sync` -> 100% đồng bộ hoàn hảo (100% OK).
-- **Files/artifacts đã cập nhật:** [c192200015.json](file:///d:/TTF/TTFCustomCards/card-data/c192200015.json), `custom_cards_zesty.cdb`, `claude-progress.md`
 
 _Thêm phiên mới theo format trên. Giữ mục "Trạng thái Hiện tại" luôn cập nhật._
