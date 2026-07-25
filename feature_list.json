@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-06-12",
+  "last_updated": "2026-06-29",
   "note": "Trạng thái: pending(p) | working(w) | review(r) | done(d) | skipped(x). Phản ánh prefix trong docs/queues/<archetype>/",
   "archetypes": {
     "Blue_Eye": {
@@ -376,6 +376,27 @@
           "status": "done",
           "queue_file": "docs/queues/Rikka/d_Rikka_Vow.jpg",
           "script": "script/c32100009.lua"
+        },
+        {
+          "name": "Rikka Beauty",
+          "passcode": "32100010",
+          "status": "done",
+          "queue_file": "docs/queues/Rikka/d_Rikka_Beauty.jpg",
+          "script": "script/c32100010.lua"
+        },
+        {
+          "name": "Rikka Bloom",
+          "passcode": "32100011",
+          "status": "done",
+          "queue_file": "docs/queues/Rikka/w_Rikka_Bloom.jpg",
+          "script": "script/c32100011.lua"
+        },
+        {
+          "name": "Rikka Stems",
+          "passcode": "32100012",
+          "status": "done",
+          "queue_file": "docs/queues/Rikka/d_Rikka_Stems.jpg",
+          "script": "script/c32100012.lua"
         }
       ]
     },
@@ -922,6 +943,27 @@
           "status": "done",
           "queue_file": "docs/queues/Common/d_The_Journeying_Three_Magi.jpg",
           "script": "script/c79900019.lua"
+        },
+        {
+          "name": "Contrary Fushion",
+          "passcode": "79900020",
+          "status": "done",
+          "queue_file": "docs/queues/Common/d_contrary_fushion.jpg",
+          "script": "script/c79900020.lua"
+        },
+        {
+          "name": "Serperior the Snake Eye Emperor",
+          "passcode": "79900021",
+          "status": "done",
+          "queue_file": "docs/queues/Common/d_serperior_the_snake_eye_emperor.jpg",
+          "script": "script/c79900021.lua"
+        },
+        {
+          "name": "Snivy the Snake Eye",
+          "passcode": "79900022",
+          "status": "done",
+          "queue_file": "docs/queues/Common/d_snivy_the_snake_eye.jpg",
+          "script": "script/c79900022.lua"
         }
       ]
     },

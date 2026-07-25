@@ -1,0 +1,21 @@
+{
+  "id": 79900022,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcode": 0,
+  "atk": 0,
+  "def": 0,
+  "level": 4,
+  "race": 1024,
+  "attribute": 1,
+  "category": 131588,
+  "name": "Snivy, The Snake Eye",
+  "desc": "If you control a Plant monster, you can Special Summon this card (from your hand).\nIf this card is Normal or Special Summoned: You can add 1 \"Contrary Fusion\" from your Deck to your hand.\nYou can banish 2 Plant monsters from your GY; add 1 Plant monster from your Deck to your hand.\nIf this card is in the GY while \"Contrary Fusion\" is in the GY: You can Special Summon this card.\nYou can only use each effect of \"Snivy, The Snake Eye\" once per turn.",
+  "strings": [
+    "Special Summon from hand",
+    "Add 1 \"Contrary Fusion\" from Deck",
+    "Banish 2 Plant from GY; add 1 Plant from Deck",
+    "Special Summon from GY"
+  ]
+}
