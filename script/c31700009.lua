@@ -46,12 +46,18 @@ end
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if c:IsRelateToEffect(e) and c:IsFaceup() then
-		local e1=Effect.CreateEffect(c)
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetCode(EFFECT_EXTRA_ATTACK)
-		e1:SetValue(1)
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-		c:RegisterEffect(e1)
+		-- dem so lan da kich hoat trong turn (moi lan tach nguyen lieu +1)
+		local ct=(c:GetFlagEffect(id)>0 and c:GetFlagEffectLabel(id) or 0)+1
+		c:ResetFlagEffect(id)
+		c:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1,ct)
+		if ct==1 then
+			local e1=Effect.CreateEffect(c)
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetCode(EFFECT_EXTRA_ATTACK)
+			e1:SetValue(function() return c:GetFlagEffectLabel(id) end)
+			e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+			c:RegisterEffect(e1)
+		end
 		local g=Duel.GetMatchingGroup(nil,tp,0,LOCATION_MZONE,nil)
 		if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
 			Duel.BreakEffect()
