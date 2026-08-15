@@ -1,0 +1,20 @@
+{
+  "id": 79900021,
+  "ot": 32,
+  "alias": 0,
+  "type": 97,
+  "setcode": 0,
+  "atk": 0,
+  "def": 3000,
+  "level": 8,
+  "race": 1024,
+  "attribute": 1,
+  "category": 2085,
+  "name": "Serperior, The Snake Eye Emperor",
+  "desc": "2 Plant monsters\nMust be Fusion Summoned by \"Contrary Fusion\".\nWhile this Fusion Summoned card is on the field: All monsters you control become Plant-Type, also neither player can Special Summon more than once per turn.\nWhile you control another Plant monster: Negate all your opponent's effects that include an effect that would negate the activation or effect of a card.\nWhile you control another Plant monster (Quick Effect): When your opponent activates a card effect, you can send 1 face-up Plant monster on the field to the GY, or banish 1 Plant monster in your GY face-down; destroy 1 face-up card on the field. You can only use this effect of \"Serperior, The Snake Eye Emperor\" twice per turn.",
+  "strings": [
+    "Send 1 Plant or banish 1 Plant from GY: destroy 1 card",
+    "Send 1 face-up Plant monster on the field to the GY",
+    "Banish 1 Plant monster in your GY face-down"
+  ]
+}
