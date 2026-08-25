@@ -76,10 +76,10 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
                     Duel.Damage(1-tp,1000,REASON_EFFECT)
                 end
 
-                -- If both players revealed, each loses 500 LP
+                -- If both players revealed, each loses 500 LP (Đã sửa bằng Duel.SetLP)
                 if rev_tp and rev_opp then
-                    Duel.LoseLP(tp,500)
-                    Duel.LoseLP(1-tp,500)
+                    Duel.SetLP(tp,Duel.GetLP(tp)-500)
+                    Duel.SetLP(1-tp,Duel.GetLP(1-tp)-500)
                 end
             end
         end
