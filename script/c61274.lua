@@ -7,8 +7,9 @@ function s.initial_effect(c)
     -- If this card is used for an Xyz Summon, it can be treated as 2 materials
     local e1=Effect.CreateEffect(c)
     e1:SetType(EFFECT_TYPE_SINGLE)
-    e1:SetCode(EFFECT_XYZ_MATERIAL)
-    e1:SetValue(2)
+    e1:SetCode(EFFECT_DOUBLE_XYZ_MATERIAL)
+    e1:SetOperation(s.xyzval)
+    e1:SetValue(1)
     c:RegisterEffect(e1)
 
     -- 1. Reveal to Special Summon from Hand/Deck, then shuffle self
@@ -38,6 +39,12 @@ end
 
 s.listed_series={0x3b}
 s.listed_names={id}
+
+-- Xyz Material Logic
+function s.xyzval(e,c)
+    -- Trả về true vì lá này có thể dùng làm 2 nguyên liệu cho bất kỳ quái thú Xyz nào
+    return true 
+end
 
 -- E1 Logic: Reveal -> SpSummon -> Shuffle
 function s.spcost1(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -77,7 +84,6 @@ function s.sptg2(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     local c=e:GetHandler()
     if chkc then return chkc:IsLocation(LOCATION_GRAVE+LOCATION_REMOVED) and chkc:IsControler(tp) and s.spfilter2(chkc,e,tp) and chkc~=c end
     if chk==0 then
-        -- Cần ít nhất 2 slot trống trên bàn và không bị khóa bởi Blue-Eyes Spirit Dragon
         return Duel.GetLocationCount(tp,LOCATION_MZONE)>1
             and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT)
             and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
@@ -91,7 +97,6 @@ end
 function s.spop2(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
     local tc=Duel.GetFirstTarget()
-    -- Kiểm tra cả 2 lá bài còn hợp lệ
     if not c:IsRelateToEffect(e) or not tc:IsRelateToEffect(e) then return end
     if Duel.GetLocationCount(tp,LOCATION_MZONE)<2 or Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then return end
     
