@@ -3,7 +3,7 @@ local s,id=GetID()
 local TOKEN_ID=70213
 
 function s.initial_effect(c)
-	--Activate
+	--Activate: Send FS cards with different names from Deck to GY (No OPT)
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_TOGRAVE)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
@@ -11,13 +11,14 @@ function s.initial_effect(c)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
-	--Token Summon and turn self into Monster
+	
+	--Once per turn (Soft OPT): Banish Spells from GY, summon Token & turn self into monster
 	local e2=Effect.CreateEffect(c)
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_REMOVE)
 	e2:SetDescription(aux.Stringid(id,0))
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_SZONE)
-	e2:SetCountLimit(1,id)
+	e2:SetCountLimit(1) -- Đã sửa thành Soft OPT
 	e2:SetCost(s.tkcost)
 	e2:SetTarget(s.tktg)
 	e2:SetOperation(s.tkop)
@@ -72,7 +73,7 @@ function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 		tk:RegisterEffect(e1)
 	end
 	Duel.SpecialSummonComplete()
-	if c:IsRelateToEffect(e) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+	if c:IsRelateToEffect(e) and c:IsLocation(LOCATION_SZONE) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
 		Duel.MoveToField(c,tp,tp,LOCATION_MZONE,POS_FACEUP_ATTACK,true)
 		local e1=Effect.CreateEffect(c)
 		e1:SetType(EFFECT_TYPE_SINGLE)
