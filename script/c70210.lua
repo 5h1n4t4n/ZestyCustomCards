@@ -1,24 +1,19 @@
 --Flower Spirit-Friendships
 local s,id=GetID()
-local FLOWER_TOKEN_ID=70213
+local TOKEN_ID=70213
 
 function s.initial_effect(c)
-	--When this card is activated: send any number of "Flower Spirit" cards with different
-	--names from your Deck to the GY
+	--Activate
 	local e1=Effect.CreateEffect(c)
+	e1:SetCategory(CATEGORY_TOGRAVE)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
-	--Once per turn: banish any number of Spell Cards from your GY; Special Summon 1
-	--"Flower Spirit Token", then Special Summon this card as a Normal Monster
-	--(Spellcaster/DARK/Level 1/Tuner/ATK 0/DEF 0) that is also treated as a Continuous
-	--Spell Card
-	--NOTE: turning a Spell Card into a monster (and keeping it as a Spell Card at the
-	--same time) is a very unusual mechanic. This is a best-effort approximation using
-	--temporary type/race/attribute/level-granting effects; please test carefully.
+	--Token Summon and turn self into Monster
 	local e2=Effect.CreateEffect(c)
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_REMOVE)
 	e2:SetDescription(aux.Stringid(id,0))
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_SZONE)
@@ -30,67 +25,80 @@ function s.initial_effect(c)
 end
 
 function s.deckfilter(c)
-	return c:IsSetCard(0x702)
+	return c:IsSetCard(0x702) and c:IsAbleToGrave()
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
+	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
 end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.IsExistingMatchingCard(s.deckfilter,tp,LOCATION_DECK,0,1,nil) then
-		local g=Duel.SelectMatchingCard(tp,s.deckfilter,tp,LOCATION_DECK,0,1,99,nil)
-		if g:GetCount()>0 then
-			Duel.SendtoGrave(g,REASON_EFFECT)
+	local g=Duel.GetMatchingGroup(s.deckfilter,tp,LOCATION_DECK,0,nil)
+	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+		local sg=aux.SelectUnselectGroup(g,e,tp,1,#g,aux.dncheck,1,tp,HINTMSG_TOGRAVE)
+		if #sg>0 then
+			Duel.SendtoGrave(sg,REASON_EFFECT)
 		end
 	end
 end
 
-function s.spfilter(c)
+function s.rmfilter(c)
 	return c:IsType(TYPE_SPELL) and c:IsAbleToRemoveAsCost()
 end
 function s.tkcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_GRAVE,0,1,nil) end
-	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_GRAVE,0,1,99,nil)
-	Duel.Remove(g,POS_FACEUP,REASON_COST)
-	e:SetLabel(g:GetCount())
+	if chk==0 then return Duel.IsExistingMatchingCard(s.rmfilter,tp,LOCATION_GRAVE,0,1,nil) end
+	local g=Duel.GetMatchingGroup(s.rmfilter,tp,LOCATION_GRAVE,0,nil)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local sg=g:Select(tp,1,#g,nil)
+	Duel.Remove(sg,POS_FACEUP,REASON_COST)
+	e:SetLabel(#sg)
 end
 function s.tktg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>=2
+		and Duel.IsPlayerCanSpecialSummonMonster(tp,TOKEN_ID,0x702,TYPES_TOKEN,0,0,1,RACE_ZOMBIE,ATTRIBUTE_DARK) end
+	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,0)
 end
 function s.tkop(e,tp,eg,ep,ev,re,r,rp)
-	local ct=e:GetLabel()
-	if ct<=0 then ct=1 end
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
-		local tk=Duel.CreateToken(tp,FLOWER_TOKEN_ID)
-		Duel.SpecialSummon(tk,0,tp,tp,true,false,POS_FACEUP)
-		if tk:IsRelateToEffect(e) and ct>1 then
-			local le=Effect.CreateEffect(e:GetHandler())
-			le:SetType(EFFECT_TYPE_SINGLE)
-			le:SetCode(EFFECT_UPDATE_LEVEL)
-			le:SetValue(ct-1)
-			le:SetReset(RESET_EVENT+0x1fe0000)
-			tk:RegisterEffect(le)
-		end
-	end
 	local c=e:GetHandler()
-	if c:IsRelateToEffect(e) and c:IsLocation(LOCATION_SZONE) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+	local lv=e:GetLabel()
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+	local tk=Duel.CreateToken(tp,TOKEN_ID)
+	if Duel.SpecialSummonStep(tk,0,tp,tp,false,false,POS_FACEUP) then
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_CHANGE_LEVEL)
+		e1:SetValue(lv)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+		tk:RegisterEffect(e1)
+	end
+	Duel.SpecialSummonComplete()
+	if c:IsRelateToEffect(e) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
 		Duel.MoveToField(c,tp,tp,LOCATION_MZONE,POS_FACEUP_ATTACK,true)
-		local le1=Effect.CreateEffect(c)
-		le1:SetType(EFFECT_TYPE_SINGLE)
-		le1:SetCode(EFFECT_ADD_TYPE)
-		le1:SetValue(TYPE_MONSTER+TYPE_NORMAL+TYPE_TUNER)
-		le1:SetReset(RESET_EVENT+0x1fe0000)
-		c:RegisterEffect(le1)
-		local le2=le1:Clone()
-		le2:SetCode(EFFECT_CHANGE_RACE)
-		le2:SetValue(RACE_SPELLCASTER)
-		c:RegisterEffect(le2)
-		local le3=le1:Clone()
-		le3:SetCode(EFFECT_CHANGE_ATTRIBUTE)
-		le3:SetValue(ATTRIBUTE_DARK)
-		c:RegisterEffect(le3)
-		local le4=le1:Clone()
-		le4:SetCode(EFFECT_UPDATE_LEVEL)
-		le4:SetValue(1)
-		c:RegisterEffect(le4)
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_ADD_TYPE)
+		e1:SetValue(TYPE_MONSTER+TYPE_NORMAL+TYPE_TUNER)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+		c:RegisterEffect(e1)
+		local e2=e1:Clone()
+		e2:SetCode(EFFECT_CHANGE_RACE)
+		e2:SetValue(RACE_SPELLCASTER)
+		c:RegisterEffect(e2)
+		local e3=e1:Clone()
+		e3:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+		e3:SetValue(ATTRIBUTE_DARK)
+		c:RegisterEffect(e3)
+		local e4=e1:Clone()
+		e4:SetCode(EFFECT_CHANGE_LEVEL)
+		e4:SetValue(1)
+		c:RegisterEffect(e4)
+		local e5=e1:Clone()
+		e5:SetCode(EFFECT_SET_BASE_ATTACK)
+		e5:SetValue(0)
+		c:RegisterEffect(e5)
+		local e6=e1:Clone()
+		e6:SetCode(EFFECT_SET_BASE_DEFENSE)
+		e6:SetValue(0)
+		c:RegisterEffect(e6)
 	end
 end
