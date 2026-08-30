@@ -4,7 +4,7 @@ local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
 	--Xyz Summon: 2+ Level 4 monsters
-	Xyz.AddProcedure(c,nil,4,2,99)
+	Xyz.AddProcedure(c,nil,4,2,nil,nil,99)
 	--Alternative: 2 Normal Monsters
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_FIELD)
@@ -16,7 +16,7 @@ function s.initial_effect(c)
 	e0:SetOperation(s.altop)
 	e0:SetValue(SUMMON_TYPE_XYZ)
 	c:RegisterEffect(e0)
-	--(Quick Effect): Detach 1 material; negate the effect of the first response from opponent
+	--(Quick Effect): Detach 1 material; negate the first response from opponent
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_QUICK_O)
