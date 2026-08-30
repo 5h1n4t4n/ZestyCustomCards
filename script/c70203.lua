@@ -1,9 +1,13 @@
 --Flower Spirit - Ferral Spring
 local s,id=GetID()
+local COUNTER_FLOWER=0x702
 
 function s.initial_effect(c)
 	c:EnableReviveLimit()
 	Pendulum.AddProcedure(c)
+	
+	--Cho phep nhan Flower Counter tai Pendulum Zone va Monster Zone
+	c:EnableCounterPermit(COUNTER_FLOWER,LOCATION_PZONE+LOCATION_MZONE)
 	
 	--Special Summon Procedure: Shuffle 3 "Flower Spirit" Spells from GY/banish into Deck
 	local e0=Effect.CreateEffect(c)
@@ -25,7 +29,7 @@ function s.initial_effect(c)
 	e1:SetValue(aux.FALSE)
 	c:RegisterEffect(e1)
 	
-	--Pendulum Effect: Place Flower Counter when a FS Spell resolves
+	--Pendulum Effect: Place 1 Flower Counter each time a "Flower Spirit" Spell resolves
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_CONTINUOUS+EFFECT_TYPE_FIELD)
 	e2:SetCode(EVENT_CHAIN_SOLVED)
@@ -33,7 +37,7 @@ function s.initial_effect(c)
 	e2:SetOperation(s.ctop)
 	c:RegisterEffect(e2)
 	
-	--Pendulum Effect: Remove 10 Flower Counters; draw 2 then destroy this card
+	--Pendulum Effect: Remove 10 Flower Counters; draw 2 cards, then destroy this card
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
 	e3:SetCategory(CATEGORY_DRAW+CATEGORY_DESTROY)
@@ -94,15 +98,15 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 	g:DeleteGroup()
 end
 
---Pendulum Counter effect
+--Pendulum Counter Logic
 function s.ctop(e,tp,eg,ep,ev,re,r,rp)
 	if re:IsActiveType(TYPE_SPELL) and re:GetHandler():IsSetCard(0x702) and re:GetHandlerPlayer()==tp then
-		e:GetHandler():AddCounter(0x702,1)
+		e:GetHandler():AddCounter(COUNTER_FLOWER,1)
 	end
 end
 function s.drawcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():IsCanRemoveCounter(tp,0x702,10,REASON_COST) end
-	e:GetHandler():RemoveCounter(tp,0x702,10,REASON_COST)
+	if chk==0 then return e:GetHandler():IsCanRemoveCounter(tp,COUNTER_FLOWER,10,REASON_COST) end
+	e:GetHandler():RemoveCounter(tp,COUNTER_FLOWER,10,REASON_COST)
 end
 function s.drawtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsPlayerCanDraw(tp,2) end
