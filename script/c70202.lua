@@ -27,12 +27,22 @@ function s.initial_effect(c)
 end
 
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetFieldGroupCount(tp,LOCATION_HAND,0)>=2
+	local c=e:GetHandler()
+	local hand_count=Duel.GetFieldGroupCount(tp,LOCATION_HAND,0)
+	--Nếu kích hoạt từ tay: cần ít nhất 2 lá khác trên tay (tổng là 3 tính cả lá này)
+	--Nếu kích hoạt từ sân (đã Set): cần ít nhất 3 lá trên tay
+	if c:IsLocation(LOCATION_HAND) or c:IsStatus(STATUS_ACT_FROM_HAND) then
+		return hand_count>=2
+	else
+		return hand_count>=3
+	end
 end
+
 function s.spfilter(c,e,tp)
 	return c:IsSetCard(0x702) and c:IsType(TYPE_MONSTER)
 		and c:IsCanBeSpecialSummoned(e,0,tp,true,true)
 end
+
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		return Duel.GetLocationCountFromEx(tp,tp,nil,TYPE_MONSTER)>0
@@ -41,6 +51,7 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,1,tp,LOCATION_HAND)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
+
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local hg=Duel.GetFieldGroup(tp,LOCATION_HAND,0)
 	if #hg>0 and Duel.Remove(hg,POS_FACEUP,REASON_EFFECT)>0 then
@@ -57,12 +68,15 @@ function s.gcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	return eg:IsContains(c) and c:IsPreviousLocation(LOCATION_GRAVE)
 end
+
 function s.gyfilter(c)
 	return c:IsAbleToDeck()
 end
+
 function s.spiritfilter(c)
 	return c:IsSetCard(0x702)
 end
+
 function s.gtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		return Duel.IsPlayerCanDraw(tp,2)
@@ -71,6 +85,7 @@ function s.gtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,3,tp,LOCATION_GRAVE)
 	Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,2)
 end
+
 function s.gop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.gyfilter,tp,LOCATION_GRAVE,0,nil)
 	if #g<3 then return end
