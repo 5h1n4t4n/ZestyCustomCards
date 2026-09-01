@@ -1,5 +1,6 @@
 --Maiden of Flower Spirit
 local s,id=GetID()
+local TOKEN_ID=70200 -- Đã đồng bộ khớp với CDB
 
 function s.initial_effect(c)
 	--Activate
@@ -42,7 +43,7 @@ function s.actcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.mzfilter(c)
-	return (c:IsSetCard(0x702) and c:IsType(TYPE_MONSTER)) or c:IsCode(70213)
+	return (c:IsSetCard(0x702) and c:IsType(TYPE_MONSTER)) or c:IsCode(TOKEN_ID)
 end
 function s.chainop(e,tp,eg,ep,ev,re,r,rp)
 	local ph=Duel.GetCurrentPhase()
