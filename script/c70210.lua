@@ -1,6 +1,6 @@
 --Flower Spirit-Friendships
 local s,id=GetID()
-local TOKEN_ID=70213
+local TOKEN_ID=70200 -- Đã đồng bộ khớp với CDB
 
 function s.initial_effect(c)
 	--Activate: Send FS cards with different names from Deck to GY (No OPT)
@@ -18,7 +18,7 @@ function s.initial_effect(c)
 	e2:SetDescription(aux.Stringid(id,0))
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_SZONE)
-	e2:SetCountLimit(1) -- Đã sửa thành Soft OPT
+	e2:SetCountLimit(1)
 	e2:SetCost(s.tkcost)
 	e2:SetTarget(s.tktg)
 	e2:SetOperation(s.tkop)
