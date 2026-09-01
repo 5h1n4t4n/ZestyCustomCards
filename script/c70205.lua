@@ -4,18 +4,9 @@ local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
 	--Xyz Summon: 2+ Level 4 monsters
-	Xyz.AddProcedure(c,nil,4,2,nil,nil,Xyz.InfiniteMats)
-	--Alternative: 2 Normal Monsters
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_FIELD)
-	e0:SetCode(EFFECT_SPSUMMON_PROC)
-	e0:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-	e0:SetRange(LOCATION_EXTRA)
-	e0:SetCondition(s.altcon)
-	e0:SetTarget(s.alttg)
-	e0:SetOperation(s.altop)
-	e0:SetValue(SUMMON_TYPE_XYZ)
-	c:RegisterEffect(e0)
+	--Hoặc Xyz Summon bằng 2 Normal Monsters
+	Xyz.AddProcedure(c,nil,4,2,s.ovfilter,aux.Stringid(id,2),Xyz.InfiniteMats,s.xyzop)
+
 	--(Quick Effect): Detach 1 material; negate the first response from opponent
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
@@ -26,6 +17,7 @@ function s.initial_effect(c)
 	e1:SetCost(s.detachcost)
 	e1:SetOperation(s.negsetop)
 	c:RegisterEffect(e1)
+
 	--(Quick Effect): When a Spell is activated: target it; attach to this card
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
@@ -40,36 +32,23 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 
-function s.nfilter(c,sc,tp)
-	return c:IsType(TYPE_NORMAL) and c:IsFaceup() and c:IsCanBeXyzMaterial(sc)
+--Filter check alternative overlay bằng 2 Normal Monsters
+function s.ovfilter(c,tp,xyzc)
+	return c:IsFaceup() and c:IsType(TYPE_NORMAL) and c:IsCanBeXyzMaterial(xyzc)
 end
-function s.altcon(e,c)
-	if c==nil then return true end
-	local tp=c:GetControler()
-	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
-		and Duel.IsExistingMatchingCard(s.nfilter,tp,LOCATION_MZONE,0,2,nil,c,tp)
-end
-function s.alttg(e,tp,eg,ep,ev,re,r,rp,c)
-	local g=Duel.SelectMatchingCard(tp,s.nfilter,tp,LOCATION_MZONE,0,2,2,nil,c,tp)
-	if #g==2 then
-		g:KeepAlive()
-		e:SetLabelObject(g)
-		return true
-	end
-	return false
-end
-function s.altop(e,tp,eg,ep,ev,re,r,rp,c)
-	local g=e:GetLabelObject()
-	if not g then return end
-	c:SetMaterial(g)
-	Duel.Overlay(c,g)
-	g:DeleteGroup()
+function s.xyzop(e,tp,chk,mc)
+	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 end
+	Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,0,1)
+	return true
 end
 
+--Detach cost
 function s.detachcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
 	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
+
+--Negate first response
 function s.negsetop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local e1=Effect.CreateEffect(c)
@@ -86,6 +65,7 @@ function s.chainop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
+--Attach activated Spell
 function s.atcon(e,tp,eg,ep,ev,re,r,rp)
 	return re:IsActiveType(TYPE_SPELL)
 end
