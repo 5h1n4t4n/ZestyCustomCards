@@ -21,7 +21,7 @@ function s.initial_effect(c)
 	e0:SetValue(SUMMON_TYPE_SPECIAL)
 	c:RegisterEffect(e0)
 	
-	--Cannot be Special Summoned by card effects
+	--Cannot be Special Summoned by card effects (except ignoring conditions)
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
@@ -70,6 +70,23 @@ function s.initial_effect(c)
 	e5:SetTarget(s.pztg)
 	e5:SetOperation(s.pzop)
 	c:RegisterEffect(e5)
+
+	--Global Check: Track Special Summon (You can only Special Summon "Flower Spirit - Ferral Spring" once per turn)
+	aux.GlobalCheck(s,function()
+		local ge1=Effect.CreateEffect(c)
+		ge1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+		ge1:SetCode(EVENT_SPSUMMON_SUCCESS)
+		ge1:SetOperation(s.checkop)
+		Duel.RegisterEffect(ge1,0)
+	end)
+end
+
+function s.checkop(e,tp,eg,ep,ev,re,r,rp)
+	for tc in aux.Next(eg) do
+		if tc:IsCode(id) then
+			Duel.RegisterFlagEffect(tc:GetSummonPlayer(),id,RESET_PHASE+PHASE_END,0,1)
+		end
+	end
 end
 
 --Procedure: Shuffle 3 "Flower Spirit" Spells from GY/banish into Deck
@@ -79,7 +96,8 @@ end
 function s.spcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
-	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
+	return Duel.GetFlagEffect(tp,id)==0
+		and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
 		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,3,nil)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,c)
