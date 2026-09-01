@@ -121,7 +121,7 @@ function s.drawop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---Monster Effect: Move Spells from GY to Monster Zone as Normal Monsters
+--Monster Effect: Move Spells from GY to Monster Zone as Normal Monsters (as many as possible)
 function s.mzfilter(c)
 	return c:IsSetCard(0x702) and c:IsType(TYPE_SPELL)
 end
@@ -136,8 +136,9 @@ function s.mzop(e,tp,eg,ep,ev,re,r,rp)
 	if ft<=0 then return end
 	local g=Duel.GetMatchingGroup(s.mzfilter,tp,LOCATION_GRAVE,0,nil)
 	if #g==0 then return end
+	local max_count=math.min(ft,#g)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
-	local sg=g:Select(tp,1,ft,nil)
+	local sg=g:Select(tp,1,max_count,nil)
 	local c=e:GetHandler()
 	for tc in aux.Next(sg) do
 		if Duel.MoveToField(tc,tp,tp,LOCATION_MZONE,POS_FACEUP,true) then
