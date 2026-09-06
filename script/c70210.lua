@@ -3,16 +3,17 @@ local s,id=GetID()
 local TOKEN_ID=70200
 
 function s.initial_effect(c)
-	--Activate: Send FS cards with different names from Deck to GY (No OPT)
+	--Effect 1: Activate - Send FS cards with different names from Deck to GY (HOPT)
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_TOGRAVE)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetCountLimit(1,id)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 	
-	--Once per turn (Soft OPT): Banish Spells from GY, summon Token & turn self into monster
+	--Effect 2: Banish Spells from GY, summon Token & turn self into monster (Soft OPT)
 	local e2=Effect.CreateEffect(c)
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_REMOVE)
 	e2:SetDescription(aux.Stringid(id,0))
@@ -63,6 +64,7 @@ function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local lv=e:GetLabel()
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+	if not Duel.IsPlayerCanSpecialSummonMonster(tp,TOKEN_ID,0x702,TYPES_TOKEN,0,0,lv,RACE_ZOMBIE,ATTRIBUTE_DARK) then return end
 	local tk=Duel.CreateToken(tp,TOKEN_ID)
 	if Duel.SpecialSummonStep(tk,0,tp,tp,false,false,POS_FACEUP) then
 		--Set Level
@@ -72,16 +74,14 @@ function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetValue(lv)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 		tk:RegisterEffect(e1)
-		
-		--Lock Race Zombie
+		--Set Race Zombie
 		local e2=Effect.CreateEffect(c)
 		e2:SetType(EFFECT_TYPE_SINGLE)
 		e2:SetCode(EFFECT_CHANGE_RACE)
 		e2:SetValue(RACE_ZOMBIE)
 		e2:SetReset(RESET_EVENT+RESETS_STANDARD)
 		tk:RegisterEffect(e2)
-		
-		--Lock Attribute DARK
+		--Set Attribute DARK
 		local e3=Effect.CreateEffect(c)
 		e3:SetType(EFFECT_TYPE_SINGLE)
 		e3:SetCode(EFFECT_CHANGE_ATTRIBUTE)
@@ -91,7 +91,7 @@ function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 	end
 	Duel.SpecialSummonComplete()
 	
-	--Turn self into Normal Monster
+	--Turn Friendships into Normal Monster
 	if c:IsRelateToEffect(e) and c:IsLocation(LOCATION_SZONE) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
 		Duel.MoveToField(c,tp,tp,LOCATION_MZONE,POS_FACEUP_ATTACK,true)
 		local e1=Effect.CreateEffect(c)
