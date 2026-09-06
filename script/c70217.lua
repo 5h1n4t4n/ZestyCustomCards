@@ -4,7 +4,8 @@ local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
 	Pendulum.AddProcedure(c,false)
-	Xyz.AddProcedure(c,nil,6,2,nil,nil,99)
+	--Xyz Summon: 2+ Level 6 monsters
+	Xyz.AddProcedure(c,nil,6,2,nil,nil,Xyz.InfiniteMats)
 
 	--Pendulum Effect 1: Banish 1 FS Spell from GY to Special Summon 1 FS monster
 	local pe1=Effect.CreateEffect(c)
@@ -83,7 +84,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 
---Pendulum 1
+--Pendulum 1: Banish 1 FS Spell from GY to Special Summon 1 FS monster
 function s.pcostfilter(c)
 	return c:IsSetCard(0x702) and c:IsType(TYPE_SPELL) and c:IsAbleToRemoveAsCost()
 end
@@ -121,7 +122,7 @@ function s.pop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.SpecialSummonComplete()
 end
 
---Pendulum 2
+--Pendulum 2: If FS Spell placed in MZone -> Destroy 1 S/T
 function s.cfilter(c,tp)
 	return c:IsSetCard(0x702) and c:IsType(TYPE_SPELL) and c:IsLocation(LOCATION_MZONE) and c:IsControler(tp)
 end
@@ -142,7 +143,7 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---Monster 1: Attach
+--Monster 1: Attach up to 3 FS Spells
 function s.atfilter(c)
 	return c:IsSetCard(0x702) and c:IsType(TYPE_SPELL)
 end
