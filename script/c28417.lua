@@ -8,7 +8,8 @@ function s.initial_effect(c)
     c:EnableReviveLimit()
 
     -- Standard Xyz Summon: 2 Level 4 "Sky Striker" monsters
-    Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0x115),4,2,s.ovfilter,aux.Stringid(id,0),1,s.altop)
+    -- Alternative: 1 "Sky Striker" Link Monster
+    Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0x115),4,2,s.ovfilter,aux.Stringid(id,0),1)
 
     -- Special Summon Count Limit: Once per turn
     c:SetSPSummonOnce(id)
@@ -22,7 +23,7 @@ function s.initial_effect(c)
     e1:SetType(EFFECT_TYPE_IGNITION)
     e1:SetRange(LOCATION_MZONE)
     e1:SetCountLimit(1)
-    e1:SetCost(aux.dxcon(1,1))
+    e1:SetCost(s.thcost) -- Đã sửa: Dùng hàm trả cost thủ công thay vì aux.dxcon
     e1:SetTarget(s.thtg)
     e1:SetOperation(s.thop)
     c:RegisterEffect(e1,false,REGISTER_FLAG_DETACH_XMAT)
@@ -49,28 +50,21 @@ function s.initial_effect(c)
 end
 
 --------------------------------------------------
--- Alternative Xyz Summon Procedure (1 Sky Striker Link Monster)
+-- Alternative Xyz Summon Filter
 --------------------------------------------------
 function s.ovfilter(c,tp,lc)
     return c:IsFaceup() and c:IsSetCard(0x115) and c:IsType(TYPE_LINK,lc,SUMMON_TYPE_XYZ,tp)
 end
+-- Đã sửa: Xóa hàm s.altop vì EDOPro tự động chuyển nguyên liệu khi đè Xyz.
 
-function s.altop(e,tp,eg,ep,ev,re,r,rp,c,og,min,max)
-    local g=e:GetLabelObject()
-    if g then
-        local mg=g:GetFirst():GetOverlayGroup()
-        if #mg>0 then
-            Duel.Overlay(c,mg)
-        end
-        c:SetMaterial(g)
-        Duel.Overlay(c,g)
-        g:DeleteGroup()
-    end
+--------------------------------------------------
+-- Effect 1 Logic (Detach & Excavate)
+--------------------------------------------------
+function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
+    e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
 
---------------------------------------------------
--- Effect 1 Logic
---------------------------------------------------
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=3 end
     Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
