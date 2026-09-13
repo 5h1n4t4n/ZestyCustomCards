@@ -1,11 +1,12 @@
 -- Qin Shi Huang, Sovereign Dragon Beyond Heaven
+-- ID: 99900132
 local s,id=GetID()
 s.listed_names={99900131} -- ID của Qin Shi Huang cũ
 
 function s.initial_effect(c)
 	-- XYZ SUMMON PROCEDURE (Chồng lên Rank 12 Qin Shi Huang)
 	c:EnableReviveLimit()
-	Xyz.AddProcedure(c,nil,13,99,s.ovfilter,aux.Stringid(id,0))
+	Xyz.AddProcedure(c,nil,13,Xyz.InfiniteMats,s.ovfilter,aux.Stringid(id,0))
 
 	-- EFFECT 1: UNAFFECTED (If Xyz Summoned)
 	local e1=Effect.CreateEffect(c)
@@ -82,7 +83,7 @@ function s.initial_effect(c)
 	-- EFFECT 6: SELF-RECYCLE (End Phase)
 	local e10=Effect.CreateEffect(c)
 	e10:SetDescription(aux.Stringid(id,3))
-	e10:SetCategory(CATEGORY_TO_DECK)
+	e10:SetCategory(CATEGORY_TODECK)
 	e10:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e10:SetCode(EVENT_PHASE+PHASE_END)
 	e10:SetRange(LOCATION_GRAVE+LOCATION_REMOVED)
@@ -123,14 +124,18 @@ function s.rmcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
 
+function s.rmfilter(c,tp)
+	return c:IsAbleToRemove(tp,POS_FACEDOWN)
+end
+
 function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=Duel.GetFieldGroup(tp,0,LOCATION_ONFIELD)
-	if chk==0 then return #g>0 and Duel.IsPlayerCanRemove(1-tp) end
+	local g=Duel.GetMatchingGroup(s.rmfilter,tp,0,LOCATION_ONFIELD,nil,tp)
+	if chk==0 then return #g>0 end
 	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,#g,0,0)
 end
 
 function s.rmop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetFieldGroup(tp,0,LOCATION_ONFIELD)
+	local g=Duel.GetMatchingGroup(s.rmfilter,tp,0,LOCATION_ONFIELD,nil,tp)
 	if #g>0 then
 		Duel.Remove(g,POS_FACEDOWN,REASON_EFFECT)
 	end
@@ -140,7 +145,8 @@ end
 -- EFFECT 4: ATK CALCULATION
 --------------------------------------------------------------------------------
 function s.atkval(e,c)
-	local g=Duel.GetMatchingGroup(Card.IsFaceup,0,LOCATION_MZONE,LOCATION_MZONE,nil)
+	local tp=e:GetHandlerPlayer()
+	local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,LOCATION_MZONE,nil)
 	local val=0
 	for tc in aux.Next(g) do
 		if tc:IsType(TYPE_XYZ) then
@@ -162,7 +168,9 @@ function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.spfilter(c,e,tp)
-	return c:IsCode(99900131) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	return c:IsCode(99900131) 
+		and (c:IsLocation(LOCATION_GRAVE) or c:IsFaceup()) 
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
 function s.attachfilter(c)
@@ -199,12 +207,14 @@ end
 -- EFFECT 6: SELF-RECYCLE LOGIC
 --------------------------------------------------------------------------------
 function s.tdcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():GetTurnID()==Duel.GetTurnCount()
+	local c=e:GetHandler()
+	return c:GetTurnID()==Duel.GetTurnCount() 
+		and (c:IsLocation(LOCATION_GRAVE) or c:IsFaceup())
 end
 
 function s.tdtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():IsAbleToExtra() end
-	Duel.SetOperationInfo(0,CATEGORY_TO_DECK,e:GetHandler(),1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,e:GetHandler(),1,0,0)
 end
 
 function s.tdop(e,tp,eg,ep,ev,re,r,rp)
