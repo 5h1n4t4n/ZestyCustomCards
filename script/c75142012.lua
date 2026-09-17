@@ -31,7 +31,7 @@ function s.initial_effect(c)
     e2:SetType(EFFECT_TYPE_IGNITION)
     e2:SetRange(LOCATION_MZONE)
     e2:SetCountLimit(1,id+1)
-    e2:SetCost(aux.StributeCost) -- Đã sửa: dùng aux.StributeCost thay vì aux.bfgcost
+    e2:SetCost(s.trcost) -- Đã sửa: Dùng hàm s.trcost tự định nghĩa phía dưới
     e2:SetTarget(s.pltg)
     e2:SetOperation(s.plop)
     c:RegisterEffect(e2)
@@ -41,7 +41,7 @@ end
 -- Effect 1 Logic (Search)
 --------------------------------------------------
 function s.thfilter(c)
-    return (c:IsSetCard(0x3b) or c:IsCode(93969023)) and c:IsMonster() and c:IsAbleToHand()
+    return (c:IsSetCard(0x3b) or c:IsCode(93969023)) and c:IsType(TYPE_MONSTER) and c:IsAbleToHand()
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -61,9 +61,14 @@ end
 --------------------------------------------------
 -- Effect 2 Logic (Place Continuous S/T & Extra Summon)
 --------------------------------------------------
+-- Hàm trả Cost Tế lá bài này trên sân
+function s.trcost(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return e:GetHandler():IsReleasable() end
+    Duel.Release(e:GetHandler(),REASON_COST)
+end
+
 function s.plfilter(c,tp)
-    -- Đã sửa: Dùng IsType(TYPE_CONTINUOUS) thay cho IsContinuous()
-    return c:IsType(TYPE_CONTINUOUS) and c:IsType(TYPE_SPELL+TYPE_TRAP) 
+    return c:IsType(TYPE_CONTINUOUS) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) 
         and aux.IsCodeListed(c,CARD_REDEYES_B_DRAGON) 
         and not c:IsForbidden() and c:CheckUniqueOnField(tp)
 end
