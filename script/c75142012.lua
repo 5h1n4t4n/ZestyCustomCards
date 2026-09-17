@@ -94,11 +94,11 @@ function s.plop(e,tp,eg,ep,ev,re,r,rp)
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
     local tc=Duel.SelectMatchingCard(tp,s.plfilter,tp,LOCATION_DECK,0,1,1,nil,tp):GetFirst()
     if tc and Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true) then
-        -- Additional Normal Summon (Đã sửa lại đúng tên hằng số EDOPro)
+        -- Additional Normal Summon
         local e1=Effect.CreateEffect(e:GetHandler())
         e1:SetDescription(aux.Stringid(id,2))
         e1:SetType(EFFECT_TYPE_FIELD)
-        e1:SetCode(EFFECT_EXTRA_NORMAL_SUMMON_COUNT)
+        e1:SetCode(EFFECT_EXTRA_SUMMON_COUNT)
         e1:SetTargetRange(LOCATION_HAND+LOCATION_MZONE,0)
         e1:SetReset(RESET_PHASE+PHASE_END)
         Duel.RegisterEffect(e1,tp)
