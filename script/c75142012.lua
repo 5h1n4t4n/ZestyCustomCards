@@ -1,6 +1,9 @@
 -- Red-Eyes Wyvern Metal Dragon
 local s,id=GetID()
 
+s.listed_series={0x3b}
+s.listed_names={CARD_REDEYES_B_DRAGON, 93969023} -- Black Metal Dragon (93969023)
+
 function s.initial_effect(c)
     --------------------------------------------------
     -- Effect 1: Search "Red-Eyes" monster or "Black Metal Dragon"
@@ -21,14 +24,14 @@ function s.initial_effect(c)
     c:RegisterEffect(e1b)
 
     --------------------------------------------------
-    -- Effect 2: Tribute this card; place Continuous S/T & Extra Normal Summon
+    -- Effect 2: Tribute to place Continuous S/T & Extra Normal Summon
     --------------------------------------------------
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetType(EFFECT_TYPE_IGNITION)
     e2:SetRange(LOCATION_MZONE)
     e2:SetCountLimit(1,id+1)
-    e2:SetCost(s.plcost)
+    e2:SetCost(aux.bfgcost)
     e2:SetTarget(s.pltg)
     e2:SetOperation(s.plop)
     c:RegisterEffect(e2)
@@ -38,7 +41,8 @@ end
 -- Effect 1 Logic (Search)
 --------------------------------------------------
 function s.thfilter(c)
-    return ((c:IsSetCard(0x3b) and c:IsType(TYPE_MONSTER)) or c:IsCode(93969023)) and c:IsAbleToHand()
+    -- Bắt buộc bọc (c:IsSetCard(0x3b) or c:IsCode(93969023)) trong ngoặc tròn
+    return (c:IsSetCard(0x3b) or c:IsCode(93969023)) and c:IsMonster() and c:IsAbleToHand()
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -58,13 +62,8 @@ end
 --------------------------------------------------
 -- Effect 2 Logic (Place Continuous S/T & Extra Summon)
 --------------------------------------------------
-function s.plcost(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return e:GetHandler():IsReleasable() end
-    Duel.Release(e:GetHandler(),REASON_COST)
-end
-
 function s.plfilter(c,tp)
-    return c:IsType(TYPE_CONTINUOUS) and c:IsType(TYPE_SPELL+TYPE_TRAP) 
+    return c:IsContinuous() and c:IsType(TYPE_SPELL+TYPE_TRAP) 
         and aux.IsCodeListed(c,CARD_REDEYES_B_DRAGON) 
         and not c:IsForbidden() and c:CheckUniqueOnField(tp)
 end
@@ -82,6 +81,7 @@ function s.plop(e,tp,eg,ep,ev,re,r,rp)
     local g=Duel.SelectMatchingCard(tp,s.plfilter,tp,LOCATION_DECK,0,1,1,nil,tp)
     local tc=g:GetFirst()
     if tc and Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true) then
+        -- Thêm 1 lần Normal Summon trong lượt
         local e1=Effect.CreateEffect(e:GetHandler())
         e1:SetDescription(aux.Stringid(id,2))
         e1:SetType(EFFECT_TYPE_FIELD)
