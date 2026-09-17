@@ -3,32 +3,34 @@
 local s,id=GetID()
 
 local SET_MAGICA		  = 0x654
-local SET_PUELLA_WITCH  = 0x1654
+local SET_PUELLA_WITCH	= 0x1654
 local CARD_HOMURA_RITUAL  = 999900020
-local CARD_HOMURA_LINK  = 999900024
+local CARD_HOMURA_LINK	= 999900024
 local CARD_EVENT_HORIZON  = 999900021
-local TOKEN_GRIEF_SEED  = 999900006
+local TOKEN_GRIEF_SEED	= 999900006
 
 s.listed_series={SET_MAGICA, SET_PUELLA_WITCH}
 s.listed_names={CARD_HOMURA_RITUAL, CARD_HOMURA_LINK, CARD_EVENT_HORIZON, TOKEN_GRIEF_SEED}
 
 function s.initial_effect(c)
-	-- Điều kiện triệu hồi Xyz tiêu chuẩn: 2+ quái thú "Magica" Level 12
+	-- Điều kiện triệu hồi Xyz tiêu chuẩn
 	Xyz.AddProcedure(c, aux.FilterBoolFunction(Card.IsSetCard, SET_MAGICA), 12, 2, nil, nil, Xyz.InfiniteMats)
 	c:EnableReviveLimit()
 
-	-- 1. Triệu hồi Đặc biệt từ Extra Deck bằng cách chọn 1 Homura Ritual/Link dưới GY làm nguyên liệu
+	-- 1. Quick Effect: Xyz Summon during either player's turn
 	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_SPSUMMON_PROCEDURE)
-	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e1:SetType(EFFECT_TYPE_QUICK_O)
+	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetRange(LOCATION_EXTRA)
-	e1:SetCondition(s.xyzspcon)
+	e1:SetHintTiming(0, TIMINGS_CHECK_MONSTER_E)
 	e1:SetTarget(s.xyzsptg)
 	e1:SetOperation(s.xyzspop)
 	c:RegisterEffect(e1)
 
-	-- 2. Hiệu ứng liên tục: Khi lá này có nguyên liệu, quái thú "Magica" ngửa mặt không chịu ảnh hưởng bởi hiệu ứng card đối thủ
+	-- 2. Hiệu ứng liên tục: Immune
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetCode(EFFECT_IMMUNE_EFFECT)
@@ -39,7 +41,7 @@ function s.initial_effect(c)
 	e2:SetValue(s.efilter)
 	c:RegisterEffect(e2)
 
-	-- 3. Ignition Effect: Trả 500 LP -> Search "TIME REWIND: THE MAGICA EVENT HORIZON" từ Deck lên tay
+	-- 3. Ignition Effect: Trả 500 LP -> Search
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
@@ -50,7 +52,7 @@ function s.initial_effect(c)
 	e3:SetOperation(s.thop)
 	c:RegisterEffect(e3)
 
-	-- 4. Quick Effect: Khi đối thủ kích hoạt lá bài/hiệu ứng -> gỡ 1 nguyên liệu về tay -> Đổi hiệu ứng đó của đối thủ
+	-- 4. Quick Effect: Đổi hiệu ứng đối thủ
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,2))
 	e4:SetCategory(CATEGORY_DESTROY+CATEGORY_DRAW)
@@ -63,7 +65,7 @@ function s.initial_effect(c)
 	e4:SetOperation(s.chop)
 	c:RegisterEffect(e4)
 
-	-- 5. Khi lá này bị gửi xuống GY: Special Summon 1 "Grief Seed" Token
+	-- 5. Khi bị gửi xuống GY: Special Summon Token
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,3))
 	e5:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN)
@@ -75,36 +77,36 @@ function s.initial_effect(c)
 end
 
 --------------------------------------------------------------------------------
--- 1. SPECIAL XYZ SUMMON PROCEDURE LOGIC
+-- 1. QUICK EFFECT XYZ SUMMON LOGIC
 --------------------------------------------------------------------------------
-function s.xyzfilter(c)
-	return (c:IsCode(CARD_HOMURA_RITUAL) or c:IsCode(CARD_HOMURA_LINK)) and c:IsCanBeXyzMaterial()
+function s.xyzfilter(c,e,tp,sc)
+	return (c:IsCode(CARD_HOMURA_RITUAL) or c:IsCode(CARD_HOMURA_LINK)) 
+		and c:IsCanBeEffectTarget(e) 
+		and c:IsCanBeXyzMaterial(sc)
 end
 
-function s.xyzspcon(e,c)
-	if c==nil then return true end
-	local tp=c:GetControler()
-	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
-		and Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_GRAVE,0,1,nil)
-end
-
-function s.xyzsptg(e,tp,eg,ep,ev,re,r,rp,c)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-	local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_GRAVE,0,1,1,nil)
-	if #g>0 then
-		g:KeepAlive()
-		e:SetLabelObject(g)
-		return true
+function s.xyzsptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	local c=e:GetHandler()
+	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and s.xyzfilter(chkc,e,tp,c) end
+	if chk==0 then
+		return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
+			and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_XYZ,tp,false,false)
+			and Duel.IsExistingTarget(s.xyzfilter,tp,LOCATION_GRAVE,0,1,nil,e,tp,c)
 	end
-	return false
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+	local g=Duel.SelectTarget(tp,s.xyzfilter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp,c)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
 end
 
-function s.xyzspop(e,tp,eg,ep,ev,re,r,rp,c)
-	local g=e:GetLabelObject()
-	if not g then return end
-	c:SetMaterial(g)
-	Duel.Overlay(c,g)
-	g:DeleteGroup()
+function s.xyzspop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local tc=Duel.GetFirstTarget()
+	if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)>0 then
+		c:CompleteProcedure()
+		if tc and tc:IsRelateToEffect(e) then
+			Duel.Overlay(c,tc)
+		end
+	end
 end
 
 --------------------------------------------------------------------------------
