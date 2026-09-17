@@ -31,7 +31,7 @@ function s.initial_effect(c)
     e2:SetType(EFFECT_TYPE_IGNITION)
     e2:SetRange(LOCATION_MZONE)
     e2:SetCountLimit(1,id+1)
-    e2:SetCost(s.trcost) -- Đã sửa: Dùng hàm s.trcost tự định nghĩa phía dưới
+    e2:SetCost(s.trcost)
     e2:SetTarget(s.pltg)
     e2:SetOperation(s.plop)
     c:RegisterEffect(e2)
@@ -61,15 +61,15 @@ end
 --------------------------------------------------
 -- Effect 2 Logic (Place Continuous S/T & Extra Summon)
 --------------------------------------------------
--- Hàm trả Cost Tế lá bài này trên sân
 function s.trcost(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return e:GetHandler():IsReleasable() end
     Duel.Release(e:GetHandler(),REASON_COST)
 end
 
 function s.plfilter(c,tp)
-    return c:IsType(TYPE_CONTINUOUS) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) 
-        and aux.IsCodeListed(c,CARD_REDEYES_B_DRAGON) 
+    -- Đã sửa: Dùng c:ListsCode(...) thay cho aux.IsCodeListed(...)
+    return c:IsType(TYPE_CONTINUOUS) and c:IsType(TYPE_SPELL+TYPE_TRAP) 
+        and c:ListsCode(CARD_REDEYES_B_DRAGON) 
         and not c:IsForbidden() and c:CheckUniqueOnField(tp)
 end
 
