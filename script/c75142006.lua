@@ -1,83 +1,65 @@
 -- The Scarlet Claw of Hermos
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Activate
+	-- Fusion Summon 1 Fusion Monster from Extra Deck that mentions targeted "Red-Eyes Black Dragon"
 	local e1=Effect.CreateEffect(c)
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_FUSION_SUMMON+CATEGORY_TODECK)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_TODECK+CATEGORY_SPECIAL_SUMMON+CATEGORY_FUSION_SUMMON)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-	e1:SetTarget(s.target)
-	e1:SetOperation(s.activate)
+	e1:SetHintTiming(0,TIMING_STANDBY_PHASE|TIMING_MAIN_END|TIMINGS_CHECK_MONSTER_E)
+	e1:SetTarget(s.sptg)
+	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 end
-s.listed_names={74677422, 45986603}
-function s.is_listed(c, code)
-	if c:IsCode(code) then return true end
-	if c.listed_names then
-		for _,v in pairs(c.listed_names) do
-			if v==code then return true end
-		end
-	end
-	return false
-end
-function s.spfilter(c,e,tp,mc)
-	return (c:IsCode(30100551) or s.is_listed(c, 74677422) or s.is_listed(c, 89631139))
-		and c:IsType(TYPE_FUSION) and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
-		and Duel.GetLocationCountFromEx(tp,tp,mc,c)>0
-end
-function s.filter(c,e,tp)
-	return c:IsCode(74677422) and c:IsAbleToDeck()
+
+s.listed_names={74677422, 46232525} -- Red-Eyes Black Dragon (74677422), The Claw of Hermos (46232525)
+
+function s.tdfilter(c,e,tp)
+	return c:IsCode(74677422) and c:IsCanBeFusionMaterial() and c:IsAbleToDeck()
 		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,c)
 end
-function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_MZONE+LOCATION_GRAVE) and chkc:IsControler(tp) and s.filter(chkc,e,tp) end
-	if chk==0 then return Duel.IsExistingTarget(s.filter,tp,LOCATION_MZONE+LOCATION_GRAVE,0,1,nil,e,tp) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-	local g=Duel.SelectTarget(tp,s.filter,tp,LOCATION_MZONE+LOCATION_GRAVE,0,1,1,nil,e,tp)
-	Duel.SetOperationInfo(0,CATEGORY_TODECK,g,1,0,0)
+
+function s.spfilter(c,e,tp,mc)
+	if Duel.GetLocationCountFromEx(tp,tp,mc,c)<=0 then return false end
+	local mustg=aux.GetMustBeMaterialGroup(tp,nil,tp,c,nil,REASON_FUSION)
+	-- Cho phép Triệu hồi Đặc biệt qua true (bỏ qua điều kiện Summon của các quái thú Hermos)
+	return c:IsType(TYPE_FUSION) and c:ListsCodeAsMaterial(mc:GetCode()) 
+		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,true,false)
+		and (#mustg==0 or (#mustg==1 and mustg:IsContains(mc)))
+end
+
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_MZONE|LOCATION_GRAVE) and chkc:IsControler(tp) and s.tdfilter(chkc,e,tp) end
+	if chk==0 then return Duel.IsExistingTarget(s.tdfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,0,1,nil,e,tp) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FMATERIAL)
+	local g=Duel.SelectTarget(tp,s.tdfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,0,1,1,nil,e,tp)
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,g,1,tp,0)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
-function s.activate(e,tp,eg,ep,ev,re,r,rp)
+
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) and Duel.SendtoDeck(tc,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)>0 then
+	if tc and tc:IsRelateToEffect(e) and tc:IsCanBeFusionMaterial() and not tc:IsImmuneToEffect(e) then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,nil)
-		local sc=g:GetFirst()
+		local sc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,tc):GetFirst()
 		if sc then
+			if tc:IsFacedown() then Duel.ConfirmCards(1-tp,tc) end
 			sc:SetMaterial(Group.FromCards(tc))
-			Duel.SpecialSummon(sc,SUMMON_TYPE_FUSION,tp,tp,true,false,POS_FACEUP)
-			sc:CompleteProcedure()
-			-- Banish it during End Phase of next turn
-			local e1=Effect.CreateEffect(e:GetHandler())
-			e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-			e1:SetCode(EVENT_PHASE+PHASE_END)
-			e1:SetCountLimit(1)
-			e1:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
-			e1:SetLabel(Duel.GetTurnCount())
-			e1:SetLabelObject(sc)
-			e1:SetCondition(s.rmcon)
-			e1:SetOperation(s.rmop)
-			if Duel.GetTurnPlayer()==tp and Duel.GetCurrentPhase()==PHASE_END then
-				e1:SetReset(RESET_PHASE+PHASE_END,3)
-			else
-				e1:SetReset(RESET_PHASE+PHASE_END,2)
+			Duel.SendtoDeck(tc,nil,SEQ_DECKSHUFFLE,REASON_EFFECT|REASON_MATERIAL|REASON_FUSION)
+			Duel.BreakEffect()
+			if Duel.SpecialSummon(sc,SUMMON_TYPE_FUSION,tp,tp,true,false,POS_FACEUP)>0 then
+				sc:CompleteProcedure()
+				-- Banish ở End Phase của lượt kế tiếp
+				local turn_summoned=Duel.GetTurnCount()
+				aux.DelayedOperation(sc,PHASE_END,id,e,tp,
+					function(sc) Duel.Remove(sc,POS_FACEUP,REASON_EFFECT) end,
+					function() return Duel.GetTurnCount()==turn_summoned+1 end,
+					nil,2,aux.Stringid(id,1)
+				)
 			end
-			Duel.RegisterEffect(e1,tp)
-			sc:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD,0,1)
 		end
 	end
-end
-function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
-	local tc=e:GetLabelObject()
-	if tc:GetFlagEffect(id)==0 then
-		e:Reset()
-		return false
-	end
-	return Duel.GetTurnCount()~=e:GetLabel()
-end
-function s.rmop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=e:GetLabelObject()
-	Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
 end
