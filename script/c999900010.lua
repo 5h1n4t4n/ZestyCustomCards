@@ -4,8 +4,8 @@ local s,id=GetID()
 
 local SET_MAGICA		  = 0x654
 local SET_PUELLA_WITCH  = 0x1654
-local SET_SOULGEM		= 0xc7d
-local COUNTER_NOTE	  = 0x1655
+local SET_SOULGEM	   = 0xc7d
+local COUNTER_NOTE	= 0x1655
 
 local CARD_SAYAKA_STUDENT = 999900008
 local CARD_SYMPHONIC	  = 999900011
@@ -65,7 +65,7 @@ function s.initial_effect(c)
 	e_mat4:SetCode(EFFECT_CANNOT_BE_LINK_MATERIAL)
 	c:RegisterEffect(e_mat4)
 
-	-- 2. ĐẶT COUNTER: Khi SS đặt Note Counter = số quái "Magica" & Cộng Counter khi Magica về tay (HOPT)
+	-- 2. ĐẶT COUNTER: Khi SS đặt Note Counter = số quái "Magica" & Cộng Counter khi Magica về tay
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_COUNTER)
@@ -87,6 +87,7 @@ function s.initial_effect(c)
 	-- 3. QUICK EFFECT: Trừ Note Counter trên sân để chọn 1 trong 3 hiệu ứng (HOPT)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SPECIAL_SUMMON+CATEGORY_DISABLE)
 	e2:SetType(EFFECT_TYPE_QUICK_O)
 	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetRange(LOCATION_MZONE)
@@ -109,7 +110,7 @@ function s.initial_effect(c)
 	e3:SetOperation(s.tokop)
 	c:RegisterEffect(e3)
 
-	-- 5. RETURN EXTRA DECK: Ở End Phase hoặc ngay sau khi giải quyết hiệu ứng -> SS Sayaka Student & chuyển Counter (HOPT)
+	-- 5. RETURN EXTRA DECK: Ở End Phase hoặc ngay sau khi giải quyết hiệu ứng
 	local e4a=Effect.CreateEffect(c)
 	e4a:SetDescription(aux.Stringid(id,6))
 	e4a:SetCategory(CATEGORY_TODECK+CATEGORY_SPECIAL_SUMMON)
@@ -160,24 +161,27 @@ function s.mfilter(c)
 	return c:IsFaceup() and c:IsSetCard(SET_MAGICA)
 end
 
+function s.ctfilter(c)
+	return c:IsFaceup() and c:IsCanAddCounter(COUNTER_NOTE,1)
+end
+
 function s.cttg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local ct=Duel.GetMatchingGroupCount(s.mfilter,tp,LOCATION_MZONE,0,nil)
-	if chk==0 then return ct>0 and Duel.IsExistingMatchingCard(Card.IsFaceup,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) end
+	if chk==0 then return ct>0 and Duel.IsExistingMatchingCard(s.ctfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) end
 end
 
 function s.ctop(e,tp,eg,ep,ev,re,r,rp)
 	local ct=Duel.GetMatchingGroupCount(s.mfilter,tp,LOCATION_MZONE,0,nil)
 	if ct<=0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
-	local g=Duel.SelectMatchingCard(tp,Card.IsFaceup,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
+	local g=Duel.SelectMatchingCard(tp,s.ctfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
 	if #g>0 then
 		g:GetFirst():AddCounter(COUNTER_NOTE,ct)
 	end
 end
 
--- Sửa c:IsMonster() thành c:IsType(TYPE_MONSTER)
 function s.rthfilter(c,tp)
-	return c:IsControler(tp) and c:IsSetCard(SET_MAGICA) and c:IsType(TYPE_MONSTER) and c:IsPreviousLocation(LOCATION_MZONE)
+	return c:IsPreviousControler(tp) and c:IsSetCard(SET_MAGICA) and c:IsType(TYPE_MONSTER) and c:IsPreviousLocation(LOCATION_MZONE)
 end
 
 function s.rthop(e,tp,eg,ep,ev,re,r,rp)
@@ -198,7 +202,6 @@ function s.stdfilter(c,e,tp)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
--- Hàm lọc các lá bài ngửa có thể bị negate hiệu ứng
 function s.negfilter(c)
 	return c:IsFaceup() and not c:IsDisabled()
 end
@@ -248,13 +251,12 @@ function s.opttg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
 	local sel=e:GetLabel()
 	if sel==1 then
-		e:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 		Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 	elseif sel==2 then
-		e:SetCategory(CATEGORY_SPECIAL_SUMMON)
 		Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_DECK)
 	elseif sel==3 then
-		e:SetCategory(CATEGORY_DISABLE)
+		local g=Duel.GetMatchingGroup(s.negfilter,tp,0,LOCATION_ONFIELD,nil)
+		Duel.SetOperationInfo(0,CATEGORY_DISABLE,g,#g,0,0)
 	end
 end
 
@@ -277,6 +279,7 @@ function s.optop(e,tp,eg,ep,ev,re,r,rp)
 	elseif sel==3 then
 		local g=Duel.GetMatchingGroup(s.negfilter,tp,0,LOCATION_ONFIELD,nil)
 		for tc in aux.Next(g) do
+			Duel.NegateRelatedChain(tc,RESET_TURN_SET) -- Khắc phục lỗi không dập được chain đang chạy
 			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)
 			e1:SetCode(EFFECT_DISABLE)
@@ -348,7 +351,7 @@ function s.edop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=g:GetFirst()
 	if tc and Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)>0 then
 		local ct=e:GetLabel()
-		if ct>0 then
+		if ct>0 and tc:IsCanAddCounter(COUNTER_NOTE,ct) then
 			tc:AddCounter(COUNTER_NOTE,ct)
 		end
 	end

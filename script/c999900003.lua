@@ -3,20 +3,14 @@
 local s,id=GetID()
 
 local SET_MAGICA		  = 0x654
-local SET_PUELLA_WITCH	= 0x1654
+local SET_PUELLA_WITCH  = 0x1654
 
 local CARD_MADOKA_STUDENT = 999900001
 local CARD_MADOKA_MAHOU   = 999900002
 local CARD_MADOKA_DIVINE  = 999900003
-local CARD_SAYAKA_MAHOU   = 999900009
-local CARD_MAMI_MAHOU	 = 999900014
-local CARD_HOMURA_MAHOU   = 999900020
 
 s.listed_series={SET_MAGICA, SET_PUELLA_WITCH}
-s.listed_names={
-	CARD_MADOKA_STUDENT, CARD_MADOKA_MAHOU, CARD_MADOKA_DIVINE,
-	CARD_SAYAKA_MAHOU, CARD_MAMI_MAHOU, CARD_HOMURA_MAHOU
-}
+s.listed_names={CARD_MADOKA_MAHOU, CARD_MADOKA_STUDENT}
 
 function s.initial_effect(c)
 	c:EnableReviveLimit()
@@ -32,7 +26,7 @@ function s.initial_effect(c)
 	e0:SetValue(s.splimit)
 	c:RegisterEffect(e0)
 
-	-- 1. Không thể bị trục xuất
+	-- 1. Không thể bị trục xuất hoặc gửi xuống GY bởi hiệu ứng lá bài
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
@@ -41,7 +35,6 @@ function s.initial_effect(c)
 	e1:SetValue(1)
 	c:RegisterEffect(e1)
 
-	-- Không thể bị gửi xuống GY bởi hiệu ứng lá bài
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
@@ -60,7 +53,7 @@ function s.initial_effect(c)
 	e3:SetTarget(s.rmlimit)
 	c:RegisterEffect(e3)
 
-	-- 3. Quái thú "Magica" không thể bị chỉ định bởi hiệu ứng
+	-- 3. Quái thú "Magica" bạn điều khiển không thể bị chỉ định bởi hiệu ứng
 	local e4=Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_FIELD)
 	e4:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
@@ -118,10 +111,12 @@ function s.witchfilter(c)
 	return c:IsFaceup() and c:IsSetCard(SET_PUELLA_WITCH) and (c:IsAbleToHand() or c:IsAbleToDeck())
 end
 
+-- Lọc quái thú trong tay CÓ ĐỀ CẬP "Madoka the Magica Mahou Shoujo", TRỪ CHÍNH NÓ
 function s.mahoufilter(c,e,tp)
-	local is_mahou = c:IsCode(CARD_MADOKA_MAHOU, CARD_SAYAKA_MAHOU, CARD_MAMI_MAHOU, CARD_HOMURA_MAHOU)
-	local is_rit = c:IsType(TYPE_RITUAL) and c:IsSetCard(SET_MAGICA)
-	return (is_mahou or is_rit) and c:IsCanBeSpecialSummoned(e,0,tp,true,false)
+	return c:IsMonster() 
+		and c:IsListsCode(CARD_MADOKA_MAHOU) 
+		and not c:IsCode(CARD_MADOKA_MAHOU)
+		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,true,false)
 end
 
 function s.studentfilter(c,e,tp)
@@ -135,13 +130,13 @@ function s.efftg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.effop(e,tp,eg,ep,ev,re,r,rp)
-	-- 1. Trả toàn bộ "Magica Puella Witch" ngửa mặt trên sân về tay/Extra Deck
+	-- 1. Trả toàn bộ "Magica Puella Witch" ngửa mặt trên sân về tay
 	local wg=Duel.GetMatchingGroup(s.witchfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
 	if #wg>0 then
 		Duel.SendtoHand(wg,nil,REASON_EFFECT)
 	end
 
-	-- 2. Special Summon toàn bộ quái thú "Magica Mahou Shoujo" / Magica Ritual từ tay
+	-- 2. Special Summon TẤT CẢ quái thú từ tay có đề cập "Madoka the Magica Mahou Shoujo" (Coi như Ritual Summon)
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	local rg=Duel.GetMatchingGroup(s.mahoufilter,tp,LOCATION_HAND,0,nil,e,tp)
 	if ft>0 and #rg>0 then
@@ -151,9 +146,8 @@ function s.effop(e,tp,eg,ep,ev,re,r,rp)
 			rg=rg:Select(tp,ft,ft,nil)
 		end
 		for tc in aux.Next(rg) do
-			local sumtype = tc:IsType(TYPE_RITUAL) and SUMMON_TYPE_RITUAL or 0
-			if Duel.SpecialSummonStep(tc,sumtype,tp,tp,true,false,POS_FACEUP) then
-				if tc:IsType(TYPE_RITUAL) then tc:CompleteProcedure() end
+			if Duel.SpecialSummonStep(tc,SUMMON_TYPE_RITUAL,tp,tp,true,false,POS_FACEUP) then
+				tc:CompleteProcedure()
 			end
 		end
 		Duel.SpecialSummonComplete()
@@ -175,7 +169,7 @@ function s.effop(e,tp,eg,ep,ev,re,r,rp)
 	if #g>0 then
 		Duel.BreakEffect()
 		for tc in aux.Next(g) do
-			local e1=Effect.CreateEffect(e:GetHandler())
+			local e1=Effect.CreateEffect(tc)
 			e1:SetDescription(aux.Stringid(id,1))
 			e1:SetCategory(CATEGORY_DESTROY+CATEGORY_HANDES)
 			e1:SetType(EFFECT_TYPE_QUICK_O)

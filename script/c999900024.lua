@@ -3,12 +3,12 @@
 local s,id=GetID()
 
 local SET_MAGICA			 = 0x654
-local SET_PUELLA_WITCH	   = 0x1654
+local SET_PUELLA_WITCH	 = 0x1654
 
-local CARD_LAST_GRACE		= 999900004
+local CARD_LAST_GRACE	   = 999900004
 local CARD_SYMPHONIC_CADENZA = 999900011
-local CARD_TIRO_FINALE	   = 999900016
-local CARD_HOMURA_MAHOU	  = 999900020
+local CARD_TIRO_FINALE	 = 999900016
+local CARD_HOMURA_MAHOU   = 999900020
 
 s.listed_series={SET_MAGICA, SET_PUELLA_WITCH}
 s.listed_names={
@@ -23,7 +23,7 @@ function s.initial_effect(c)
 	c:EnableReviveLimit()
 	Link.AddProcedure(c, s.matfilter, 3, 3, s.lcheck)
 
-	-- Đắc thù triệu hồi: Phải triệu hồi Link trước, hoặc triệu hồi bằng hiệu ứng của Homura Mahou Shoujo
+	-- Phải được Link Summon trước, hoặc Special Summon bằng hiệu ứng của Homura Mahou Shoujo
 	local e0=Effect.CreateEffect(c)
 	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 	e0:SetType(EFFECT_TYPE_SINGLE)
@@ -31,7 +31,7 @@ function s.initial_effect(c)
 	e0:SetValue(s.splimit)
 	c:RegisterEffect(e0)
 
-	-- 1. Khi được Special Summon: Gửi lá này xuống GY -> Target tối đa 3 quái thú "Magica" Level 4 dưới GY -> Special Summon
+	-- 1. Khi Special Summon: Gửi lá này xuống GY -> Target tối đa 3 quái thú "Magica" Level 4 dưới GY -> Special Summon
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TOGRAVE+CATEGORY_SPECIAL_SUMMON)
@@ -43,7 +43,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
-	-- 2. Dưới GY (1 Turn 1 Lần): Xáo lá này + 3 Normal Spell "Magica" vào Deck -> Trả 1 lá trên sân về Deck (hoặc kích hoạt 1 Spell từ Deck)
+	-- 2. Dưới GY (1 Turn 1 Lần): Xáo lá này + 3 Normal Spell "Magica" vào Deck -> Trả 1 lá về Deck (hoặc kích hoạt 1 Spell từ Deck)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TODECK)
@@ -72,7 +72,7 @@ function s.lcheck(g,lc,sumtype,tp)
 end
 
 function s.splimit(e,se,sp,st)
-	return (st&SUMMON_TYPE_LINK)==SUMMON_TYPE_LINK or (se and se:GetHandler():IsCode(CARD_HOMURA_MAHOU))
+	return ((st&SUMMON_TYPE_LINK)==SUMMON_TYPE_LINK) or (se and se:GetHandler():IsCode(CARD_HOMURA_MAHOU))
 end
 
 --------------------------------------------------------------------------------
@@ -89,9 +89,11 @@ function s.spfilter(c,e,tp)
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	local c=e:GetHandler()
 	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and s.spfilter(chkc,e,tp) end
 	if chk==0 then
-		return Duel.IsExistingTarget(s.spfilter,tp,LOCATION_GRAVE,0,1,nil,e,tp)
+		return Duel.GetMZoneCount(tp,c)>0
+			and Duel.IsExistingTarget(s.spfilter,tp,LOCATION_GRAVE,0,1,nil,e,tp)
 	end
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	local max=math.min(3,ft)
@@ -128,7 +130,6 @@ function s.gycost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
 	local g=Duel.SelectMatchingCard(tp,s.nspellfilter,tp,LOCATION_GRAVE,0,3,3,c)
 	
-	-- Kiểm tra xem 3 lá bài phép được chọn có đúng bộ 3 combo không
 	local is_combo = g:IsExists(Card.IsCode,1,nil,CARD_LAST_GRACE)
 				 and g:IsExists(Card.IsCode,1,nil,CARD_TIRO_FINALE)
 				 and g:IsExists(Card.IsCode,1,nil,CARD_SYMPHONIC_CADENZA)
@@ -148,7 +149,6 @@ end
 
 function s.actspellfilter(c,e,tp)
 	return c:IsCode(CARD_LAST_GRACE, CARD_TIRO_FINALE, CARD_SYMPHONIC_CADENZA)
-		and c:GetActivateEffect():IsActivatable(tp,true,true)
 end
 
 function s.mahoufilter(c)
@@ -157,21 +157,22 @@ end
 
 function s.gyop(e,tp,eg,ep,ev,re,r,rp)
 	local is_combo=(e:GetLabel()==1)
-	local can_act=is_combo and Duel.IsExistingMatchingCard(s.actspellfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
+	local can_act=is_combo 
+		and Duel.GetLocationCount(tp,LOCATION_SZONE)>0 
+		and Duel.IsExistingMatchingCard(s.actspellfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
 	
-	if can_act and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-		-- Kích hoạt 1 trong các lá Spells đó trực tiếp từ Deck
+	if can_act and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RESOLVECARD)
 		local g=Duel.SelectMatchingCard(tp,s.actspellfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
 		local tc=g:GetFirst()
 		if tc then
-			local te=tc:GetActivateEffect()
-			
-			-- Kiểm tra quái thú "Magica Mahou Shoujo" trên sân
 			local has_mahou=Duel.IsExistingMatchingCard(s.mahoufilter,tp,LOCATION_MZONE,0,1,nil)
 			
+			Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
+			local te=tc:GetActivateEffect()
+			
+			-- Nếu có quái "Magica Mahou Shoujo" trên sân: Kháng Negate + Cấm đối thủ Chain
 			if has_mahou then
-				-- Việc kích hoạt và hiệu ứng không thể bị negate
 				local e1=Effect.CreateEffect(e:GetHandler())
 				e1:SetType(EFFECT_TYPE_FIELD)
 				e1:SetCode(EFFECT_CANNOT_INACTIVATE)
@@ -186,21 +187,19 @@ function s.gyop(e,tp,eg,ep,ev,re,r,rp)
 				e2:SetReset(RESET_CHAIN)
 				Duel.RegisterEffect(e2,tp)
 				
-				-- Đối thủ không thể kích hoạt card/hiệu ứng phản ứng lại
 				Duel.SetChainLimit(s.chainlm)
 			end
 			
-			-- Thực hiện kích hoạt Spell từ Deck
-			Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
 			local tg=te:GetTarget()
 			local op=te:GetOperation()
 			tc:CreateEffectRelation(te)
 			if tg then tg(te,tp,eg,ep,ev,re,r,rp,1) end
 			if op then op(te,tp,eg,ep,ev,re,r,rp) end
 			tc:ReleaseEffectRelation(te)
+			
+			Duel.SendtoGrave(tc,REASON_EFFECT)
 		end
 	else
-		-- Trả 1 lá bài trên sân về Deck
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
 		local sg=Duel.SelectMatchingCard(tp,Card.IsAbleToDeck,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
 		if #sg>0 then

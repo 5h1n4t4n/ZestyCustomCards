@@ -3,7 +3,7 @@
 local s,id=GetID()
 
 local SET_MAGICA		= 0x654
-local SET_SOULGEM	   = 0xc7d
+local SET_SOULGEM	  = 0xc7d
 local CARD_MAMI_STUDENT = 999900013
 local CARD_MAMI_MAHOU   = 999900014
 local CARD_MAMI_WITCH   = 999900015
@@ -11,7 +11,6 @@ local TOKEN_GRIEF_SEED  = 999900006
 
 s.listed_series={SET_SOULGEM, SET_MAGICA}
 s.listed_names={CARD_MAMI_STUDENT, CARD_MAMI_MAHOU, CARD_MAMI_WITCH, TOKEN_GRIEF_SEED}
-s.add_setcode={SET_MAGICA}
 
 function s.initial_effect(c)
 	-- Luôn được xem là lá bài "Magica"
@@ -22,7 +21,7 @@ function s.initial_effect(c)
 	e0:SetValue(SET_MAGICA)
 	c:RegisterEffect(e0)
 
-	-- Điều kiện Trang bị (Equip Limit) khi chọn Option 2
+	-- Điều kiện Trang bị (Equip Limit)
 	local e_eq=Effect.CreateEffect(c)
 	e_eq:SetType(EFFECT_TYPE_SINGLE)
 	e_eq:SetCode(EFFECT_EQUIP_LIMIT)
@@ -30,7 +29,7 @@ function s.initial_effect(c)
 	e_eq:SetValue(s.eqlimit)
 	c:RegisterEffect(e_eq)
 
-	-- KÍCH HOẠT (QUICK-PLAY SPELL): Chọn 1 trong 2 hiệu ứng
+	-- 1. KÍCH HOẠT: Chọn 1 trong 2 hiệu ứng
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
@@ -40,23 +39,36 @@ function s.initial_effect(c)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 
-	-- CẤP HIỆU ỨNG CHO QUÁI THÚ ĐƯỢC TRANG BỊ
+	-- Hiệu ứng được trao cho quái thú (Khai báo độc lập)
+	local ge=Effect.CreateEffect(c)
+	ge:SetDescription(aux.Stringid(id,2))
+	ge:SetCategory(CATEGORY_DISABLE)
+	ge:SetType(EFFECT_TYPE_QUICK_O)
+	ge:SetCode(EVENT_FREE_CHAIN)
+	ge:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	ge:SetRange(LOCATION_MZONE)
+	ge:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E+TIMING_MAIN_END)
+	ge:SetCountLimit(1)
+	ge:SetTarget(s.distg)
+	ge:SetOperation(s.disop)
+
+	-- CẤP HIỆU ỨNG CHO QUÁI THÚ ĐƯỢC TRANG BỊ (Đã sửa SetValue chuẩn)
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
 	e2:SetRange(LOCATION_SZONE)
 	e2:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
 	e2:SetTarget(s.eftg)
-	e2:SetLabelObject(s.granted_effect(c))
+	e2:SetValue(function(e,c) return ge end)
 	c:RegisterEffect(e2)
 
-	-- HIỆU ỨNG TỪ GY / KHI BỊ DISCARD: Thu hồi về tay & Special Summon Grief Seed Token
+	-- 2. HIỆU ỨNG TỪ GY: Thu hồi về tay & Special Summon Grief Seed Token
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,3))
 	e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN)
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetProperty(EFFECT_FLAG_DELAY)
 	e3:SetCode(EVENT_TO_GRAVE)
-	e3:SetCountLimit(1,id+100)
+	e3:SetCountLimit(2,TOKEN_GRIEF_SEED,EFFECT_COUNT_CODE_OATH)
 	e3:SetTarget(s.gytg)
 	e3:SetOperation(s.gyop)
 	c:RegisterEffect(e3)
@@ -101,12 +113,13 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 		e:SetCategory(CATEGORY_EQUIP)
 		e:SetProperty(EFFECT_FLAG_CARD_TARGET)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EQUIP)
-		local g=Duel.SelectTarget(tp,s.mamifilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
+		Duel.SelectTarget(tp,s.mamifilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
 		Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,0,0)
 	end
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
 	local op=e:GetLabel()
 	if op==0 then
 		-- Search 1 Mami Student hoặc Mami Mahou Shoujo từ Deck
@@ -115,10 +128,13 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		if #g>0 then
 			Duel.SendtoHand(g,nil,REASON_EFFECT)
 			Duel.ConfirmCards(1-tp,g)
+			if c:IsRelateToEffect(e) then
+				Duel.BreakEffect()
+				Duel.SendtoGrave(c,REASON_EFFECT) -- Khắc phục lỗi kẹt sân
+			end
 		end
 	else
 		-- Trang bị lá bài này vào quái thú "Mami"
-		local c=e:GetHandler()
 		local tc=Duel.GetFirstTarget()
 		if c:IsRelateToEffect(e) and tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then
 			Duel.Equip(tp,c,tc)
@@ -131,21 +147,6 @@ end
 --------------------------------------------------------------------------------
 function s.eftg(e,c)
 	return e:GetHandler():GetEquipTarget()==c
-end
-
-function s.granted_effect(c)
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,2))
-	e1:SetCategory(CATEGORY_DISABLE)
-	e1:SetType(EFFECT_TYPE_QUICK_O)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E+TIMING_MAIN_END)
-	e1:SetCountLimit(1)
-	e1:SetTarget(s.distg)
-	e1:SetOperation(s.disop)
-	return e1
 end
 
 function s.distg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
@@ -183,7 +184,7 @@ function s.disop(e,tp,eg,ep,ev,re,r,rp)
 		e3:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
 		tc:RegisterEffect(e3)
 
-		-- Không thể dùng làm nguyên liệu Fusion, Synchro, Xyz, Link
+		-- Không thể dùng làm nguyên liệu Extra Deck
 		local e4=Effect.CreateEffect(c)
 		e4:SetType(EFFECT_TYPE_SINGLE)
 		e4:SetCode(EFFECT_CANNOT_BE_FUSION_MATERIAL)
@@ -206,14 +207,14 @@ function s.disop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------------------------------------
--- EFFECT 3: GY / DISCARD TRIGGER EFFECT
+-- EFFECT 2: GY TRIGGER EFFECT
 --------------------------------------------------------------------------------
 function s.gytg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then
 		return c:IsAbleToHand()
 			and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-			and Duel.IsPlayerCanSpecialSummonMonster(tp,TOKEN_GRIEF_SEED,SET_MAGICA,TYPES_TOKEN,300,300,1,RACE_SPELLCASTER,ATTRIBUTE_DARK)
+			and Duel.IsPlayerCanSpecialSummonMonster(tp,TOKEN_GRIEF_SEED,0,TYPES_TOKEN+TYPE_MONSTER,300,300,1,RACE_SPELLCASTER,ATTRIBUTE_DARK)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,c,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,0,0)
@@ -223,8 +224,9 @@ end
 function s.gyop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if c:IsRelateToEffect(e) and Duel.SendtoHand(c,nil,REASON_EFFECT)>0 and c:IsLocation(LOCATION_HAND) then
+		Duel.ConfirmCards(1-tp,c)
 		if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0
-			or not Duel.IsPlayerCanSpecialSummonMonster(tp,TOKEN_GRIEF_SEED,SET_MAGICA,TYPES_TOKEN,300,300,1,RACE_SPELLCASTER,ATTRIBUTE_DARK) then return end
+			or not Duel.IsPlayerCanSpecialSummonMonster(tp,TOKEN_GRIEF_SEED,0,TYPES_TOKEN+TYPE_MONSTER,300,300,1,RACE_SPELLCASTER,ATTRIBUTE_DARK) then return end
 		
 		local token=Duel.CreateToken(tp,TOKEN_GRIEF_SEED)
 		if Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP)>0 then

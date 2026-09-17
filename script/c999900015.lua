@@ -4,10 +4,10 @@ local s,id=GetID()
 
 local SET_MAGICA			   = 0x654
 local SET_MAGICA_PUELLA_WITCH  = 0x1654
-local SET_SOULGEM			  = 0xc7d
-local CARD_MAMI_STUDENT		= 999900013
-local CARD_MAMI_MAHOU		  = 999900014
-local CARD_TIRO_FINALE		 = 999900016
+local SET_SOULGEM			 = 0xc7d
+local CARD_MAMI_STUDENT	 = 999900013
+local CARD_MAMI_MAHOU		 = 999900014
+local CARD_TIRO_FINALE	   = 999900016
 
 s.listed_series={SET_MAGICA, SET_MAGICA_PUELLA_WITCH, SET_SOULGEM}
 s.listed_names={CARD_MAMI_STUDENT, CARD_MAMI_MAHOU, CARD_TIRO_FINALE}
@@ -42,23 +42,23 @@ function s.initial_effect(c)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E+TIMING_MAIN_END)
 	e2:SetCountLimit(1,id)
+	e2:SetTarget(s.atktg)
 	e2:SetOperation(s.atkop)
 	c:RegisterEffect(e2)
 
-	-- 3. In-hand Effect (Trong lượt của bạn): Reveal -> Nhận 300 damage -> Search "Magica: TIRO FINALE" (HOPT)
+	-- 3. In-hand Effect: Reveal -> Nhận 300 damage -> Search "Magica: TIRO FINALE" (HOPT)
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetCategory(CATEGORY_DAMAGE+CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e3:SetType(EFFECT_TYPE_IGNITION)
 	e3:SetRange(LOCATION_HAND)
 	e3:SetCountLimit(1,id+100)
-	e3:SetCondition(s.srchcon)
 	e3:SetCost(s.srchcost)
 	e3:SetTarget(s.srchtg)
 	e3:SetOperation(s.srchop)
 	c:RegisterEffect(e3)
 
-	-- 4. Trigger Effect: Khi lá này kích hoạt hiệu ứng -> Thu hồi về tay & Special Summon Mami Student từ Tay/GY
+	-- 4. Trigger Effect: Khi lá này kích hoạt hiệu ứng -> Thu hồi về tay/ED & Special Summon Mami Student
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,2))
 	e4:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON)
@@ -66,6 +66,7 @@ function s.initial_effect(c)
 	e4:SetCode(EVENT_CHAINING)
 	e4:SetProperty(EFFECT_FLAG_DELAY)
 	e4:SetRange(LOCATION_MZONE)
+	e4:SetCountLimit(1,id+200)
 	e4:SetCondition(s.thcon)
 	e4:SetTarget(s.thtg)
 	e4:SetOperation(s.thop)
@@ -80,7 +81,7 @@ end
 -- EFFECT 1: BATTLE INDESTRUCTIBILITY
 --------------------------------------------------------------------------------
 function s.indtg(e,c)
-	return c==e:GetHandler() or (c:IsSetCard(SET_MAGICA) and c:IsControler(e:GetHandlerPlayer()))
+	return c:IsSetCard(SET_MAGICA)
 end
 
 --------------------------------------------------------------------------------
@@ -88,6 +89,10 @@ end
 --------------------------------------------------------------------------------
 function s.atkfilter(c)
 	return c:IsFaceup() and c:IsSetCard(SET_MAGICA)
+end
+
+function s.atktg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.atkfilter,tp,LOCATION_MZONE,0,1,nil) end
 end
 
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
@@ -108,17 +113,13 @@ end
 --------------------------------------------------------------------------------
 -- EFFECT 3: REVEAL IN HAND -> SEARCH TIRO FINALE
 --------------------------------------------------------------------------------
-function s.srchcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetTurnPlayer()==tp
-end
-
 function s.srchcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return not c:IsPublic() end
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_PUBLIC)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TOHAND+RESET_PHASE+PHASE_END)
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
 	c:RegisterEffect(e1)
 end
 
@@ -144,10 +145,10 @@ function s.srchop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------------------------------------
--- EFFECT 4: RETURN TO HAND & SPECIAL SUMMON MAMI STUDENT ON EFFECT ACTIVATION
+-- EFFECT 4: RETURN TO HAND/EXTRA DECK & SPECIAL SUMMON MAMI STUDENT
 --------------------------------------------------------------------------------
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
-	return re:GetHandler()==e:GetHandler() and re:GetHandler()~=e
+	return re:GetHandler()==e:GetHandler() and re~=e
 end
 
 function s.spstudentfilter(c,e,tp)
@@ -167,7 +168,8 @@ end
 
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if c:IsRelateToEffect(e) and Duel.SendtoHand(c,nil,REASON_EFFECT)>0 and c:IsLocation(LOCATION_HAND) then
+	if c:IsRelateToEffect(e) and Duel.SendtoHand(c,nil,REASON_EFFECT)>0 
+		and (c:IsLocation(LOCATION_HAND) or c:IsLocation(LOCATION_EXTRA)) then
 		if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		local g=Duel.SelectMatchingCard(tp,s.spstudentfilter,tp,LOCATION_HAND+LOCATION_GRAVE,0,1,1,nil,e,tp)

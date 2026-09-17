@@ -3,7 +3,7 @@
 local s,id=GetID()
 
 local SET_MAGICA	   = 0x654
-local SET_SOULGEM	  = 0xc7d
+local SET_SOULGEM	 = 0xc7d
 local TOKEN_GRIEF_SEED = 999900006
 
 s.listed_series={SET_MAGICA, SET_SOULGEM}
@@ -24,18 +24,19 @@ function s.initial_effect(c)
 	e0:SetValue(SET_MAGICA)
 	c:RegisterEffect(e0)
 
-	-- Điều kiện Trang bị (Equip Limit)
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_SINGLE)
-	e0:SetCode(EFFECT_EQUIP_LIMIT)
-	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e0:SetValue(s.eqlimit)
-	c:RegisterEffect(e0)
+	-- Điều kiện Trang bị (Equip Limit) - Đã sửa tên biến e_eq
+	local e_eq=Effect.CreateEffect(c)
+	e_eq:SetType(EFFECT_TYPE_SINGLE)
+	e_eq:SetCode(EFFECT_EQUIP_LIMIT)
+	e_eq:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e_eq:SetValue(s.eqlimit)
+	c:RegisterEffect(e_eq)
 
-	-- Kích hoạt: Chọn 1 trong 2 hiệu ứng (Search 1 "Homura" HOẶC Trang bị cho 1 "Homura")
+	-- 1. Kích hoạt: Chọn 1 trong 2 hiệu ứng
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.operation)
 	c:RegisterEffect(e1)
@@ -65,14 +66,14 @@ function s.initial_effect(c)
 	e4:SetValue(s.effectfilter)
 	c:RegisterEffect(e4)
 
-	-- GY/Discard Trigger: Special Summon Token -> Send 1 Level 4 "Magica" từ Deck xuống GY
+	-- 2. GY Trigger: Special Summon Token -> Send 1 Level 4 "Magica" từ Deck xuống GY
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,2))
 	e5:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN+CATEGORY_TOGRAVE)
 	e5:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e5:SetProperty(EFFECT_FLAG_DELAY)
 	e5:SetCode(EVENT_TO_GRAVE)
-	e5:SetCountLimit(1,id)
+	e5:SetCountLimit(1,id+100)
 	e5:SetTarget(s.gytg)
 	e5:SetOperation(s.gyop)
 	c:RegisterEffect(e5)
@@ -99,7 +100,8 @@ end
 
 function s.effectfilter(e,ct)
 	local te=Duel.GetChainInfo(ct,CHAININFO_TRIGGERING_EFFECT)
-	return te and te:GetHandler()==e:GetHandler():GetEquipTarget()
+	local eq=e:GetHandler():GetEquipTarget()
+	return te and eq and te:GetHandler()==eq
 end
 
 --------------------------------------------------------------------------------
@@ -127,7 +129,7 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 		e:SetCategory(CATEGORY_EQUIP)
 		e:SetProperty(EFFECT_FLAG_CARD_TARGET)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EQUIP)
-		local g=Duel.SelectTarget(tp,s.eqfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
+		Duel.SelectTarget(tp,s.eqfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
 		Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,0,0)
 	end
 end
@@ -142,6 +144,10 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 		if #g>0 then
 			Duel.SendtoHand(g,nil,REASON_EFFECT)
 			Duel.ConfirmCards(1-tp,g)
+			if c:IsRelateToEffect(e) then
+				Duel.BreakEffect()
+				Duel.SendtoGrave(c,REASON_EFFECT) -- Khắc phục lỗi kẹt bài trên sân
+			end
 		end
 	else
 		-- Trang bị lá này cho 1 quái thú "Homura" trên sân
@@ -178,7 +184,7 @@ function s.gyop(e,tp,eg,ep,ev,re,r,rp)
 
 	local target_player=tp
 	if b1 and b2 then
-		local op=Duel.SelectOption(tp,aux.Stringid(id,3),aux.Stringid(id,4)) -- 3: Your field, 4: Opponent's field
+		local op=Duel.SelectOption(tp,aux.Stringid(id,3),aux.Stringid(id,4))
 		if op==1 then target_player=1-tp end
 	elseif b2 then
 		target_player=1-tp

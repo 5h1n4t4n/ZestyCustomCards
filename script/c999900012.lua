@@ -3,15 +3,15 @@
 local s,id=GetID()
 
 local SET_MAGICA		  = 0x654
-local SET_SOULGEM		= 0xc7d
+local SET_SOULGEM	   = 0xc7d
 local CARD_SAYAKA_STUDENT = 999900008
 local CARD_SAYAKA_MAHOU   = 999900009
 local CARD_OKTAVIA_WITCH  = 999900010
-local TOKEN_GRIEF_SEED	= 999900006
-local COUNTER_NOTE		= 0x1655
+local TOKEN_GRIEF_SEED  = 999900006
+local COUNTER_NOTE	  = 0x1655
 
 -- Custom Event Code cho việc Pay LP
-local EVENT_PAY_LP		= 99990000
+local EVENT_PAY_LP	  = 99990000
 
 s.listed_series={SET_MAGICA, SET_SOULGEM}
 s.listed_names={CARD_SAYAKA_STUDENT, CARD_SAYAKA_MAHOU, CARD_OKTAVIA_WITCH, TOKEN_GRIEF_SEED}
@@ -33,7 +33,7 @@ function s.initial_effect(c)
 	e_eq:SetValue(s.eqlimit)
 	c:RegisterEffect(e_eq)
 
-	-- Kích hoạt bài từ tay (HOPT Card Activation)
+	-- 1. Kích hoạt bài từ tay (HOPT Card Activation)
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_EQUIP)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
@@ -82,13 +82,14 @@ function s.initial_effect(c)
 	e4:SetValue(function(e,c) return e_g3 end)
 	c:RegisterEffect(e4)
 
-	-- Hiệu ứng khi bị discard hoặc gửi xuống GY
+	-- 2. Hiệu ứng khi bị gửi xuống GY (Đã thêm Count Limit tránh Loop)
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,3))
 	e5:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN)
 	e5:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e5:SetProperty(EFFECT_FLAG_DELAY)
 	e5:SetCode(EVENT_TO_GRAVE)
+	e5:SetCountLimit(2,TOKEN_GRIEF_SEED,EFFECT_COUNT_CODE_OATH)
 	e5:SetTarget(s.gytg)
 	e5:SetOperation(s.gyop)
 	c:RegisterEffect(e5)
@@ -139,6 +140,7 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
 	local op=e:GetLabel()
 	if op==0 then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
@@ -146,9 +148,12 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		if #g>0 then
 			Duel.SendtoHand(g,nil,REASON_EFFECT)
 			Duel.ConfirmCards(1-tp,g)
+			if c:IsRelateToEffect(e) then
+				Duel.BreakEffect()
+				Duel.SendtoGrave(c,REASON_EFFECT) -- Khắc phục lỗi kẹt bài trên sân
+			end
 		end
 	else
-		local c=e:GetHandler()
 		local tc=Duel.GetFirstTarget()
 		if c:IsRelateToEffect(e) and tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then
 			Duel.Equip(tp,c,tc)
@@ -202,7 +207,7 @@ function s.ctop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------------------------------------
--- GY TRIGGER EFFECT (RECURSION + TOKEN WITH COST EFFECT)
+-- GY TRIGGER EFFECT
 --------------------------------------------------------------------------------
 function s.gytg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
@@ -219,6 +224,7 @@ end
 function s.gyop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if c:IsRelateToEffect(e) and Duel.SendtoHand(c,nil,REASON_EFFECT)>0 and c:IsLocation(LOCATION_HAND) then
+		Duel.ConfirmCards(1-tp,c)
 		if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0
 			or not Duel.IsPlayerCanSpecialSummonMonster(tp,TOKEN_GRIEF_SEED,0,TYPES_TOKEN+TYPE_MONSTER,300,300,1,RACE_SPELLCASTER,ATTRIBUTE_DARK) then return end
 		local token=Duel.CreateToken(tp,TOKEN_GRIEF_SEED)

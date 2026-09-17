@@ -3,11 +3,11 @@
 local s,id=GetID()
 
 local SET_MAGICA		  = 0x654
-local SET_PUELLA_WITCH	= 0x1654
+local SET_PUELLA_WITCH  = 0x1654
 local CARD_HOMURA_RITUAL  = 999900020
-local CARD_HOMURA_LINK	= 999900024
+local CARD_HOMURA_LINK  = 999900024
 local CARD_EVENT_HORIZON  = 999900021
-local TOKEN_GRIEF_SEED	= 999900006
+local TOKEN_GRIEF_SEED  = 999900006
 
 s.listed_series={SET_MAGICA, SET_PUELLA_WITCH}
 s.listed_names={CARD_HOMURA_RITUAL, CARD_HOMURA_LINK, CARD_EVENT_HORIZON, TOKEN_GRIEF_SEED}
@@ -17,20 +17,18 @@ function s.initial_effect(c)
 	Xyz.AddProcedure(c, aux.FilterBoolFunction(Card.IsSetCard, SET_MAGICA), 12, 2, nil, nil, Xyz.InfiniteMats)
 	c:EnableReviveLimit()
 
-	-- 1. Triệu hồi Xyz đặc biệt từ Extra Deck trong lượt bất kỳ bằng cách target 1 Homura Ritual/Link dưới GY
+	-- 1. Triệu hồi Đặc biệt từ Extra Deck bằng cách chọn 1 Homura Ritual/Link dưới GY làm nguyên liệu
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_QUICK_O)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_SPSUMMON_PROCEDURE)
+	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
 	e1:SetRange(LOCATION_EXTRA)
-	e1:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
-	e1:SetTarget(s.xyzspytg)
+	e1:SetCondition(s.xyzspcon)
+	e1:SetTarget(s.xyzsptg)
 	e1:SetOperation(s.xyzspop)
 	c:RegisterEffect(e1)
 
-	-- 2. Hiệu ứng liên tục: Khi lá này có nguyên liệu, các quái thú "Magica" ngửa mặt trên sân không chịu ảnh hưởng bởi hiệu ứng card của đối thủ
+	-- 2. Hiệu ứng liên tục: Khi lá này có nguyên liệu, quái thú "Magica" ngửa mặt không chịu ảnh hưởng bởi hiệu ứng card đối thủ
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetCode(EFFECT_IMMUNE_EFFECT)
@@ -55,6 +53,7 @@ function s.initial_effect(c)
 	-- 4. Quick Effect: Khi đối thủ kích hoạt lá bài/hiệu ứng -> gỡ 1 nguyên liệu về tay -> Đổi hiệu ứng đó của đối thủ
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,2))
+	e4:SetCategory(CATEGORY_DESTROY+CATEGORY_DRAW)
 	e4:SetType(EFFECT_TYPE_QUICK_O)
 	e4:SetCode(EVENT_CHAINING)
 	e4:SetRange(LOCATION_MZONE)
@@ -76,34 +75,36 @@ function s.initial_effect(c)
 end
 
 --------------------------------------------------------------------------------
--- 1. SPECIAL XYZ SUMMON FROM EXTRA DECK LOGIC
+-- 1. SPECIAL XYZ SUMMON PROCEDURE LOGIC
 --------------------------------------------------------------------------------
 function s.xyzfilter(c)
 	return (c:IsCode(CARD_HOMURA_RITUAL) or c:IsCode(CARD_HOMURA_LINK)) and c:IsCanBeXyzMaterial()
 end
 
-function s.xyzspytg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	local c=e:GetHandler()
-	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and s.xyzfilter(chkc) end
-	if chk==0 then
-		return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
-			and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_XYZ,tp,false,false)
-			and Duel.IsExistingTarget(s.xyzfilter,tp,LOCATION_GRAVE,0,1,nil)
-	end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local g=Duel.SelectTarget(tp,s.xyzfilter,tp,LOCATION_GRAVE,0,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
+function s.xyzspcon(e,c)
+	if c==nil then return true end
+	local tp=c:GetControler()
+	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
+		and Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_GRAVE,0,1,nil)
 end
 
-function s.xyzspop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local tc=Duel.GetFirstTarget()
-	if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)>0 then
-		c:CompleteProcedure()
-		if tc and tc:IsRelateToEffect(e) and not tc:IsImmuneToEffect(e) then
-			Duel.Overlay(c,tc)
-		end
+function s.xyzsptg(e,tp,eg,ep,ev,re,r,rp,c)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
+	local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+	if #g>0 then
+		g:KeepAlive()
+		e:SetLabelObject(g)
+		return true
 	end
+	return false
+end
+
+function s.xyzspop(e,tp,eg,ep,ev,re,r,rp,c)
+	local g=e:GetLabelObject()
+	if not g then return end
+	c:SetMaterial(g)
+	Duel.Overlay(c,g)
+	g:DeleteGroup()
 end
 
 --------------------------------------------------------------------------------
@@ -118,7 +119,7 @@ function s.immtg(e,c)
 end
 
 function s.efilter(e,te)
-	return te:GetOwnerPlayer()~=e:GetOwnerPlayer()
+	return te:GetOwnerPlayer()~=e:GetHandlerPlayer()
 end
 
 --------------------------------------------------------------------------------
@@ -156,8 +157,8 @@ end
 
 function s.chcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	if chk==0 then return c:GetOverlayCount()>0 end
-	local g=c:GetOverlayGroup()
+	if chk==0 then return c:GetOverlayGroup():IsExists(Card.IsAbleToHand,1,nil) end
+	local g=c:GetOverlayGroup():Filter(Card.IsAbleToHand,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
 	local sg=g:Select(tp,1,1,nil)
 	Duel.SendtoHand(sg,REASON_COST)
@@ -190,8 +191,8 @@ end
 --------------------------------------------------------------------------------
 function s.tokentg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
-	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,0)
+	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,0,0)
 end
 
 function s.tokenop(e,tp,eg,ep,ev,re,r,rp)

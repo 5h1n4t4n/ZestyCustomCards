@@ -3,12 +3,12 @@
 local s,id=GetID()
 
 local SET_MAGICA		  = 0x654
-local SET_SOULGEM		 = 0xc7d
-local CARD_MADOKA_1	   = 999900001
-local CARD_MADOKA_2	   = 999900002
-local CARD_MADOKA_3	   = 999900003
-local CARD_KYUBEI		 = 999900007
-local TOKEN_GRIEF_SEED	= 999900006
+local SET_SOULGEM		= 0xc7d
+local CARD_MADOKA_1	= 999900001
+local CARD_MADOKA_2	= 999900002
+local CARD_MADOKA_3	= 999900003
+local CARD_KYUBEI		= 999900007
+local TOKEN_GRIEF_SEED  = 999900006
 
 s.listed_series={SET_MAGICA, SET_SOULGEM}
 s.listed_names={CARD_MADOKA_1, CARD_MADOKA_2, CARD_MADOKA_3, CARD_KYUBEI, TOKEN_GRIEF_SEED}
@@ -93,7 +93,7 @@ function s.madokafilter(c)
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_MZONE) and s.madokafilter(chkc) end
+	if chkc then return chkc:IsLocation(LOCATION_MZONE) and s.madokafilter(chkc) and chkc:IsControler(tp) end
 	local b1=Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil)
 	local b2=Duel.IsExistingTarget(s.madokafilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
 	if chk==0 then return b1 or b2 end
@@ -126,11 +126,16 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local op=e:GetLabel()
 
 	if op==0 then
+		-- Nếu chọn Search: Tìm bài xong thì đưa lá Spell này xuống Mộ luôn để tránh kẹt sân
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 		local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
 		if #g>0 then
 			Duel.SendtoHand(g,nil,REASON_EFFECT)
 			Duel.ConfirmCards(1-tp,g)
+			if c:IsRelateToEffect(e) then
+				Duel.BreakEffect()
+				Duel.SendtoGrave(c,REASON_EFFECT) 
+			end
 		end
 	else
 		local tc=Duel.GetFirstTarget()
