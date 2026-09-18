@@ -14,7 +14,7 @@
 
 1. Đọc `docs/agent-workflow.md`; chốt effect text, passcode chưa dùng trong tất cả CDB, và các tình huống cần kiểm tra.
 2. Tra setcode tại `docs/archetype_setcode_constants.lua`. Tải official reference bằng `tools/fetch_official.ps1 <ID>`; ghi card ID, effect/function tham khảo và phần khác biệt. Không lấy custom card cũ làm bằng chứng API đúng.
-3. Card mới: `python tools/manage_harness.py start <ID> "<name>" <template>`. Dùng template như khung, không giữ hiệu ứng mẫu không thuộc yêu cầu.
+3. Card mới: `python tools/manage_harness.py start <ID> "<name>" <template>`. Archetype chưa đăng ký thì chạy `archetype add <Name> <setcode>` trước. Dùng template như khung, không giữ hiệu ứng mẫu không thuộc yêu cầu.
 4. Sửa JSON và Lua; đối chiếu từng effect với `docs/agent-rules.md`. Không bịa API, không suy ra timing từ tên hàm.
 5. `python tools/manage_harness.py verify <ID>`; kiểm tra exit code. Đây là kiểm tra **tĩnh**, không chứng minh hiệu ứng chạy đúng.
 6. Kiểm thử duel theo kịch bản trong workflow; báo rõ những gì chưa chạy. Trạng thái queue `done` chỉ có nghĩa hoàn tất pipeline hiện có, không là chứng nhận runtime.

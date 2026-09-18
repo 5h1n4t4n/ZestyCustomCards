@@ -12,10 +12,17 @@ import shutil
 import subprocess
 from pathlib import Path
 
+# manage_db nằm cùng thư mục; thêm tay vào sys.path để import được cả khi file
+# này được nạp theo đường dẫn (test) chứ không qua `python tools/...`.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import manage_db
+
 # Mapping of templates to default card types
 TEMPLATE_TYPES = {
     "effect_monster": 0x21,       # Monster + Effect
     "normal_spell": 0x2,          # Spell
+    "quick_play_spell": 0x10002,  # Spell + Quick-Play
+    "continuous_spell": 0x20002,  # Spell + Continuous
     "normal_trap": 0x4,           # Trap
     "fusion_monster": 0x61,       # Monster + Fusion + Effect
     "synchro_monster": 0x2021,    # Monster + Synchro + Effect
@@ -25,6 +32,13 @@ TEMPLATE_TYPES = {
     "field_spell": 0x80002,       # Spell + Field
     "hand_trap": 0x21             # Monster + Effect (usually)
 }
+
+# Mỗi archetype giữ một block passcode = setcode * PASSCODE_BLOCK, theo quy ước
+# đã dùng trong feature_list.json (0x16e -> 36600001-36699999).
+PASSCODE_BLOCK = 100000
+MAX_PASSCODE = 999999999
+# Khóa archetype trùng tên thư mục docs/queues/<archetype>/
+ARCHETYPE_KEY_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*$")
 
 MONSTER_TEMPLATES = {
     "effect_monster", "fusion_monster", "synchro_monster", "xyz_monster",
@@ -64,6 +78,116 @@ def find_archetype_by_passcode(fl_data, passcode):
             except:
                 pass
     return "Common", fl_data.get("archetypes", {}).get("Common", {})
+
+def normalize_archetype_key(name):
+    """Khóa so sánh tên archetype, khớp cách scan dò thư mục queue."""
+    return name.lower().replace("_", "")
+
+
+def parse_setcode(raw):
+    """'0x16e' hoặc decimal -> int. Trả về (setcode, error)."""
+    text = str(raw).strip()
+    try:
+        value = int(text, 16) if text.lower().startswith("0x") else int(text, 10)
+    except ValueError:
+        return None, f"setcode không hợp lệ: {raw!r} (dùng dạng hex '0x16e' hoặc decimal)"
+    if not 0 < value <= 0xFFFF:
+        return None, f"setcode phải trong khoảng 0x1-0xFFFF, nhận {text}"
+    return value, None
+
+
+def parse_passcode_range(raw):
+    """'36600001-36699999' -> (start, end). Trả về (range, error)."""
+    parts = str(raw).split("-")
+    if len(parts) != 2:
+        return None, f"range không hợp lệ: {raw!r} (dạng '36600001-36699999')"
+    try:
+        start, end = (int(part.strip()) for part in parts)
+    except ValueError:
+        return None, f"range không hợp lệ: {raw!r} (dạng '36600001-36699999')"
+    if not 0 < start <= end <= MAX_PASSCODE:
+        return None, f"range phải tăng dần và tối đa {MAX_PASSCODE}, nhận {raw!r}"
+    return (start, end), None
+
+
+def derive_passcode_range(setcode):
+    """Block passcode mặc định của một setcode. Trả về (range, error)."""
+    start = setcode * PASSCODE_BLOCK + 1
+    end = setcode * PASSCODE_BLOCK + PASSCODE_BLOCK - 1
+    if end > MAX_PASSCODE:
+        return None, (f"setcode {hex(setcode)} cho range {start}-{end} vượt quá {MAX_PASSCODE} "
+                      "(passcode tối đa 9 chữ số) — truyền --range để chọn block khác")
+    return (start, end), None
+
+
+def add_archetype(name, setcode_raw, range_raw=None):
+    """Đăng ký archetype mới vào feature_list.json.
+
+    AGENTS.md cấm sửa tay feature_list.json, nên đây là đường duy nhất để mở
+    một archetype mới trước khi 'start' cấp passcode cho card của nó.
+    """
+    from datetime import datetime
+    paths = get_project_paths()
+
+    if not ARCHETYPE_KEY_RE.match(name):
+        print(f"Error: tên archetype '{name}' không hợp lệ — dùng chữ/số/'_' và bắt đầu bằng chữ "
+              "(vd Icejade, White_Forest).", file=sys.stderr)
+        return False
+    if not paths["feature_list"].exists():
+        print("Error: feature_list.json not found.", file=sys.stderr)
+        return False
+
+    setcode, error = parse_setcode(setcode_raw)
+    if error:
+        print(f"Error: {error}", file=sys.stderr)
+        return False
+
+    with open(paths["feature_list"], "r", encoding="utf-8") as f:
+        fl_data = json.load(f)
+    archetypes = fl_data.setdefault("archetypes", {})
+
+    key = normalize_archetype_key(name)
+    for existing_name, info in archetypes.items():
+        if normalize_archetype_key(existing_name) == key:
+            print(f"Error: archetype '{existing_name}' đã tồn tại trong feature_list.json.", file=sys.stderr)
+            return False
+        existing_setcode, _ = parse_setcode(info.get("setcode", "0"))
+        if existing_setcode == setcode:
+            print(f"Error: setcode {hex(setcode)} đã thuộc archetype '{existing_name}'.", file=sys.stderr)
+            return False
+
+    if range_raw:
+        bounds, error = parse_passcode_range(range_raw)
+    else:
+        bounds, error = derive_passcode_range(setcode)
+    if error:
+        print(f"Error: {error}", file=sys.stderr)
+        return False
+    start, end = bounds
+
+    # Range chồng nhau nghĩa là hai archetype cùng tranh một passcode khi 'scan'
+    # hoặc 'start' cấp ID.
+    for existing_name, info in archetypes.items():
+        other, _ = parse_passcode_range(info.get("passcode_range", ""))
+        if other and start <= other[1] and other[0] <= end:
+            print(f"Error: range {start}-{end} chồng lên '{existing_name}' ({other[0]}-{other[1]}).", file=sys.stderr)
+            return False
+
+    archetypes[name] = {"setcode": f"0x{setcode:x}", "passcode_range": f"{start}-{end}", "cards": []}
+    fl_data["last_updated"] = datetime.now().strftime("%Y-%m-%d")
+    with open(paths["feature_list"], "w", encoding="utf-8") as f:
+        json.dump(fl_data, f, ensure_ascii=False, indent=2)
+
+    print(f"Registered archetype '{name}': setcode 0x{setcode:x}, passcode range {start}-{end}.")
+    print("\n=== Việc cần làm tiếp theo ===")
+    print("1. Archetype official: tra setcode tại docs/archetype_setcode_constants.lua và KHÔNG thêm vào "
+          "script/constants.lua (EDOPro đã có sẵn).")
+    print(f"2. Archetype fan-made: thêm 'SET_{name.upper()} = 0x{setcode:x}' vào script/constants.lua và "
+          f"'!setname 0x{setcode:x} {name.replace('_', ' ')}' vào strings.conf (docs/agent-rules.md §2.2).")
+    print(f"3. Ảnh queue đặt trong docs/queues/{name}/ với tiền tố p_ rồi chạy 'scan', hoặc tạo card trực tiếp:")
+    print(f"   python tools/manage_harness.py start {start} \"<name>\" <template>")
+    return True
+
 
 def locate_queue_image(queues_dir, card_name, archetype):
     # Try searching under the specific archetype folder, then globally
@@ -326,6 +450,11 @@ def start_card(passcode, card_name, template_type):
 
     # 7. Append or update in feature_list.json
     if existing_card:
+        # Tên trong entry pending do scan suy từ tên file queue nên hay sai
+        # chính tả; tên truyền vào lệnh start mới là tên chốt của card.
+        if existing_card.get("name") != card_name:
+            print(f"Renamed pending card {passcode}: '{existing_card.get('name')}' -> '{card_name}'")
+        existing_card["name"] = card_name
         existing_card["status"] = "working"
         existing_card["script"] = f"script/c{passcode}.lua"
         if new_queue_file_path:
@@ -570,6 +699,14 @@ def scan_pending_cards():
 
     print(f"Found {len(found_pending)} new pending queue files. Registering...")
 
+    # Passcode phải chưa dùng trong MỌI CDB, không chỉ trong feature_list
+    # (docs/agent-rules.md §2.1) — trùng ID thì EDOPro nạp nhầm card.
+    taken_codes, missing_game_dir = manage_db.external_passcodes(paths["root"])
+    if missing_game_dir is not None:
+        print(f"Warning: không thấy bản cài EDOPro tại {missing_game_dir} — passcode chỉ được đối chiếu với "
+              "CDB trong repo. Đặt $EDOPRO_DIR để kiểm tra cả CDB của game.", file=sys.stderr)
+    taken_codes |= {int(code) for code in registered_passcodes if str(code).isdigit()}
+
     # For each found pending file:
     added_count = 0
     for p_path in found_pending:
@@ -614,7 +751,7 @@ def scan_pending_cards():
             try:
                 start_range, end_range = map(int, pr.split("-"))
                 candidate = start_range
-                while str(candidate) in registered_passcodes:
+                while candidate in taken_codes:
                     candidate += 1
                 if candidate <= end_range:
                     passcode = str(candidate)
@@ -622,15 +759,14 @@ def scan_pending_cards():
                 print(f"Error calculating passcode range for {actual_arch_name}: {e}")
                 
         if not passcode:
-            common_candidates = [int(code) for code in registered_passcodes if code.startswith("799000")]
-            if common_candidates:
-                passcode = str(max(common_candidates) + 1)
-            else:
-                passcode = "79900001"
-                while passcode in registered_passcodes:
-                    passcode = str(int(passcode) + 1)
+            common_candidates = [code for code in taken_codes if str(code).startswith("799000")]
+            candidate = max(common_candidates) + 1 if common_candidates else 79900001
+            while candidate in taken_codes:
+                candidate += 1
+            passcode = str(candidate)
 
         registered_passcodes.add(passcode)
+        taken_codes.add(int(passcode))
 
         # Build card entry
         rel_path = str(p_path.relative_to(paths["root"]).as_posix())
@@ -651,6 +787,22 @@ def scan_pending_cards():
         json.dump(fl_data, f, ensure_ascii=False, indent=2)
         
     print(f"Successfully registered {added_count} new pending cards in feature_list.json!")
+
+def tracked_paths(root, subdir):
+    """Đường dẫn dưới subdir đang được Git theo dõi; None khi không hỏi được Git.
+
+    Chỉ file đã commit mới khôi phục được sau khi xóa, nên file chưa track phải
+    được cảnh báo riêng thay vì gộp chung vào câu "vẫn khôi phục từ history".
+    """
+    try:
+        result = subprocess.run(["git", "ls-files", "-z", "--", subdir],
+                                cwd=str(root), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    except OSError:
+        return None
+    if result.returncode != 0:
+        return None
+    return {entry for entry in result.stdout.decode("utf-8", "replace").split("\0") if entry}
+
 
 def cleanup_queue(apply_changes=False):
     """Dọn ảnh queue đã done, chỉ xóa file đã có artwork tương ứng trong pics/.
@@ -725,12 +877,18 @@ def cleanup_queue(apply_changes=False):
     for rel, reason in kept:
         print(f"  [GIỮ ] {rel} — {reason}")
 
+    tracked = tracked_paths(paths["root"], paths["queues_dir"].relative_to(paths["root"]).as_posix())
+    untracked = 0
     freed = 0
     failed = 0
     for rel, image, card in ready:
         size = image.stat().st_size
+        note = ""
+        if tracked is not None and rel not in tracked:
+            note = " [CHƯA COMMIT — xóa là mất hẳn]"
+            untracked += 1
         if not apply_changes:
-            print(f"  [XÓA ] {rel} (artwork pics/{card['passcode']} đã có, {size / 1024:.0f} KB)")
+            print(f"  [XÓA ] {rel} (artwork pics/{card['passcode']} đã có, {size / 1024:.0f} KB){note}")
             freed += size
             continue
         try:
@@ -741,7 +899,7 @@ def cleanup_queue(apply_changes=False):
             continue
         card.pop("queue_file", None)
         freed += size
-        print(f"  [XÓA ] {rel}")
+        print(f"  [XÓA ] {rel}{note}")
 
     if apply_changes and (ready or stale_refs):
         with open(paths["feature_list"], "w", encoding="utf-8") as f:
@@ -753,8 +911,11 @@ def cleanup_queue(apply_changes=False):
     if stale_refs:
         gone = "Đã gỡ" if apply_changes else "Sẽ gỡ"
         print(f"{gone} {len(stale_refs)} tham chiếu 'queue_file' trỏ tới ảnh không còn.")
+    if untracked:
+        print(f"Cảnh báo: {untracked} ảnh chưa được Git theo dõi — xóa xong KHÔNG khôi phục được từ history. "
+              "Commit trước nếu còn cần bản gốc.")
     if not apply_changes and (ready or stale_refs):
-        print("Đây là dry-run. Chạy lại với --apply để áp dụng thật (file đang được Git theo dõi, vẫn khôi phục được từ history).")
+        print("Đây là dry-run. Chạy lại với --apply để áp dụng thật (ảnh đã commit vẫn khôi phục được từ Git history).")
     return failed == 0
 
 
@@ -775,6 +936,15 @@ def main():
     # Subcommand: scan
     subparsers.add_parser("scan", help="Scan queues directory for new pending cards and register them in feature_list.json")
 
+    # Subcommand: archetype
+    archetype_parser = subparsers.add_parser("archetype", help="Manage the archetype registry in feature_list.json")
+    archetype_sub = archetype_parser.add_subparsers(dest="archetype_command", required=True)
+    archetype_add = archetype_sub.add_parser("add", help="Register a new archetype with its setcode and passcode range")
+    archetype_add.add_argument("name", type=str, help="Archetype key, e.g. Icejade or White_Forest")
+    archetype_add.add_argument("setcode", type=str, help="Setcode in hex (0x16e) or decimal")
+    archetype_add.add_argument("--range", dest="passcode_range", type=str,
+                               help="Override the derived passcode range, e.g. 36600001-36699999")
+
     # Subcommand: cleanup
     cleanup_parser = subparsers.add_parser("cleanup", help="Delete done queue images whose artwork is already in pics/ (dry-run by default)")
     cleanup_parser.add_argument("--apply", action="store_true", help="Actually delete the confirmed images instead of listing them")
@@ -788,6 +958,8 @@ def main():
         sys.exit(0 if verify_card(args.passcode) else 1)
     elif args.command == "scan":
         scan_pending_cards()
+    elif args.command == "archetype":
+        sys.exit(0 if add_archetype(args.name, args.setcode, args.passcode_range) else 1)
     elif args.command == "cleanup":
         sys.exit(0 if cleanup_queue(args.apply) else 1)
 

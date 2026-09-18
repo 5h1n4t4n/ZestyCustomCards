@@ -142,6 +142,91 @@ def get_db_path() -> Path:
     return Path(__file__).resolve().parent.parent / "card-data.cdb"
 
 
+# ============================================================
+# Passcode uniqueness across every CDB the client loads
+# ============================================================
+
+# CDB trong repo thuộc luồng dữ liệu khác (docs/database-workflow.md).
+SIBLING_CDB_NAMES = ("custom_cards_zesty.cdb", "mycard.cdb")
+DEFAULT_EDOPRO_DIR = "F:/Game/ProjectIgnis"
+
+
+def read_ids(path: Path):
+    """Tập passcode trong một CDB bất kỳ.
+
+    Chỉ đọc cột datas.id nên dùng được cho cả CDB của game (schema có thể khác
+    bản Datacorn mà compiler sinh ra).
+    """
+    conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)
+    try:
+        return {row[0] for row in conn.execute("SELECT id FROM datas")}
+    finally:
+        conn.close()
+
+
+def external_cdb_paths(root: Path):
+    """CDB cần đối chiếu passcode và thư mục game nếu không tìm thấy.
+
+    Gồm CDB anh em trong repo và mọi CDB trong bản cài EDOPro ($EDOPRO_DIR).
+    CDB trong game trùng tên file với CDB của repo bị bỏ qua: đó là bản phân
+    phối của chính repo này, trùng ID với nó là chuyện đương nhiên.
+    """
+    own_names = {get_db_path().name, *SIBLING_CDB_NAMES}
+    paths = [root / name for name in SIBLING_CDB_NAMES if (root / name).exists()]
+    game_dir = Path(os.environ.get("EDOPRO_DIR") or DEFAULT_EDOPRO_DIR)
+    if not game_dir.is_dir():
+        return paths, game_dir
+    paths.extend(sorted(p for p in game_dir.rglob("*.cdb") if p.name not in own_names))
+    return paths, None
+
+
+def check_passcode_collisions(root: Path, owned_ids):
+    """Passcode phải là duy nhất trong mọi CDB (docs/agent-rules.md §2.1).
+
+    Trả về (errors, warnings). Trùng ID là error vì EDOPro nạp nhầm card mà
+    không báo gì; không đọc được nguồn đối chiếu chỉ là warning.
+    """
+    errors, warnings = [], []
+    if not owned_ids:
+        return errors, warnings
+    paths, missing_game_dir = external_cdb_paths(root)
+    if missing_game_dir is not None:
+        warnings.append(f"Không thấy bản cài EDOPro tại {missing_game_dir} — chỉ đối chiếu passcode với CDB "
+                        "trong repo. Đặt $EDOPRO_DIR để kiểm tra cả CDB của game.")
+    for path in paths:
+        try:
+            hits = owned_ids & read_ids(path)
+        except sqlite3.Error as exc:
+            warnings.append(f"Không đọc được passcode từ {path}: {exc}")
+            continue
+        label = path.name if path.parent == root else str(path)
+        for code in sorted(hits):
+            errors.append(f"{code}: passcode đã được dùng trong {label} — đổi ID trước khi phát hành")
+    return errors, warnings
+
+
+def external_passcodes(root: Path):
+    """Passcode đã dùng ở mọi CDB ngoài card-data, và thư mục game nếu thiếu."""
+    used = set()
+    paths, missing_game_dir = external_cdb_paths(root)
+    for path in paths:
+        try:
+            used |= read_ids(path)
+        except sqlite3.Error as exc:
+            print(f"Warning: không đọc được passcode từ {path}: {exc}", file=sys.stderr)
+    return used, missing_game_dir
+
+
+def report_collisions(root: Path, cards):
+    """In kết quả đối chiếu passcode, trả về (n_errors, n_warnings)."""
+    errors, warnings = check_passcode_collisions(root, {cols["id"] for cols, _ in cards})
+    for warning in warnings:
+        print(f"  [WARN ] {warning}")
+    for error in errors:
+        print(f"  [ERROR] {error}", file=sys.stderr)
+    return len(errors), len(warnings)
+
+
 def verify_schema(conn) -> bool:
     """Kiểm tra DB có đúng format YGOPro (logic giống Datacorn openDatabaseWithFile)."""
     def table_fields(table):
@@ -584,6 +669,9 @@ def validate_specs(db_path: Path) -> bool:
         return False
     print(f"Validating specs in {json_dir}/ ...")
     cards, n_err, n_warn = collect_specs(json_dir)
+    col_err, col_warn = report_collisions(db_path.parent, cards)
+    n_err += col_err
+    n_warn += col_warn
     print("-" * 40)
     print(f"Specs hợp lệ : {len(cards)}")
     print(f"Errors       : {n_err}")
@@ -606,6 +694,9 @@ def compile_db(db_path: Path) -> bool:
 
     print("Step 1/2: Validating specs...")
     cards, n_err, n_warn = collect_specs(json_dir)
+    col_err, col_warn = report_collisions(project_root, cards)
+    n_err += col_err
+    n_warn += col_warn
     if n_err:
         print(f"Error: {n_err} lỗi validation. CDB cũ được giữ nguyên, không biên dịch.", file=sys.stderr)
         return False

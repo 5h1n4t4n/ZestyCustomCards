@@ -41,6 +41,61 @@ class HarnessRegressionTests(unittest.TestCase):
                 spec = harness.build_spec_skeleton(12345678, "Test", template, 0)
                 self.assertEqual(spec["type"], expected)
 
+    def test_spell_templates_carry_their_own_type_bits(self):
+        # Spell subtype nằm ở bit riêng; thiếu template thì agent phải sửa type tay sau khi start.
+        for template, expected in {
+            "normal_spell": 0x2,
+            "quick_play_spell": 0x10002,
+            "continuous_spell": 0x20002,
+            "field_spell": 0x80002,
+        }.items():
+            with self.subTest(template=template):
+                self.assertTrue((TOOLS / "templates" / f"template_{template}.lua").exists())
+                spec = harness.build_spec_skeleton(12345678, "Test", template, 0)
+                self.assertEqual(spec["type"], expected)
+
+    def test_archetype_add_derives_range_and_rejects_conflicts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            features = root / "feature_list.json"
+            features.write_text(json.dumps({"archetypes": {"Common": {"cards": []}}}), encoding="utf-8")
+            paths = {"root": root, "feature_list": features}
+            with patch.object(harness, "get_project_paths", return_value=paths), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertTrue(harness.add_archetype("Icejade", "0x16e"))
+                self.assertFalse(harness.add_archetype("ice_jade", "0x999"), "trùng tên sau khi chuẩn hóa")
+                self.assertFalse(harness.add_archetype("Other", "0x16e"), "trùng setcode")
+                self.assertFalse(harness.add_archetype("Other", "0x999", "36600050-36600060"), "chồng range")
+                self.assertFalse(harness.add_archetype("TooBig", "0xffff"), "passcode vượt 9 chữ số")
+                self.assertFalse(harness.add_archetype("2Bad", "0x999"), "tên không hợp lệ")
+            archetypes = json.loads(features.read_text(encoding="utf-8"))["archetypes"]
+            self.assertEqual(archetypes["Icejade"],
+                             {"setcode": "0x16e", "passcode_range": "36600001-36699999", "cards": []})
+            self.assertEqual(set(archetypes), {"Common", "Icejade"})
+
+    def test_start_rewrites_name_of_pending_card(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("card-data", "script", "pics", "templates", "queues"):
+                (root / name).mkdir()
+            (root / "templates" / "template_normal_spell.lua").write_text(
+                "-- <<CARD_NAME>> <<PASSCODE>> <<SETCODE>> <<ARCHETYPE_NAME>>\nlocal s,id=GetID()\n", encoding="utf-8")
+            features = root / "feature_list.json"
+            # scan suy tên từ tên file queue nên tên trong entry pending có thể sai chính tả.
+            features.write_text(json.dumps({"archetypes": {"Icejade": {
+                "setcode": "0x16e", "passcode_range": "36600001-36699999",
+                "cards": [{"name": "Icejade Tremore", "passcode": "36600001", "status": "pending"}]}}}),
+                encoding="utf-8")
+            paths = {"root": root, "feature_list": features, "script_dir": root / "script",
+                     "template_dir": root / "templates", "card_data": root / "card-data",
+                     "queues_dir": root / "queues", "pics_dir": root / "pics"}
+            with patch.object(harness, "get_project_paths", return_value=paths), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertTrue(harness.start_card(36600001, "Icejade Tremora", "normal_spell"))
+            card = json.loads(features.read_text(encoding="utf-8"))["archetypes"]["Icejade"]["cards"][0]
+            self.assertEqual(card["name"], "Icejade Tremora")
+            self.assertEqual(card["status"], "working")
+            spec = json.loads((root / "card-data" / "c36600001.json").read_text(encoding="utf-8"))
+            self.assertEqual(spec["name"], "Icejade Tremora")
+
     def test_preflight_rejects_non_uppercase_placeholders(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -155,6 +210,41 @@ class HarnessRegressionTests(unittest.TestCase):
             self.assertNotIn("queue_file", cards[0])
             self.assertIn("queue_file", cards[1], "ref chỉ lệch tiền tố trạng thái không phải rác")
             self.assertTrue(kept.exists())
+
+
+@unittest.skipUnless(shutil.which("git"), "Git is required to tell tracked images apart")
+class CleanupGitTrackingTests(unittest.TestCase):
+    def git(self, root, *args):
+        subprocess.run(["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", *args],
+                       cwd=root, capture_output=True, check=True)
+
+    def test_cleanup_marks_images_git_cannot_restore(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            queues = root / "docs" / "queues" / "Test"
+            queues.mkdir(parents=True)
+            pics = root / "pics"
+            pics.mkdir()
+            for stem, passcode in (("d_tracked", "11111111"), ("d_untracked", "22222222")):
+                (queues / f"{stem}.jpg").write_bytes(b"artwork")
+                (pics / f"{passcode}.jpg").write_bytes(b"artwork")
+            self.git(root, "init")
+            self.git(root, "add", "docs/queues/Test/d_tracked.jpg")
+            self.git(root, "commit", "-m", "track one image")
+            features = root / "feature_list.json"
+            features.write_text(json.dumps({"archetypes": {"Test": {"cards": [
+                {"passcode": "11111111", "status": "done", "queue_file": "docs/queues/Test/d_tracked.jpg"},
+                {"passcode": "22222222", "status": "done", "queue_file": "docs/queues/Test/d_untracked.jpg"},
+            ]}}}), encoding="utf-8")
+            paths = {"root": root, "feature_list": features, "queues_dir": root / "docs" / "queues", "pics_dir": pics}
+            output = io.StringIO()
+            with patch.object(harness, "get_project_paths", return_value=paths), contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
+                self.assertTrue(harness.cleanup_queue())
+            # Ảnh chưa commit xóa là mất hẳn; ảnh đã commit vẫn còn trong history.
+            lines = {name: [line for line in output.getvalue().splitlines() if name in line]
+                     for name in ("d_tracked.jpg", "d_untracked.jpg")}
+            self.assertTrue(all("CHƯA COMMIT" in line for line in lines["d_untracked.jpg"]), lines)
+            self.assertTrue(all("CHƯA COMMIT" not in line for line in lines["d_tracked.jpg"]), lines)
 
 
 @unittest.skipUnless(POWERSHELL, "PowerShell is required for validator integration tests")

@@ -2,6 +2,7 @@ import contextlib
 import io
 import json
 from pathlib import Path
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -21,6 +22,11 @@ class DatabaseTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        # Test không được phụ thuộc bản cài EDOPro của máy chạy: trỏ sang thư
+        # mục không tồn tại để chỉ còn CDB trong temp root được đối chiếu.
+        env = patch.dict("os.environ", {"EDOPRO_DIR": str(self.root / "no-edopro")})
+        env.start()
+        self.addCleanup(env.stop)
         (self.root / "card-data").mkdir()
         (self.root / "script").mkdir()
         self.spec = {"id": 123, "type": 2, "name": "Owned", "desc": "Draw a card."}
@@ -33,9 +39,20 @@ class DatabaseTests(unittest.TestCase):
     def write_spec(self):
         (self.root / "card-data/c123.json").write_text(json.dumps(self.spec))
 
+    def sources(self):
+        """CDB legacy trước migration, mỗi file đều chứa ID đã có spec."""
+        paths = [self.source(name) for name in migration.SOURCES]
+        # card-data.cdb ở đây chỉ là khuôn để dựng CDB legacy; migration phải tự tạo nó.
+        self.luna.unlink(missing_ok=True)
+        return paths
+
     def source(self, name):
+        # Compile vào card-data.cdb rồi copy sang tên legacy: compiler chặn ID
+        # đã tồn tại ở CDB anh em, còn test thì cần đúng trạng thái trùng ID đó.
+        if not self.luna.exists():
+            self.assertTrue(db.compile_db(self.luna))
         path = self.root / name
-        self.assertTrue(db.compile_db(path))
+        shutil.copy2(self.luna, path)
         with contextlib.closing(sqlite3.connect(path)) as conn, conn:
             conn.execute("INSERT INTO datas SELECT 999,ot,alias,setcode,type,atk,def,level,race,attribute,category FROM datas WHERE id=123")
             conn.execute("INSERT INTO texts SELECT 999,name,desc," + ",".join(f"str{i}" for i in range(1, 17)) + " FROM texts WHERE id=123")
@@ -44,7 +61,7 @@ class DatabaseTests(unittest.TestCase):
         return path
 
     def test_migration_preserves_other_devs_and_is_idempotent(self):
-        sources = [self.source(name) for name in migration.SOURCES]
+        sources = self.sources()
         before = {p: db.read_rows(p) for p in sources}
         original_bytes = {p: p.read_bytes() for p in sources}
         migration.migrate(self.root)
@@ -78,7 +95,7 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual(before, self.luna.read_bytes())
 
     def test_invalid_migration_leaves_sources_unchanged(self):
-        sources = [self.source(name) for name in migration.SOURCES]
+        sources = self.sources()
         before = {p: p.read_bytes() for p in sources}
         self.spec["type"] = 0
         self.write_spec()
@@ -102,8 +119,22 @@ class DatabaseTests(unittest.TestCase):
             conn.execute("DELETE FROM texts")
         self.assertFalse(db.check_sync(self.luna))
 
+    def test_passcode_collision_blocks_validate_and_compile(self):
+        # ID trùng ở CDB khác làm EDOPro nạp nhầm card mà không báo gì.
+        sibling = self.root / db.SIBLING_CDB_NAMES[0]
+        with contextlib.closing(sqlite3.connect(sibling)) as conn, conn:
+            conn.execute("CREATE TABLE datas (id INTEGER PRIMARY KEY)")
+            conn.execute("INSERT INTO datas VALUES (123)")
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertFalse(db.validate_specs(self.luna))
+            self.assertFalse(db.compile_db(self.luna))
+            self.assertFalse(self.luna.exists(), "CDB không được ghi khi passcode trùng")
+            with contextlib.closing(sqlite3.connect(sibling)) as conn, conn:
+                conn.execute("DELETE FROM datas WHERE id=123")
+            self.assertTrue(db.compile_db(self.luna))
+
     def test_partial_publish_restores_databases(self):
-        sources = [self.source(name) for name in migration.SOURCES]
+        sources = self.sources()
         before = {p: p.read_bytes() for p in sources}
         original_replace = migration.os.replace
         def fail_second_source(src, dest):

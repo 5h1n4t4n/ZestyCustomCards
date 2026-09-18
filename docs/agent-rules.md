@@ -25,7 +25,7 @@ Các quy tắc lập trình bắt buộc để đảm bảo script tương thíc
 ## 2. Quy Tắc Chọn Passcode & Setcode
 
 ### 2.1 Quy tắc chọn Passcode
-Giữ nguyên passcode hiện hữu. Với card mới, dùng range đã đăng ký trong `feature_list.json` và kiểm tra trùng trong **mọi CDB**, JSON và script. Ưu tiên range 9 chữ số được nhóm thống nhất; không ghép setcode thành ID rồi coi là bảo đảm không trùng. ID và setcode là hai định danh khác nhau.
+Giữ nguyên passcode hiện hữu. Với card mới, dùng range đã đăng ký trong `feature_list.json` và kiểm tra trùng trong **mọi CDB**, JSON và script. `python tools/manage_db.py validate` (và `compile` trong `verify`) tự đối chiếu với các CDB anh em lẫn CDB của bản cài EDOPro, trùng là ERROR; xem `docs/agent-workflow.md` mục "Trùng passcode giữa các CDB". Ưu tiên range 9 chữ số được nhóm thống nhất; không ghép setcode thành ID rồi coi là bảo đảm không trùng. ID và setcode là hai định danh khác nhau.
 
 ### 2.2 Phân biệt Archetype Official và Fan-made
 * **Archetype Official (Dragonmaid, Labrynth, White Forest, Witchcrafter, Branded...):**
@@ -34,6 +34,8 @@ Giữ nguyên passcode hiện hữu. Với card mới, dùng range đã đăng k
 * **Archetype Fan-made mới:**
   1. Đăng ký hằng số `SET_XXX = 0xYYY` vào [script/constants.lua](../script/constants.lua).
   2. Đăng ký chuỗi hiển thị tên archetype `!setname 0xYYY TênArchetype` vào [strings.conf](../strings.conf).
+
+Cả hai loại đều phải có entry trong `feature_list.json` trước khi cấp passcode; tạo bằng `python tools/manage_harness.py archetype add <Name> <setcode>`, không sửa tay file đó.
 
 ---
 

@@ -15,7 +15,8 @@ Tham khảo đầy đủ:
 |-----------|---------------|
 | Effect Monster (trigger + ignition) | `template_effect_monster.lua` |
 | Normal Spell | `template_normal_spell.lua` |
-| Quick-Play Spell | `template_normal_spell.lua` (đổi type constant) |
+| Quick-Play Spell | `template_quick_play_spell.lua` |
+| Continuous Spell | `template_continuous_spell.lua` |
 | Normal Trap | `template_normal_trap.lua` |
 | Fusion Monster | `template_fusion_monster.lua` |
 | Synchro Monster | `template_synchro_monster.lua` |
