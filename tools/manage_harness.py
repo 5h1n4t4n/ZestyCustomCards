@@ -17,10 +17,10 @@ TEMPLATE_TYPES = {
     "effect_monster": 0x21,       # Monster + Effect
     "normal_spell": 0x2,          # Spell
     "normal_trap": 0x4,           # Trap
-    "fusion_monster": 0x41,       # Monster + Fusion
-    "synchro_monster": 0x2001,    # Monster + Synchro
-    "xyz_monster": 0x801,         # Monster + Xyz
-    "link_monster": 0x4000001,    # Monster + Link
+    "fusion_monster": 0x61,       # Monster + Fusion + Effect
+    "synchro_monster": 0x2021,    # Monster + Synchro + Effect
+    "xyz_monster": 0x800021,         # Monster + Xyz + Effect
+    "link_monster": 0x4000021,    # Monster + Link + Effect
     "pendulum_monster": 0x1000021,# Monster + Pendulum + Effect
     "field_spell": 0x80002,       # Spell + Field
     "hand_trap": 0x21             # Monster + Effect (usually)
@@ -31,10 +31,14 @@ MONSTER_TEMPLATES = {
     "link_monster", "pendulum_monster", "hand_trap",
 }
 
+# Đuôi ảnh chấp nhận trong queue; EDOPro chỉ nạp .jpg/.png
+QUEUE_EXTS = (".jpg", ".jpeg", ".png", ".gif")
+ARTWORK_EXTS = (".jpg", ".png")
+
 # desc placeholder ghi vào spec JSON khi start; verify chặn nếu chưa thay
 PLACEHOLDER_DESC = "Mô tả hiệu ứng..."
 # Placeholder dạng <<...>> trong templates (vd <<ATK_VALUE>>) phải được thay hết
-PLACEHOLDER_RE = re.compile(r"<<[A-Z_]+>>")
+PLACEHOLDER_RE = re.compile(r"<<[^<>]*>>")
 
 def get_project_paths():
     script_dir = Path(__file__).resolve().parent
@@ -43,7 +47,7 @@ def get_project_paths():
         "root": project_root,
         "feature_list": project_root / "feature_list.json",
         "script_dir": project_root / "script",
-        "template_dir": project_root / "script-test" / "templates",
+        "template_dir": project_root / "tools" / "templates",
         "card_data": project_root / "card-data",
         "queues_dir": project_root / "docs" / "queues",
         "pics_dir": project_root / "pics"
@@ -69,8 +73,7 @@ def locate_queue_image(queues_dir, card_name, archetype):
         search_dirs.append(queues_dir / archetype)
     search_dirs.append(queues_dir)
     
-    # Common extensions
-    extensions = ["*.jpg", "*.jpeg", "*.png", "*.gif"]
+    extensions = [f"*{ext}" for ext in QUEUE_EXTS]
     
     for s_dir in search_dirs:
         for ext in extensions:
@@ -82,6 +85,77 @@ def locate_queue_image(queues_dir, card_name, archetype):
                     if normalized_name in cleaned_filename or all(word in cleaned_filename for word in normalized_name.split("_") if len(word) > 2):
                         return p
     return None
+
+def strip_queue_prefix(stem):
+    """Bỏ tiền tố trạng thái p_/w_/d_ khỏi tên file queue."""
+    return stem[2:] if stem[:2] in ("p_", "w_", "d_") else stem
+
+
+def queue_key(rel_path):
+    """Khóa nhận dạng ảnh queue không phụ thuộc tiền tố trạng thái hay đuôi file,
+    để cleanup vẫn khớp khi feature_list còn ghi 'w_' mà đĩa đã là 'd_'."""
+    path = Path(rel_path)
+    return f"{path.parent.as_posix()}/{strip_queue_prefix(path.stem)}".lower()
+
+
+def find_artwork(pics_dir, passcode):
+    """Artwork đang có trong pics/ cho passcode, hoặc None."""
+    for ext in ARTWORK_EXTS:
+        candidate = pics_dir / f"{passcode}{ext}"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def copy_artwork_from_queue(pics_dir, passcode, queue_path):
+    """Copy ảnh queue vào pics/<passcode>.<ext> rồi đọc lại đối chiếu byte.
+
+    Trả về (pic_path, None) khi ghi và đọc lại khớp, ngược lại (None, lý do).
+    .jpeg đổi sang .jpg vì EDOPro không nạp .jpeg.
+    """
+    ext = queue_path.suffix.lower()
+    if ext == ".jpeg":
+        ext = ".jpg"
+    if ext not in ARTWORK_EXTS:
+        return None, f"{queue_path.name} dùng đuôi {queue_path.suffix} — EDOPro chỉ nạp .jpg/.png, đổi thủ công trước"
+    pic_path = pics_dir / f"{passcode}{ext}"
+    try:
+        pics_dir.mkdir(parents=True, exist_ok=True)
+        source = queue_path.read_bytes()
+        pic_path.write_bytes(source)
+        if pic_path.read_bytes() != source:
+            return None, f"ghi pics/{pic_path.name} xong nhưng đọc lại không khớp"
+    except Exception as e:
+        return None, f"copy {queue_path.name} -> pics/{passcode}{ext} thất bại: {e}"
+    return pic_path, None
+
+
+def retire_queue_image(paths, passcode, queue_path):
+    """Xác nhận artwork đã nằm trong pics/ rồi mới xóa ảnh queue.
+
+    Thiếu artwork thì copy từ chính ảnh queue và đọc lại để xác nhận. Chỉ xóa
+    khi đã cầm chắc bản trong pics/; không xác nhận được thì giữ nguyên ảnh
+    queue và trả lý do cho caller xử lý.
+    Trả về (deleted: bool, message: str).
+    """
+    pic_path = find_artwork(paths["pics_dir"], passcode)
+    if pic_path is None:
+        pic_path, error = copy_artwork_from_queue(paths["pics_dir"], passcode, queue_path)
+        if error:
+            return False, error
+        message = f"Đã copy artwork {queue_path.name} -> pics/{pic_path.name}"
+    else:
+        try:
+            same = pic_path.read_bytes() == queue_path.read_bytes()
+        except Exception as e:
+            return False, f"không đọc được pics/{pic_path.name} hoặc {queue_path.name} để đối chiếu: {e}"
+        message = f"Artwork pics/{pic_path.name} đã có" + ("" if same else " (khác bản queue — giữ bản trong pics/)")
+    try:
+        queue_path.unlink()
+    except Exception as e:
+        return False, f"{message}; xóa {queue_path.name} thất bại: {e}"
+    return True, f"{message}; đã xóa queue image {queue_path.name}"
+
 
 def build_spec_skeleton(passcode, card_name, template_type, setcode_val):
     """Tạo skeleton spec JSON theo loại template, ưu tiên field thân thiện
@@ -132,9 +206,10 @@ def print_next_steps(passcode, template_type):
             print("   - lscale / rscale: Pendulum Scale")
     print("   - category: bitmask theo docs/agent-rules.md; strings: hint cho aux.Stringid")
     print(f"2. script/c{passcode}.lua — thay hết placeholder <<...>>, viết logic effect")
-    print("   (tham khảo official qua .\\script-test\\fetch_official.ps1 <passcode>)")
-    print(f"3. Thêm artwork pics/{passcode}.jpg (hoặc .png — KHÔNG dùng .jpeg)")
-    print(f"4. Chạy: python .\\script-test\\manage_harness.py verify {passcode}")
+    print("   (tham khảo official qua .\\tools\\fetch_official.ps1 <passcode>)")
+    print(f"3. Artwork pics/{passcode}.jpg|.png — verify tự copy từ queue image nếu còn;")
+    print("   tự thêm thì KHÔNG dùng .jpeg (EDOPro không nạp)")
+    print(f"4. Chạy: python .\\tools\\manage_harness.py verify {passcode}")
 
 
 def start_card(passcode, card_name, template_type):
@@ -326,8 +401,9 @@ def preflight_card(paths, passcode):
     wrong_ext = pics_dir / f"{passcode}.jpeg"
     if wrong_ext.exists():
         errors.append(f"Artwork pics/{passcode}.jpeg dùng đuôi .jpeg — EDOPro không load, đổi tên thành .jpg")
-    elif not any((pics_dir / f"{passcode}{ext}").exists() for ext in (".jpg", ".png")):
-        warnings.append(f"Chưa có artwork pics/{passcode}.jpg|.png — card sẽ hiển thị ảnh trống trong game")
+    elif find_artwork(pics_dir, passcode) is None:
+        warnings.append(f"Chưa có artwork pics/{passcode}.jpg|.png — verify sẽ copy từ queue image nếu còn, "
+                        "không thì card hiển thị ảnh trống trong game")
 
     return errors, warnings
 
@@ -350,7 +426,7 @@ def verify_card(passcode):
 
     # 1. Validate + Compile Database Specs (atomic, theo chuẩn Datacorn)
     print("Step 1: Validating & compiling JSON specs to database...")
-    rc, stdout, stderr = run_command(["python", "script-test/manage_db.py", "compile"], paths["root"])
+    rc, stdout, stderr = run_command(["python", "tools/manage_db.py", "compile"], paths["root"])
     if rc != 0:
         print("Error: DB Validation/Compilation failed! CDB cũ được giữ nguyên.", file=sys.stderr)
         if stdout and stdout.strip():
@@ -368,7 +444,7 @@ def verify_card(passcode):
     #    và rc!=0 chặn trực tiếp thay vì chỉ soi text output)
     print("Step 2: Validating script structure and syntax...")
     rc, stdout, stderr = run_command(
-        ["powershell", "-ExecutionPolicy", "Bypass", "-File", "script-test/validate_scripts.ps1",
+        ["powershell", "-ExecutionPolicy", "Bypass", "-File", "tools/validate_scripts.ps1",
          "-Path", f"script/c{passcode}.lua"], paths["root"])
 
     file_failed = False
@@ -387,7 +463,7 @@ def verify_card(passcode):
 
     # 3. Run basic style check (Linter)
     print("Step 3: Checking style linter...")
-    rc, stdout, stderr = run_command(["powershell", "-ExecutionPolicy", "Bypass", "-File", "script-test/lint_scripts.ps1", "-Path", f"script/c{passcode}.lua"], paths["root"])
+    rc, stdout, stderr = run_command(["powershell", "-ExecutionPolicy", "Bypass", "-File", "tools/lint_scripts.ps1", "-Path", f"script/c{passcode}.lua"], paths["root"])
     print(stdout.strip())
     # Style issues không chặn pipeline nhưng phải được thông báo rõ (cả fallback lẫn luacheck)
     if "Total files with issues" in (stdout or "") or rc != 0:
@@ -395,38 +471,12 @@ def verify_card(passcode):
 
     # 4. Check sync status
     print("Step 4: Running system sync check...")
-    rc, stdout, stderr = run_command(["python", "script-test/manage_db.py", "check-sync"], paths["root"])
+    rc, stdout, stderr = run_command(["python", "tools/manage_db.py", "check-sync"], paths["root"])
     print(stdout.strip())
-    # Build set of pending passcodes from feature_list.json (not yet started)
-    pending_passcodes = set()
-    try:
-        with open(paths["feature_list"], "r", encoding="utf-8") as f:
-            fl = json.load(f)
-        for arch_info in fl.get("archetypes", {}).values():
-            for card in arch_info.get("cards", []):
-                if card.get("status") == "pending":
-                    pending_passcodes.add(card.get("passcode", ""))
-    except Exception:
-        pass
-    # Filter out pre-existing orphan passcodes (18199611-18199620)
-    # and pending cards (not yet started) from sync issues check
-    lines = (stdout or "").splitlines()
-    actual_issues = []
-    for line in lines:
-        parts = line.strip().split()
-        if len(parts) >= 2 and parts[0] == "-" and parts[1].isdigit():
-            passcode_str = parts[1]
-            if (18199611 <= int(passcode_str) <= 18199620):
-                continue
-            if passcode_str in pending_passcodes:
-                continue
-            actual_issues.append(line)
-    if len(actual_issues) > 0:
-        print("Error: System synchronization has mismatches. Cannot declare passing.", file=sys.stderr)
-        return False
-    if "WARNING:" in stdout and "CDB" in stdout:
-        # Compile vừa chạy ở Step 1 nên CDB lệch tại đây là bất thường thật sự
-        print("Error: CDB vẫn lệch so với specs JSON sau khi compile. Cannot declare passing.", file=sys.stderr)
+    if rc != 0:
+        print("Error: System synchronization failed. Cannot declare passing.", file=sys.stderr)
+        if stderr and stderr.strip():
+            print(stderr.strip(), file=sys.stderr)
         return False
     print("System sync verified successfully.")
 
@@ -446,19 +496,27 @@ def verify_card(passcode):
                 card_found = True
                 card["status"] = "done"
                 
-                # Check and rename queue image from w_ to d_
+                # Ảnh queue hết vai trò khi artwork đã vào pics/: copy nếu thiếu,
+                # xác nhận, rồi xóa để queue không phình ra theo thời gian.
                 queue_path_str = card.get("queue_file")
                 if queue_path_str:
                     q_path = paths["root"] / queue_path_str
-                    if q_path.exists() and q_path.name.startswith("w_"):
-                        new_name = q_path.name.replace("w_", "d_", 1)
-                        new_path = q_path.parent / new_name
-                        try:
-                            shutil.move(str(q_path), str(new_path))
-                            card["queue_file"] = str(new_path.relative_to(paths["root"]).as_posix())
-                            print(f"Renamed queue image to done state: {new_name}")
-                        except Exception as e:
-                            print(f"Warning: Failed to rename queue image: {e}", file=sys.stderr)
+                    if q_path.exists():
+                        deleted, message = retire_queue_image(paths, passcode, q_path)
+                        if deleted:
+                            card.pop("queue_file", None)
+                            print(message)
+                        else:
+                            print(f"Warning: {message}", file=sys.stderr)
+                            # Chưa xác nhận được artwork: giữ ảnh, chỉ đánh dấu done
+                            if q_path.name.startswith("w_"):
+                                new_path = q_path.parent / q_path.name.replace("w_", "d_", 1)
+                                try:
+                                    shutil.move(str(q_path), str(new_path))
+                                    card["queue_file"] = str(new_path.relative_to(paths["root"]).as_posix())
+                                    print(f"Giữ queue image, đổi tên sang trạng thái done: {new_path.name}")
+                                except Exception as e:
+                                    print(f"Warning: Failed to rename queue image: {e}", file=sys.stderr)
                 break
         if card_found:
             break
@@ -470,16 +528,9 @@ def verify_card(passcode):
     with open(paths["feature_list"], "w", encoding="utf-8") as f:
         json.dump(fl_data, f, ensure_ascii=False, indent=2)
         
-    print(f"\nSUCCESS: Card {passcode} is now fully verified and marked as 'done'!")
-    
-    # Run automatic session log archiver (max 25 sessions)
-    print("Step 6: Running automatic session log archiver...")
-    rc, stdout, stderr = run_command(["python", "script-test/archive_progress.py"], paths["root"])
-    if rc == 0:
-        print(stdout.strip())
-    else:
-        print(f"Warning: Session log archiver failed: {stderr.strip()}", file=sys.stderr)
-        
+    print(f"\nSUCCESS: Card {passcode} passed static validation; legacy status set to 'done'.")
+    print("EDOPro runtime behavior is NOT verified. Run in-game scenarios before declaring the card complete.")
+
     return True
 
 def scan_pending_cards():
@@ -498,26 +549,19 @@ def scan_pending_cards():
     for arch_name, arch_info in fl_data.get("archetypes", {}).items():
         for card in arch_info.get("cards", []):
             if "queue_file" in card:
-                stem = Path(card["queue_file"]).stem
-                # strip prefixes: p_, w_, d_
-                if stem.startswith("p_") or stem.startswith("w_") or stem.startswith("d_"):
-                    stem = stem[2:]
-                registered_stems.add(stem.lower())
+                registered_stems.add(strip_queue_prefix(Path(card["queue_file"]).stem).lower())
             if "passcode" in card:
                 registered_passcodes.add(card["passcode"])
 
     # Locate all p_ files in queues
     queues_dir = paths["queues_dir"]
-    extensions = ["*.jpg", "*.jpeg", "*.png", "*.gif"]
+    extensions = [f"*{ext}" for ext in QUEUE_EXTS]
     found_pending = []
     
     for ext in extensions:
         for p in queues_dir.rglob(ext):
             if p.name.startswith("p_"):
-                stem = p.stem
-                if stem.startswith("p_"):
-                    stem = stem[2:]
-                if stem.lower() not in registered_stems:
+                if strip_queue_prefix(p.stem).lower() not in registered_stems:
                     found_pending.append(p)
 
     if not found_pending:
@@ -550,10 +594,7 @@ def scan_pending_cards():
         arch_info = fl_data["archetypes"][actual_arch_name]
 
         # Generate name from filename
-        stem = p_path.stem
-        if stem.startswith("p_"):
-            stem = stem[2:]
-        words = stem.split("_")
+        words = strip_queue_prefix(p_path.stem).split("_")
         formatted_words = []
         for word in words:
             if word.lower() == "and":
@@ -611,6 +652,112 @@ def scan_pending_cards():
         
     print(f"Successfully registered {added_count} new pending cards in feature_list.json!")
 
+def cleanup_queue(apply_changes=False):
+    """Dọn ảnh queue đã done, chỉ xóa file đã có artwork tương ứng trong pics/.
+
+    Mặc định chỉ liệt kê. Cần --apply mới xóa thật và gỡ 'queue_file' khỏi
+    feature_list. File chưa đăng ký, chưa done hoặc chưa có artwork đều được
+    giữ lại và báo lý do, vì lúc đó ảnh queue có thể là bản duy nhất.
+    """
+    paths = get_project_paths()
+    if not paths["feature_list"].exists():
+        print("Error: feature_list.json not found.", file=sys.stderr)
+        return False
+
+    with open(paths["feature_list"], "r", encoding="utf-8") as f:
+        fl_data = json.load(f)
+
+    if not paths["queues_dir"].is_dir():
+        print(f"Error: {paths['queues_dir']} không tồn tại.", file=sys.stderr)
+        return False
+
+    # Khóa của mọi ảnh còn trên đĩa, kể cả ảnh chưa done: ref chỉ lệch tiền tố
+    # trạng thái vẫn khớp được nhờ queue_key.
+    existing_keys = {
+        queue_key(image.relative_to(paths["root"]).as_posix())
+        for image in paths["queues_dir"].rglob("*")
+        if image.is_file() and image.suffix.lower() in QUEUE_EXTS
+    }
+
+    # Tra ngược từ đường dẫn ảnh về card để biết passcode và trạng thái.
+    # Ref không khớp ảnh nào là rác: ảnh đã bị dọn hoặc gỡ khỏi repo từ trước.
+    # Giữ lại chỉ làm mọi lệnh đọc queue hiểu sai trạng thái card.
+    card_by_queue = {}
+    stale_refs = []
+    for arch_info in fl_data.get("archetypes", {}).values():
+        for card in arch_info.get("cards", []):
+            queue_file = card.get("queue_file")
+            if not queue_file:
+                continue
+            key = queue_key(queue_file)
+            if key in existing_keys:
+                card_by_queue[key] = card
+            else:
+                stale_refs.append((card, queue_file))
+
+    for card, queue_file in stale_refs:
+        print(f"  [GỠ  ] {queue_file} — ảnh không còn, gỡ 'queue_file' của {card.get('passcode')}")
+        if apply_changes:
+            card.pop("queue_file", None)
+
+    images = sorted(
+        p for p in paths["queues_dir"].rglob("d_*")
+        if p.is_file() and p.suffix.lower() in QUEUE_EXTS
+    )
+    if not images:
+        print("Queue không còn ảnh done nào để dọn.")
+
+    ready, kept = [], []
+    for image in images:
+        rel = image.relative_to(paths["root"]).as_posix()
+        card = card_by_queue.get(queue_key(rel))
+        if card is None:
+            kept.append((rel, "chưa đăng ký trong feature_list"))
+        elif card.get("status") != "done":
+            kept.append((rel, f"status='{card.get('status')}', chưa done"))
+        elif not card.get("passcode"):
+            kept.append((rel, "card thiếu passcode"))
+        elif find_artwork(paths["pics_dir"], card["passcode"]) is None:
+            kept.append((rel, f"chưa có artwork pics/{card['passcode']}.jpg|.png — copy artwork trước"))
+        else:
+            ready.append((rel, image, card))
+
+    for rel, reason in kept:
+        print(f"  [GIỮ ] {rel} — {reason}")
+
+    freed = 0
+    failed = 0
+    for rel, image, card in ready:
+        size = image.stat().st_size
+        if not apply_changes:
+            print(f"  [XÓA ] {rel} (artwork pics/{card['passcode']} đã có, {size / 1024:.0f} KB)")
+            freed += size
+            continue
+        try:
+            image.unlink()
+        except Exception as e:
+            print(f"  [LỖI ] {rel} — xóa thất bại: {e}", file=sys.stderr)
+            failed += 1
+            continue
+        card.pop("queue_file", None)
+        freed += size
+        print(f"  [XÓA ] {rel}")
+
+    if apply_changes and (ready or stale_refs):
+        with open(paths["feature_list"], "w", encoding="utf-8") as f:
+            json.dump(fl_data, f, ensure_ascii=False, indent=2)
+
+    verb = "Đã xóa" if apply_changes else "Sẽ xóa"
+    print()
+    print(f"{verb} {len(ready) - failed}/{len(images)} ảnh queue (~{freed / 1048576:.1f} MB), giữ lại {len(kept)}.")
+    if stale_refs:
+        gone = "Đã gỡ" if apply_changes else "Sẽ gỡ"
+        print(f"{gone} {len(stale_refs)} tham chiếu 'queue_file' trỏ tới ảnh không còn.")
+    if not apply_changes and (ready or stale_refs):
+        print("Đây là dry-run. Chạy lại với --apply để áp dụng thật (file đang được Git theo dõi, vẫn khôi phục được từ history).")
+    return failed == 0
+
+
 def main():
     parser = argparse.ArgumentParser(description="TTF Custom Cards Harness Management CLI Tool")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -622,11 +769,15 @@ def main():
     start_parser.add_argument("template", type=str, choices=list(TEMPLATE_TYPES.keys()), help="Template type to copy")
 
     # Subcommand: verify
-    verify_parser = subparsers.add_parser("verify", help="Run full check-sync & syntax tests and mark card as done")
+    verify_parser = subparsers.add_parser("verify", help="Run static check-sync and syntax checks (runtime unverified); set legacy done status")
     verify_parser.add_argument("passcode", type=int, help="Card passcode to verify")
 
     # Subcommand: scan
     subparsers.add_parser("scan", help="Scan queues directory for new pending cards and register them in feature_list.json")
+
+    # Subcommand: cleanup
+    cleanup_parser = subparsers.add_parser("cleanup", help="Delete done queue images whose artwork is already in pics/ (dry-run by default)")
+    cleanup_parser.add_argument("--apply", action="store_true", help="Actually delete the confirmed images instead of listing them")
 
     args = parser.parse_args()
 
@@ -637,6 +788,8 @@ def main():
         sys.exit(0 if verify_card(args.passcode) else 1)
     elif args.command == "scan":
         scan_pending_cards()
+    elif args.command == "cleanup":
+        sys.exit(0 if cleanup_queue(args.apply) else 1)
 
 if __name__ == "__main__":
     main()

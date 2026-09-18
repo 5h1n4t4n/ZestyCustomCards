@@ -10,21 +10,18 @@
           "name": "Blue Eye Flute of Summoning Dragon",
           "passcode": "22100001",
           "status": "done",
-          "queue_file": "docs/queues/Blue_Eye/d_Blue_Eye_Flute_Of_Summoning_Dragon.jpg",
           "script": "script/c22100001.lua"
         },
         {
           "name": "Purple Eyes Ultra Max Dragon",
           "passcode": "22100002",
           "status": "done",
-          "queue_file": "docs/queues/Blue_Eye/d_Purple_Eyes_Ultra_Max_Dragon.jpg",
           "script": "script/c22100002.lua"
         },
         {
           "name": "Blue Eye Ultimammoth Arrow Dragon",
           "passcode": "22100003",
           "status": "done",
-          "queue_file": "docs/queues/Blue_Eye/d_Blue_Eye_Ultimammoth_Arrow_Dragon.jpg",
           "script": "script/c22100003.lua"
         }
       ]
@@ -55,29 +52,25 @@
           "name": "Witchcrafter Bumble Magic",
           "passcode": "29600002",
           "status": "done",
-          "script": "script/c29600002.lua",
-          "queue_file": "docs/queues/Witchcrafter/d_Witchcrafter_bumble_magic.jpg"
+          "script": "script/c29600002.lua"
         },
         {
           "name": "Witchcrafter Unit Furnacer",
           "passcode": "29600003",
           "status": "done",
-          "script": "script/c29600003.lua",
-          "queue_file": "docs/queues/Witchcrafter/d_Witchcrafter_unit_furnacer.jpg"
+          "script": "script/c29600003.lua"
         },
         {
           "name": "Verre Magic Mastery",
           "passcode": "29600004",
           "status": "done",
-          "script": "script/c29600004.lua",
-          "queue_file": "docs/queues/Witchcrafter/d_Verre_Magic_Mastery.jpg"
+          "script": "script/c29600004.lua"
         },
         {
           "name": "Witchcrafter Garden",
           "passcode": "29600005",
           "status": "done",
-          "script": "script/c29600005.lua",
-          "queue_file": "docs/queues/Common/d_witchcrafter_garden.jpg"
+          "script": "script/c29600005.lua"
         },
         {
           "name": "Witchcrafter Hisho - Madame",
@@ -137,8 +130,7 @@
           "name": "Dragonmaid's Soul",
           "passcode": "30700001",
           "status": "done",
-          "script": "script/c30700001.lua",
-          "queue_file": "docs/queues/Dragonmaid/d_Dragonmaids_Soul.png"
+          "script": "script/c30700001.lua"
         }
       ]
     },
@@ -150,22 +142,19 @@
           "name": "Whispers of the White Forest",
           "passcode": "42600001",
           "status": "done",
-          "script": "script/c42600001.lua",
-          "queue_file": "docs/queues/White_Forest/d_Whispers_of_the_White_Forest.png"
+          "script": "script/c42600001.lua"
         },
         {
           "name": "Memory of the White Forest",
           "passcode": "42600002",
           "status": "done",
-          "script": "script/c42600002.lua",
-          "queue_file": "docs/queues/White_Forest/d_Memory_of_the_White_Forest.jpg"
+          "script": "script/c42600002.lua"
         },
         {
           "name": "Knowledge of the White Forest",
           "passcode": "42600003",
           "status": "done",
-          "script": "script/c42600003.lua",
-          "queue_file": "docs/queues/White_Forest/d_Knowledge_of_the_White_Forest.jpg"
+          "script": "script/c42600003.lua"
         }
       ]
     },
@@ -177,8 +166,7 @@
           "name": "Branded's New Adventure",
           "passcode": "35200001",
           "status": "done",
-          "script": "script/c35200001.lua",
-          "queue_file": "docs/queues/Brandeds/d_Brandeds_New_Adventure.png"
+          "script": "script/c35200001.lua"
         },
         {
           "name": "Branded in Peace",
@@ -195,96 +183,82 @@
         {
           "name": "Iris, Master of the Castle of Dreams",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Iris_Master_of_the_Castle_of_Dreams_.jpg",
           "passcode": "192200004",
           "script": "script/c192200004.lua"
         },
         {
           "name": "Bena, Guardian of the Castle of Dreams",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Bena_Guardian_of_the_Castle_of_Dreams_2.jpg",
           "passcode": "192200001",
           "script": "script/c192200001.lua"
         },
         {
           "name": "Cautus, Keeper of the Castle of Dreams",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Cautus_Keeper_of_the_Castle_of_Dreams_1.jpg",
           "passcode": "192200002",
           "script": "script/c192200002.lua"
         },
         {
           "name": "Morpheus, Corruptor of the Castle of Dreams",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Morpheus_Corruptor_of_the_Castle_of_Dreams_1.jpg",
           "passcode": "192200006",
           "script": "script/c192200006.lua"
         },
         {
           "name": "Morpheus, Dreamspinner of the Castle of Dreams",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Morpheus_Dreamspinner_of_the_Castle_of_Dreams_1.jpg",
           "passcode": "192200005",
           "script": "script/c192200005.lua"
         },
         {
           "name": "Wandering Ghost of the Castle of Dreams",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Wandering_Ghost_of_the_Castle_of_Dreams_1.jpg",
           "passcode": "192200007",
           "script": "script/c192200007.lua"
         },
         {
           "name": "Wolff, Servant of the Castle of Dreams",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Wolff_Servant_of_the_Castle_of_Dreams_.jpg",
           "passcode": "192200003",
           "script": "script/c192200003.lua"
         },
         {
           "name": "Castle of Dreams - Betrayal",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Castel_of_Dreams_-_Betrayal.jpg",
           "passcode": "192200012",
           "script": "script/c192200012.lua"
         },
         {
           "name": "Castle of Dreams - Breakout",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Castel_of_Dreams_-_Breakout.jpg",
           "passcode": "192200013",
           "script": "script/c192200013.lua"
         },
         {
           "name": "Castle of Dreams - Fall",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Castel_of_Dreams_-_Fall_1.jpg",
           "passcode": "192200014",
           "script": "script/c192200014.lua"
         },
         {
           "name": "Castle of Dreams - Dream Show",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Castle_of_Dreams_-_Dream_Show.jpg",
           "passcode": "192200010",
           "script": "script/c192200010.lua"
         },
         {
           "name": "Castle of Dreams - Fairytale",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Castle_of_Dreams_-_Fairytale.jpg",
           "passcode": "192200008",
           "script": "script/c192200008.lua"
         },
         {
           "name": "Castle of Dreams - Iriss Necklace",
-          "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Castle_of_Dreams_-_Iriss_Necklace_.jpg"
+          "status": "done"
         },
         {
           "name": "Castle of Dreams - Stage",
           "status": "done",
-          "queue_file": "docs/queues/Castel_of_dreams/d_Castle_of_Dreams_-_Stage.jpg",
           "passcode": "192200009",
           "script": "script/c192200009.lua"
         },
@@ -298,14 +272,12 @@
           "name": "Wandering Fairy in the Castle of Dreams",
           "passcode": "192200015",
           "status": "done",
-          "queue_file": "docs/queues/Common/d_Wandering_Fairy_in_the_Castle_of_Dreams.jpg",
           "script": "script/c192200015.lua"
         },
         {
           "name": "Iris Wand - Dream Magical",
           "passcode": "192200016",
           "status": "done",
-          "queue_file": "docs/queues/Common/d_Iris_Wand_Dream_Magical.jpg",
           "script": "script/c192200016.lua"
         }
       ]
@@ -318,84 +290,72 @@
           "name": "Teardrop the Rikka Fairy",
           "passcode": "32100001",
           "status": "done",
-          "script": "script/c32100001.lua",
-          "queue_file": "docs/queues/Rikka/d_Teardrop_the_Rikka_Fairy.jpg"
+          "script": "script/c32100001.lua"
         },
         {
           "name": "Kanzashi the Rikka Flower",
           "passcode": "32100002",
           "status": "done",
-          "queue_file": "docs/queues/Rikka/d_Kanzashi_The_Rikka_Flower.jpg",
           "script": "script/c32100002.lua"
         },
         {
           "name": "Rikka Blizzard",
           "passcode": "32100003",
           "status": "done",
-          "queue_file": "docs/queues/Rikka/d_Rikka_Blizzard.jpg",
           "script": "script/c32100003.lua"
         },
         {
           "name": "Rikka Fleurness",
           "passcode": "32100004",
           "status": "done",
-          "queue_file": "docs/queues/Rikka/d_Rikka_Fleurness.jpg",
           "script": "script/c32100004.lua"
         },
         {
           "name": "Rikka Foliage",
           "passcode": "32100005",
           "status": "done",
-          "queue_file": "docs/queues/Rikka/d_Rikka_Foliage.jpg",
           "script": "script/c32100005.lua"
         },
         {
           "name": "Cecillia the Rikka Queen",
           "passcode": "32100006",
           "status": "done",
-          "queue_file": "docs/queues/Rikka/d_Cecillia_The_Rikka_Queen.jpg",
           "script": "script/c32100006.lua"
         },
         {
           "name": "Rikka Invitation",
           "passcode": "32100007",
           "status": "done",
-          "queue_file": "docs/queues/Rikka/d_Rikka_Invitation.jpg",
           "script": "script/c32100007.lua"
         },
         {
           "name": "Rikka Siesta",
           "passcode": "32100008",
           "status": "done",
-          "queue_file": "docs/queues/Rikka/d_Rikka_Siesta.jpg",
           "script": "script/c32100008.lua"
         },
         {
           "name": "Rikka Vow",
           "passcode": "32100009",
           "status": "done",
-          "queue_file": "docs/queues/Rikka/d_Rikka_Vow.jpg",
           "script": "script/c32100009.lua"
         },
         {
           "name": "Rikka Beauty",
           "passcode": "32100010",
           "status": "done",
-          "queue_file": "docs/queues/Rikka/d_Rikka_Beauty.jpg",
           "script": "script/c32100010.lua"
         },
         {
           "name": "Rikka Bloom",
           "passcode": "32100011",
           "status": "done",
-          "queue_file": "docs/queues/Rikka/w_Rikka_Bloom.jpg",
           "script": "script/c32100011.lua"
         },
         {
           "name": "Rikka Stems",
           "passcode": "32100012",
           "status": "done",
-          "queue_file": "docs/queues/Rikka/d_Rikka_Stems.jpg",
           "script": "script/c32100012.lua"
         }
       ]
@@ -408,8 +368,7 @@
           "name": "Maliss of the Fallen Game",
           "passcode": "44100001",
           "status": "done",
-          "script": "script/c44100001.lua",
-          "queue_file": "docs/queues/Maliss/d_Maliss_Of_The_Fallen_Game.png"
+          "script": "script/c44100001.lua"
         },
         {
           "name": "The Grand Stage of Maliss",
@@ -427,22 +386,19 @@
           "name": "Ohime the Curious Mikanko",
           "passcode": "34100001",
           "status": "done",
-          "script": "script/c34100001.lua",
-          "queue_file": "docs/queues/Mikanko/d_ohime_the_curious_mikanko.jpg"
+          "script": "script/c34100001.lua"
         },
         {
           "name": "Mikanko Illusion Dance",
           "passcode": "34100002",
           "status": "done",
-          "script": "script/c34100002.lua",
-          "queue_file": "docs/queues/Mikanko/d_Mikanko_Illusion_Dance.jpg"
+          "script": "script/c34100002.lua"
         },
         {
           "name": "Mikanko Fire Soul",
           "passcode": "34100003",
           "status": "done",
-          "script": "script/c34100003.lua",
-          "queue_file": "docs/queues/Mikanko/d_mikanko_fire_soul.jpg"
+          "script": "script/c34100003.lua"
         }
       ]
     },
@@ -454,8 +410,7 @@
           "name": "Exosister Nunctis",
           "passcode": "37200001",
           "status": "done",
-          "script": "script/c37200001.lua",
-          "queue_file": "docs/queues/Exosister/d_exosister_nunctis.png"
+          "script": "script/c37200001.lua"
         }
       ]
     },
@@ -467,15 +422,13 @@
           "name": "Return of the Red Ant",
           "passcode": "13800001",
           "status": "done",
-          "script": "script/c13800001.lua",
-          "queue_file": "docs/queues/Traptrix/d_Return_of_the_Red_Ant.jpg"
+          "script": "script/c13800001.lua"
         },
         {
           "name": "Seventh Traptrix",
           "passcode": "13800002",
           "status": "done",
-          "script": "script/c13800002.lua",
-          "queue_file": "docs/queues/Traptrix/d_Seventh_Traptrix.jpg"
+          "script": "script/c13800002.lua"
         }
       ]
     },
@@ -487,8 +440,7 @@
           "name": "Lemuria, the Slumbering Eternal City",
           "passcode": "37700001",
           "status": "done",
-          "script": "script/c37700001.lua",
-          "queue_file": "docs/queues/Umi/d_Lemuria_the_Slumbering_Eternal_City.jpg"
+          "script": "script/c37700001.lua"
         }
       ]
     },
@@ -500,8 +452,7 @@
           "name": "Outer Entity Sothoth",
           "passcode": "42790001",
           "status": "done",
-          "script": "script/c42790001.lua",
-          "queue_file": "docs/queues/Common/d_Outer_Entity_Sothoth.jpg"
+          "script": "script/c42790001.lua"
         }
       ]
     },
@@ -513,8 +464,7 @@
           "name": "Rank-Up-Magic Rising Force",
           "passcode": "14900001",
           "status": "done",
-          "script": "script/c14900001.lua",
-          "queue_file": "docs/queues/Common/d_Rank_up_magic_rising_force.jpg"
+          "script": "script/c14900001.lua"
         },
         {
           "name": "DoomZ Command J.U.P.I.T.E.R",
@@ -530,7 +480,6 @@
         {
           "name": "Laundry Fusion",
           "status": "done",
-          "queue_file": "docs/queues/Common/d_Laundry_Fusion.jpg",
           "passcode": "30700002",
           "script": "script/c30700002.lua"
         },
@@ -538,120 +487,103 @@
           "name": "Elaina, The Wandering Witch",
           "passcode": "79900001",
           "status": "done",
-          "script": "script/c79900001.lua",
-          "queue_file": "docs/queues/Common/d_Elaina_The_Wandering_Witch.jpg"
+          "script": "script/c79900001.lua"
         },
         {
           "name": "Power of the Dominators",
           "passcode": "44700001",
           "status": "done",
-          "script": "script/c44700001.lua",
-          "queue_file": "docs/queues/Common/d_Power_of_the_Dominators.jpg"
+          "script": "script/c44700001.lua"
         },
         {
           "name": "Witchcrafter Trick",
           "passcode": "29600001",
           "status": "done",
-          "script": "script/c29600001.lua",
-          "queue_file": "docs/queues/Common/d_witchcrafter_trick.jpg"
+          "script": "script/c29600001.lua"
         },
         {
           "name": "Blessing of the Fire Charmer",
           "passcode": "19100002",
           "status": "done",
-          "script": "script/c19100002.lua",
-          "queue_file": "docs/queues/Common/d_blessing_of_the_fire_charmer.jpg"
+          "script": "script/c19100002.lua"
         },
         {
           "name": "Blessing of the Water Charmer",
           "passcode": "19100003",
           "status": "done",
-          "script": "script/c19100003.lua",
-          "queue_file": "docs/queues/Common/d_blessing_of_the_water_charmer.jpg"
+          "script": "script/c19100003.lua"
         },
         {
           "name": "Blessing of the Earth Charmer",
           "passcode": "19100001",
           "status": "done",
-          "script": "script/c19100001.lua",
-          "queue_file": "docs/queues/Common/d_blessing_of_the_earth_charmer.jpg"
+          "script": "script/c19100001.lua"
         },
         {
           "name": "Blessing of the Wind Charmer",
           "passcode": "19100004",
           "status": "done",
-          "script": "script/c19100004.lua",
-          "queue_file": "docs/queues/Common/d_blessing_of_the_wind_charmer.jpg"
+          "script": "script/c19100004.lua"
         },
         {
           "name": "First Day Of Witch",
           "passcode": "79900003",
           "status": "done",
-          "script": "script/c79900003.lua",
-          "queue_file": "docs/queues/Common/d_First_Day_Of_Witch.jpg"
+          "script": "script/c79900003.lua"
         },
         {
           "name": "Waking Nightmare",
           "passcode": "79900004",
           "status": "done",
-          "script": "script/c79900004.lua",
-          "queue_file": "docs/queues/Common/d_Waking_Nightmare.jpg"
+          "script": "script/c79900004.lua"
         },
         {
           "name": "Don't Ash The Witch!",
           "passcode": "79900006",
           "status": "done",
-          "script": "script/c79900006.lua",
-          "queue_file": "docs/queues/Common/d_Dont_Ash_The_Witch.jpg"
+          "script": "script/c79900006.lua"
         },
         {
           "name": "WANTED: A Lazy Trouble Witch",
           "passcode": "79900007",
           "status": "done",
-          "script": "script/c79900007.lua",
-          "queue_file": "docs/queues/Common/d_WANTED__A_Lazy_Trouble_Witch.jpg"
+          "script": "script/c79900007.lua"
         },
         {
           "name": "Dragon Restday",
           "passcode": "79900011",
           "status": "done",
-          "script": "script/c79900011.lua",
-          "queue_file": "docs/queues/Common/d_Dragon_Restday.jpg"
+          "script": "script/c79900011.lua"
         },
         {
           "name": "Ghost Twin & Spring Rabbit",
           "passcode": "79900012",
           "status": "done",
-          "script": "script/c79900012.lua",
-          "queue_file": "docs/queues/Common/d_ghost_twin_and_spring_rabit.jpg"
+          "script": "script/c79900012.lua"
         },
         {
           "name": "Green Reboot",
           "passcode": "79900013",
           "status": "done",
-          "script": "script/c79900013.lua",
-          "queue_file": "docs/queues/Common/d_Green_reboot.jpg"
+          "script": "script/c79900013.lua"
         },
         {
           "name": "Guided by the Stars",
           "passcode": "79900014",
           "status": "done",
-          "script": "script/c79900014.lua",
-          "queue_file": "docs/queues/Common/d_Guided_by_the_stars.png"
+          "script": "script/c79900014.lua"
         },
         {
           "name": "Retfihs Noisnemid",
           "passcode": "79900015",
           "status": "done",
-          "script": "script/c79900015.lua",
-          "queue_file": "docs/queues/Common/d_Retfihs_Noisnemid.jpg"
+          "script": "script/c79900015.lua"
         },
         {
           "name": "Surtr, Sarkaz of Laevateinn",
           "passcode": "79900016",
           "status": "done",
-          "script": "script/c79900016.lua",
-          "queue_file": "docs/queues/Common/d_Surtr_Sarkaz_of_Laevateinn.jpg"
+          "script": "script/c79900016.lua"
         },
         {
           "name": "The Elation Game",
@@ -927,42 +859,36 @@
           "name": "Ghost Ogre & Rabbit Spirit",
           "passcode": "79900017",
           "status": "done",
-          "queue_file": "docs/queues/Common/d_Ghost_Ogre_Rabbit_Spirit.jpg",
           "script": "script/c79900017.lua"
         },
         {
           "name": "Possessed Bond",
           "passcode": "79900018",
           "status": "done",
-          "queue_file": "docs/queues/Common/d_Possessed_Bond.jpg",
           "script": "script/c79900018.lua"
         },
         {
           "name": "The Journeying Three Magi",
           "passcode": "79900019",
           "status": "done",
-          "queue_file": "docs/queues/Common/d_The_Journeying_Three_Magi.jpg",
           "script": "script/c79900019.lua"
         },
         {
           "name": "Contrary Fushion",
           "passcode": "79900020",
           "status": "done",
-          "queue_file": "docs/queues/Common/d_contrary_fushion.jpg",
           "script": "script/c79900020.lua"
         },
         {
           "name": "Serperior the Snake Eye Emperor",
           "passcode": "79900021",
           "status": "done",
-          "queue_file": "docs/queues/Common/d_serperior_the_snake_eye_emperor.jpg",
           "script": "script/c79900021.lua"
         },
         {
           "name": "Snivy the Snake Eye",
           "passcode": "79900022",
           "status": "done",
-          "queue_file": "docs/queues/Common/d_snivy_the_snake_eye.jpg",
           "script": "script/c79900022.lua"
         }
       ]
@@ -975,85 +901,73 @@
           "name": "Wezaemon the Tombguard",
           "passcode": "192300001",
           "status": "done",
-          "script": "script/c192300001.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_Wezaemon_The_Tombguard.jpg"
+          "script": "script/c192300001.lua"
         },
         {
           "name": "Setsuna of Bygone Days",
           "passcode": "192300002",
           "status": "done",
-          "script": "script/c192300002.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_Setsuna_Of_Bygone_Days.jpg"
+          "script": "script/c192300002.lua"
         },
         {
           "name": "Battle Machine - Kirin Armor",
           "passcode": "192300003",
           "status": "done",
-          "script": "script/c192300003.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_Battle_Machine_Kirin_Armor.jpg"
+          "script": "script/c192300003.lua"
         },
         {
           "name": "Challenge to Tombguard",
           "passcode": "192300004",
           "status": "done",
-          "script": "script/c192300004.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_Challange_To_Tombguard.jpg"
+          "script": "script/c192300004.lua"
         },
         {
           "name": "The End of Greatest Warrior",
           "passcode": "192300005",
           "status": "done",
-          "script": "script/c192300005.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_The_End_Of_Greatest_Warrior.jpg"
+          "script": "script/c192300005.lua"
         },
         {
           "name": "Tachikaze",
           "passcode": "192300006",
           "status": "done",
-          "script": "script/c192300006.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_Tachikaze.jpg"
+          "script": "script/c192300006.lua"
         },
         {
           "name": "Raisho",
           "passcode": "192300007",
           "status": "done",
-          "script": "script/c192300007.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_Raisho.jpg"
+          "script": "script/c192300007.lua"
         },
         {
           "name": "Nyudogumo",
           "passcode": "192300008",
           "status": "done",
-          "script": "script/c192300008.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_Nyudogumo.jpg"
+          "script": "script/c192300008.lua"
         },
         {
           "name": "Ohshike",
           "passcode": "192300009",
           "status": "done",
-          "script": "script/c192300009.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_Ohshike.jpg"
+          "script": "script/c192300009.lua"
         },
         {
           "name": "Battle Machine - Kirin",
           "passcode": "192300010",
           "status": "done",
-          "script": "script/c192300010.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_Battle_Machine_Kirin.jpg"
+          "script": "script/c192300010.lua"
         },
         {
           "name": "Seiten Taisei",
           "passcode": "192300011",
           "status": "done",
-          "script": "script/c192300011.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_Seiten_Taisen.jpg"
+          "script": "script/c192300011.lua"
         },
         {
           "name": "Tenshei",
           "passcode": "192300012",
           "status": "done",
-          "script": "script/c192300012.lua",
-          "queue_file": "docs/queues/Wezaemon The Tombguard/d_Tenshei.jpg"
+          "script": "script/c192300012.lua"
         }
       ]
     }
