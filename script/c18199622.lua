@@ -44,7 +44,7 @@ function s.tgop(e,tp,eg,ep,ev,re,r,rp)
 		local zw=Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,4064256),tp,LOCATION_ONFIELD,0,1,nil)
 		local dis_g=Duel.GetMatchingGroup(s.disfilter,tp,0,LOCATION_MZONE,nil)
 		if zw and #dis_g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISABLE)
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_NEGATE)
 			local sg=dis_g:Select(tp,1,1,nil)
 			local tc=sg:GetFirst()
 			if tc then

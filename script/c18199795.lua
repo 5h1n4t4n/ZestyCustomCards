@@ -72,15 +72,16 @@ function s.synop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetCode(EFFECT_ADD_TYPE)
 		e1:SetValue(TYPE_TUNER)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_CHAIN)
-		tc:RegisterEffect(e1)
+		-- Bài của đối thủ cần đăng ký forced, nếu không effect không được áp dụng
+		tc:RegisterEffect(e1,true)
 		-- Allow using opponent's monster as Synchro material
 		if tc:IsControler(1-tp) then
+			-- Official reference c16769305: forced registration on opponent's card
 			local e2=Effect.CreateEffect(c)
 			e2:SetType(EFFECT_TYPE_SINGLE)
-			e2:SetCode(EFFECT_EXTRA_SYNCHRO_MATERIAL)
-			e2:SetValue(1)
+			e2:SetCode(EFFECT_SYNCHRO_MATERIAL)
 			e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_CHAIN)
-			tc:RegisterEffect(e2)
+			tc:RegisterEffect(e2,true)
 		end
 		-- Check and Synchro Summon
 		local g=Duel.GetMatchingGroup(Card.IsSynchroSummonable,tp,LOCATION_EXTRA,0,nil,nil)
