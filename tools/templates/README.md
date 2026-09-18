@@ -58,6 +58,6 @@ Ví dụ: script/c192200001.lua
 ## 5. Validate
 
 ```powershell
-.\script-test\validate_scripts.ps1
-.\script-test\lint_scripts.ps1
+.\tools\validate_scripts.ps1
+.\tools\lint_scripts.ps1
 ```
