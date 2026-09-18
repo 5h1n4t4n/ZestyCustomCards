@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """TTF Card Database CLI Manager.
 
-Compiler/validator cho custom_cards_zesty.cdb, mô phỏng theo chuẩn của
+Compiler/validator cho card-data.cdb, mô phỏng theo chuẩn của
 Datacorn (docs/resources/Datacorn) - trình editor CDB chính thức của
 ProjectIgnis - về schema, bitfield và cách đóng gói dữ liệu:
   - Schema datas/texts + PRAGMA page_size=4096 giống Datacorn tạo DB mới.
@@ -139,13 +139,7 @@ TEXTS_TABLE_FIELDS = ("desc0,id1,name0,str10,str100,str110,str120,str130,str140,
 
 
 def get_db_path() -> Path:
-    script_dir = Path(__file__).resolve().parent
-    # Check parent and current directories for custom_cards_zesty.cdb
-    for path in [script_dir.parent / "custom_cards_zesty.cdb", script_dir / "custom_cards_zesty.cdb"]:
-        if path.exists():
-            return path
-    # Default fallback
-    return script_dir.parent / "custom_cards_zesty.cdb"
+    return Path(__file__).resolve().parent.parent / "card-data.cdb"
 
 
 def verify_schema(conn) -> bool:
@@ -370,6 +364,8 @@ def load_and_validate(json_file):
             card_data = json.load(f)
     except Exception as e:
         return None, None, [f"JSON không đọc được: {e}"], []
+    if not isinstance(card_data, dict):
+        return None, None, ["Spec must be a JSON object"], []
     cols = normalize_card(card_data, errors)
     validate_card(cols, card_data, errors, warnings)
     m = re.match(r"c(\d+)$", json_file.stem)
@@ -570,6 +566,13 @@ def collect_specs(json_dir: Path):
             total_errors += len(errors)
             continue
         cards.append((cols, card_data))
+    ids = [cols["id"] for cols, _ in cards]
+    if len(ids) != len(set(ids)):
+        print("ERROR: Duplicate spec IDs", file=sys.stderr)
+        total_errors += 1
+    if not cards:
+        print("ERROR: No valid card specs", file=sys.stderr)
+        total_errors += 1
     return cards, total_errors, total_warnings
 
 
@@ -608,6 +611,17 @@ def compile_db(db_path: Path) -> bool:
         return False
     if n_warn:
         print(f"({n_warn} warning — nên xử lý nhưng không chặn biên dịch)")
+
+    if db_path.exists():
+        try:
+            existing = read_rows(db_path)
+            owned = {cols["id"] for cols, _ in cards}
+            extra = (set(existing["datas"]) | set(existing["texts"])) - owned
+            if extra:
+                raise ValueError(f"Refusing to drop IDs outside card-data: {sorted(extra)}")
+        except (ValueError, sqlite3.Error) as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return False
 
     print("Step 2/2: Compiling to SQLite...")
     tmp_path = db_path.with_suffix(".cdb.tmp")
@@ -660,157 +674,71 @@ def compile_db(db_path: Path) -> bool:
     return True
 
 
-def check_sync(db_path: Path):
-    project_root = db_path.parent
-    script_dir = project_root / "script"
-    json_dir = project_root / "card-data"
-    fl_file = project_root / "feature_list.json"
+DATA_COLUMNS = "id,ot,alias,setcode,type,atk,def,level,race,attribute,category"
+TEXT_COLUMNS = "id,name,desc," + ",".join(f"str{i}" for i in range(1, 17))
 
-    if not script_dir.is_dir():
-        print(f"Error: Script folder not found at {script_dir}", file=sys.stderr)
-        return
 
-    # 1. Scan script files
-    script_passcodes = set()
-    for f in script_dir.glob("c*.lua"):
-        m = re.match(r"c(\d+)", f.stem)
-        if m:
-            script_passcodes.add(int(m.group(1)))
+def read_rows(path):
+    """Read canonical columns without creating a missing database."""
+    conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)
+    try:
+        if not verify_schema(conn):
+            raise ValueError(f"Invalid CDB schema: {path}")
+        return {table: {row[0]: row for row in conn.execute(f"SELECT {columns} FROM {table}")}
+                for table, columns in (("datas", DATA_COLUMNS), ("texts", TEXT_COLUMNS))}
+    finally:
+        conn.close()
 
-    # 2. Scan JSON spec files
-    json_passcodes = set()
-    if json_dir.is_dir():
-        for f in json_dir.glob("c*.json"):
-            m = re.match(r"c(\d+)", f.stem)
-            if m:
-                json_passcodes.add(int(m.group(1)))
-    else:
-        print(f"Warning: card-data directory not found at {json_dir}", file=sys.stderr)
 
-    # 3. Scan feature_list.json
-    fl_passcodes = set()
-    fl_names = {}
-    if fl_file.exists():
-        try:
-            with open(fl_file, "r", encoding="utf-8") as f:
-                fl_data = json.load(f)
-            for arch in fl_data.get("archetypes", {}).values():
-                for card in arch.get("cards", []):
-                    passcode = card.get("passcode")
-                    if passcode:
-                        pid = int(passcode)
-                        fl_passcodes.add(pid)
-                        fl_names[pid] = card.get("name", "Unknown")
-        except Exception as e:
-            print(f"Error parsing feature_list.json: {e}", file=sys.stderr)
+def expected_rows(cards):
+    result = {"datas": {}, "texts": {}}
+    for cols, card in cards:
+        code = cols["id"]
+        result["datas"][code] = tuple(cols[key] for key in DATA_COLUMNS.split(","))
+        strings = card.get("strings", [])
+        result["texts"][code] = (code, card["name"], card.get("desc", ""),
+                                  *(strings + [None] * (16 - len(strings))))
+    return result
 
-    # 4. Scan SQLite Database (CDB) if it exists — lấy đủ cột để so nội dung
-    db_passcodes = set()
-    db_names = {}
-    db_datas = {}
-    db_texts = {}
-    if db_path.exists():
-        try:
-            conn = sqlite3.connect(str(db_path))
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, ot, alias, setcode, type, atk, def, level, race, attribute, category FROM datas")
-            db_datas = {row[0]: row for row in cursor.fetchall()}
-            db_passcodes = set(db_datas)
-            cursor.execute("""SELECT id, name, desc,
-                str1, str2, str3, str4, str5, str6, str7, str8,
-                str9, str10, str11, str12, str13, str14, str15, str16 FROM texts""")
-            db_texts = {row[0]: row for row in cursor.fetchall()}
-            db_names = {cid: row[1] for cid, row in db_texts.items()}
-            conn.close()
-        except Exception as e:
-            print(f"Warning: Failed to query database: {e}", file=sys.stderr)
 
-    all_passcodes = script_passcodes.union(json_passcodes).union(fl_passcodes).union(db_passcodes)
-
-    mismatches = []
-    cdb_out_of_sync = False
-
-    for code in sorted(all_passcodes):
-        in_script = code in script_passcodes
-        in_json = code in json_passcodes
-        in_fl = code in fl_passcodes
-        in_cdb = code in db_passcodes
-
-        # Check source of truth sync (script, JSON, feature_list)
-        if not (in_script and in_json and in_fl):
-            status = []
-            if not in_script: status.append("Missing Lua Script")
-            if not in_json: status.append("Missing Card Spec JSON")
-            if not in_fl: status.append("Missing from feature_list.json")
-            mismatches.append((code, ", ".join(status)))
-
-        # Check if local compiled DB matches the source of truth JSON
-        if in_json != in_cdb:
-            cdb_out_of_sync = True
-
-    # 5. So sánh NỘI DUNG: CDB có thể chứa đủ id nhưng dữ liệu cũ (specs JSON
-    #    đã sửa mà chưa compile). Normalize lại từng spec và đối chiếu từng cột.
-    stale = []
-    for code in sorted(json_passcodes & db_passcodes):
-        cols, card_data, errs, _warns = load_and_validate(json_dir / f"c{code}.json")
-        if errs:
-            stale.append((code, "spec JSON đang lỗi validate (chạy 'validate' xem chi tiết)"))
-            continue
-        expected_datas = (cols["id"], cols["ot"], cols["alias"], cols["setcode"], cols["type"],
-                          cols["atk"], cols["def"], cols["level"], cols["race"],
-                          cols["attribute"], cols["category"])
-        if db_datas.get(code) != expected_datas:
-            stale.append((code, "cột datas trong CDB khác specs JSON"))
-            continue
-        strings = card_data.get("strings", [])
-        padded = tuple(strings[i] if i < len(strings) else None for i in range(16))
-        expected_texts = (code, card_data.get("name", ""), card_data.get("desc", ""), *padded)
-        if db_texts.get(code) != expected_texts:
-            stale.append((code, "name/desc/strings trong CDB khác specs JSON"))
-    if stale:
-        cdb_out_of_sync = True
-
-    # Retrieve card name helper
-    def get_card_name(code):
-        if code in fl_names: return fl_names[code]
-        if code in db_names: return db_names[code]
-        # Try loading from JSON
-        json_file = json_dir / f"c{code}.json"
-        if json_file.exists():
-            try:
-                with open(json_file, "r", encoding="utf-8") as f:
-                    return json.load(f).get("name", "Unknown")
-            except: pass
-        return "Unknown"
-
-    print("=== Database & Script Sync Status ===")
-    print(f"Total script files found   : {len(script_passcodes)}")
-    print(f"Total card spec JSON files : {len(json_passcodes)}")
-    print(f"Total in feature_list.json : {len(fl_passcodes)}")
-    print(f"Total compiled DB rows     : {len(db_passcodes)}")
-    print("-" * 40)
-
-    if not mismatches:
-        print("All local card scripts, spec JSON files, and feature_list are in perfect sync! (100% OK)")
-    else:
-        print(f"Found {len(mismatches)} synchronization issues:")
-        for code, issue in mismatches:
-            name = get_card_name(code)
-            print(f"  - {code:<10} ({name[:20]:<20}) : {issue}")
-
-    if stale:
-        print("-" * 40)
-        print(f"WARNING: {len(stale)} card có nội dung trong CDB lệch so với specs JSON (CDB stale):")
-        for code, why in stale[:10]:
-            print(f"  - {code:<10}: {why}")
-        if len(stale) > 10:
-            print(f"  ... và {len(stale) - 10} card khác")
-
-    if cdb_out_of_sync:
-        print("-" * 40)
-        print("WARNING: Compiled database (CDB) is out of sync with card-data/ JSON files.")
-        print("Please run: python .\\script-test\\manage_db.py compile")
-    print()
+def check_sync(db_path: Path) -> bool:
+    root = db_path.parent
+    cards, errors, _ = collect_specs(root / "card-data")
+    if errors:
+        return False
+    expected = expected_rows(cards)
+    owned = set(expected["datas"])
+    try:
+        actual = read_rows(db_path)
+        features = json.loads((root / "feature_list.json").read_text(encoding="utf-8"))
+        registered = {int(card["passcode"]): card.get("status", "")
+                      for arch in features.get("archetypes", {}).values()
+                      for card in arch.get("cards", []) if card.get("passcode")}
+    except (OSError, ValueError, sqlite3.Error) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return False
+    scripts = {int(match.group(1)) for path in (root / "script").glob("c*.lua")
+               if (match := re.fullmatch(r"c(\d+)", path.stem))}
+    issues = []
+    for code in sorted(owned):
+        if code not in scripts:
+            issues.append(f"{code}: missing Lua script")
+        if code not in registered:
+            issues.append(f"{code}: missing feature_list entry")
+    for table in ("datas", "texts"):
+        if set(actual[table]) != owned:
+            issues.append(f"{table}: missing={sorted(owned-set(actual[table]))}, extra={sorted(set(actual[table])-owned)}")
+        for code in sorted(owned & set(actual[table])):
+            if actual[table][code] != expected[table][code]:
+                issues.append(f"{code}: stale {table} row")
+    legacy = (scripts | {code for code, status in registered.items()
+                          if status not in ("pending", "skipped", "p", "x")}) - owned
+    if legacy:
+        print(f"INFO: unrelated legacy cards outside card-data (not blocking): {sorted(legacy)}")
+    for issue in issues:
+        print(f"ERROR: {issue}")
+    print(f"Sync: {len(owned)} owned cards; {len(issues)} issues")
+    return not issues
 
 
 def update_text(db_path: Path, passcode: int, name: str = None, desc: str = None):
@@ -871,7 +799,7 @@ def main():
     if args.command == "query":
         query_card(db_path, args.search)
     elif args.command == "check-sync":
-        check_sync(db_path)
+        sys.exit(0 if check_sync(db_path) else 1)
     elif args.command == "validate":
         sys.exit(0 if validate_specs(db_path) else 1)
     elif args.command == "dump":
