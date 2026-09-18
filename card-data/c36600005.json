@@ -1,0 +1,21 @@
+{
+  "id": 36600005,
+  "ot": 32,
+  "alias": 7142724,
+  "type": 524290,
+  "setcodes": [
+    366
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 34603008,
+  "name": "Icejade Regaining Enion Cradle",
+  "desc": "(This card is always treated as \"Icejade Cenote Enion Cradle\".)\nDuring the Main Phase: You can Special Summon 1 \"Icejade\" monster from your hand, Deck or GY. You can only use this effect of \"Icejade Regaining Enion Cradle\" once per turn. Unaffected by other card effects while you control an \"Icejade\" Synchro Monster. You cannot Special Summon monsters, except WATER monsters. If a monster(s) is Special Summoned, you can: Immediately after this effect resolves, Synchro Summon 1 Synchro Monster, using monsters you control as material, including an \"Icejade\" monster.",
+  "strings": [
+    "Special Summon 1 \"Icejade\" monster from your hand, Deck or GY",
+    "Synchro Summon 1 Synchro Monster, including an \"Icejade\" monster as material"
+  ]
+}

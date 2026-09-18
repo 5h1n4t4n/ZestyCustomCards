@@ -1,0 +1,22 @@
+{
+  "id": 36600004,
+  "ot": 32,
+  "alias": 0,
+  "type": 4129,
+  "setcodes": [
+    366
+  ],
+  "atk": 2000,
+  "def": 2500,
+  "level": 7,
+  "race": 64,
+  "attribute": 2,
+  "category": 5242896,
+  "name": "Icejade Ran Tremora",
+  "desc": "If this card is added to your hand, except by drawing it: You can Special Summon this card. If this card is Normal or Special Summoned: You can send 1 \"Icejade\" monster from your Deck to the GY, and if you do, Special Summon 1 \"Icejade Token\" (Aqua/WATER/Level 3/ATK 0/DEF 0). If a face-up WATER monster(s) you control leave the field by your opponent's card while this card is in your GY: You can Special Summon this card. You can only use each effect of \"Icejade Ran Tremora\" once per turn.",
+  "strings": [
+    "Special Summon this card from your hand",
+    "Send 1 \"Icejade\" monster from your Deck to the GY, then Special Summon 1 \"Icejade Token\"",
+    "Special Summon this card from your GY"
+  ]
+}

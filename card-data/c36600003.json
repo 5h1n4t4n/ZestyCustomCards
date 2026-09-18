@@ -1,0 +1,21 @@
+{
+  "id": 36600003,
+  "ot": 32,
+  "alias": 0,
+  "type": 131074,
+  "setcodes": [
+    366
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 1049120,
+  "name": "Icejade Creator",
+  "desc": "During the Main Phase: You can add 1 \"Icejade\" card from your Deck to your hand. While \"Icejade Cenote Enion Cradle\" is on the field, your opponent cannot activate the effects of monsters that were Summoned that turn. If an \"Icejade\" monster you control leaves the field by your opponent's card: You can Special Summon 1 \"Icejade\" monster from your Deck or banishment. You can only use each effect of \"Icejade Creator\" once per turn.",
+  "strings": [
+    "Add 1 \"Icejade\" card from your Deck to your hand",
+    "Special Summon 1 \"Icejade\" monster from your Deck or banishment"
+  ]
+}

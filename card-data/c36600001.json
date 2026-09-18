@@ -1,0 +1,20 @@
+{
+  "id": 36600001,
+  "ot": 32,
+  "alias": 0,
+  "type": 65538,
+  "setcodes": [
+    366
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 1049120,
+  "name": "Icejade Awakening",
+  "desc": "Add 1 Level 4 or lower Aqua monster from your Deck to your hand. If your opponent controls more monsters than you do, you can Special Summon it instead. You can only use 1 \"Icejade Awakening\" once per turn.",
+  "strings": [
+    "Special Summon it instead?"
+  ]
+}

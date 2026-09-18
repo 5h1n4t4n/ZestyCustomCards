@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-06-29",
+  "last_updated": "2026-09-18",
   "note": "Trạng thái: pending(p) | working(w) | review(r) | done(d) | skipped(x). Phản ánh prefix trong docs/queues/<archetype>/",
   "archetypes": {
     "Blue_Eye": {
@@ -968,6 +968,42 @@
           "passcode": "192300012",
           "status": "done",
           "script": "script/c192300012.lua"
+        }
+      ]
+    },
+    "Icejade": {
+      "setcode": "0x16e",
+      "passcode_range": "36600001-36699999",
+      "cards": [
+        {
+          "name": "Icejade Awakening",
+          "passcode": "36600001",
+          "status": "done",
+          "script": "script/c36600001.lua"
+        },
+        {
+          "name": "Icejade Creation Pillar",
+          "passcode": "36600002",
+          "status": "done",
+          "script": "script/c36600002.lua"
+        },
+        {
+          "name": "Icejade Creator",
+          "passcode": "36600003",
+          "status": "done",
+          "script": "script/c36600003.lua"
+        },
+        {
+          "name": "Icejade Ran Tremora",
+          "passcode": "36600004",
+          "status": "done",
+          "script": "script/c36600004.lua"
+        },
+        {
+          "name": "Icejade Regaining Enion Cradle",
+          "passcode": "36600005",
+          "status": "done",
+          "script": "script/c36600005.lua"
         }
       ]
     }
