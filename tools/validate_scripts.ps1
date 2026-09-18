@@ -14,9 +14,9 @@
 .PARAMETER Quiet
     Chỉ hiển thị file bị lỗi, không hiển thị file OK
 .EXAMPLE
-    .\script-test\validate_scripts.ps1
-    .\script-test\validate_scripts.ps1 -Path script\c12345678.lua
-    .\script-test\validate_scripts.ps1 -Quiet
+    .\tools\validate_scripts.ps1
+    .\tools\validate_scripts.ps1 -Path script\c12345678.lua
+    .\tools\validate_scripts.ps1 -Quiet
 #>
 
 param(
@@ -24,7 +24,7 @@ param(
     [switch]$Quiet = $false
 )
 
-$OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 $ScriptDir = Resolve-Path "script"
@@ -35,11 +35,48 @@ $TotalFail = 0
 
 $ErrorActionPreference = "Continue"
 
+function Remove-LuaNoise {
+    param([string]$Content)
+    # Bo comment va noi dung chuoi: ten hang so/API trong do khong phai loi goi that
+    $clean = [regex]::Replace($Content, '(?s)--\[\[.*?\]\]', '')
+    $clean = [regex]::Replace($clean, '--.*', '')
+    $clean = [regex]::Replace($clean, '"(?:[^"\\]|\\.)*"', '""')
+    $clean = [regex]::Replace($clean, "'(?:[^'\\]|\\.)*'", "''")
+    return $clean
+}
+
+function Get-LuaFunctionBody {
+    param([string]$Content, [string]$FuncName)
+    # Lua khong co dau ngoac nhon de bam theo; phai dem tu khoa mo/dong block.
+    # Mo: function / if / do   Dong: end   (repeat...until la cap rieng)
+    $start = [regex]::Match($Content, "function\s+$([regex]::Escape($FuncName))\s*\(")
+    if (-not $start.Success) { return $null }
+    $tail = $Content.Substring($start.Index)
+    $depth = 0
+    foreach ($token in [regex]::Matches($tail, '\b(function|if|do|end|repeat|until)\b')) {
+        switch ($token.Groups[1].Value) {
+            'function' { $depth++ }
+            'if'       { $depth++ }
+            'do'       { $depth++ }
+            'repeat'   { $depth++ }
+            'until'    { $depth-- }
+            'end'      { $depth-- }
+        }
+        if ($depth -eq 0) {
+            return $tail.Substring(0, $token.Index + $token.Length)
+        }
+    }
+    return $null
+}
+
 function Test-LuaSyntax {
     param([string]$FilePath)
     try {
-        $escaped = $FilePath -replace '\\', '/'
-        $cmd = "local f,e=loadfile('$escaped'); if f ~= nil then return 'OK' else return e end"
+        # Nhung duong dan vao chuoi long-bracket cua Lua: khong can escape, va
+        # khong di qua stdin — stdin cua tien trinh con co the bi chen BOM tuy
+        # console encoding, lam Lua nhan duong dan rac.
+        # loadfile parses without executing EDOPro calls; syntax errors must exit 1.
+        $cmd = "local f,e=loadfile([==[$FilePath]==]); if not f then io.stderr:write(e, string.char(10)); os.exit(1) end"
         $result = & lua -e $cmd 2>&1
         if ($LASTEXITCODE -eq 0) {
             return @{ Ok = $true; Message = "" }
@@ -50,59 +87,6 @@ function Test-LuaSyntax {
     } catch {
         return @{ Ok = $false; Message = $_.Exception.Message }
     }
-}
-
-function Test-LuaSyntaxFallback {
-    param([string]$FilePath)
-    $content = Get-Content $FilePath -Raw -ErrorAction Stop
-    $warnings = @()
-
-    $lines = $content -split "`r`n|`n"
-    $depth = 0
-    $lineNum = 0
-    $inString = $false
-    $stringChar = ""
-    $inComment = $false
-    $inBlockComment = $false
-
-    foreach ($line in $lines) {
-        $lineNum++
-        $chars = $line.ToCharArray()
-        for ($i = 0; $i -lt $chars.Length; $i++) {
-            $c = $chars[$i]
-            $prev = if ($i -gt 0) { $chars[$i-1] } else { "" }
-            $next = if ($i -lt $chars.Length - 1) { $chars[$i+1] } else { "" }
-
-            if ($inBlockComment) {
-                if ($c -eq ']' -and $next -eq ']') { $inBlockComment = $false }
-                continue
-            }
-            if ($inComment) {
-                if ($c -eq "`n") { $inComment = $false }
-                continue
-            }
-            if ($c -eq '-' -and $next -eq '-') {
-                if ($i + 3 -lt $chars.Length -and $chars[$i+2] -eq '[' -and $chars[$i+3] -eq '[') {
-                    $inBlockComment = $true
-                } else {
-                    $inComment = $true
-                }
-                continue
-            }
-            if ($inString) {
-                if ($c -eq $stringChar -and $prev -ne '\') { $inString = $false }
-                continue
-            }
-            if ($c -eq '"' -or $c -eq "'") { $inString = $true; $stringChar = $c; continue }
-            if ($c -eq '(' -or $c -eq '{' -or $c -eq '[') { $depth++ }
-            if ($c -eq ')' -or $c -eq '}' -or $c -eq ']') { $depth--; if ($depth -lt 0) { $depth = 0 } }
-        }
-    }
-
-    if ($inString) { $warnings += "Unclosed string" }
-    if ($depth -ne 0) { $warnings += "Unbalanced brackets (depth=$depth)" }
-
-    return @{ Ok = ($warnings.Count -eq 0); Message = ($warnings -join "; ") }
 }
 
 function Test-ScriptStructure {
@@ -122,48 +106,24 @@ function Test-ScriptStructure {
         $errors += "Missing: RegisterEffect call"
     }
 
-    $effectMatches = [regex]::Matches($Content, 'Effect\.CreateEffect')
-    $setCodeMatches = [regex]::Matches($Content, 'SetCode')
-    $setTypeMatches = [regex]::Matches($Content, 'SetType')
-
-    if ($effectMatches.Count -gt 0) {
-        if ($setTypeMatches.Count -lt $effectMatches.Count) {
-            $warnings += "Some Effect.CreateEffect may be missing SetType"
-        }
-        if ($setCodeMatches.Count -lt $effectMatches.Count) {
-            $warnings += "Some Effect.CreateEffect may be missing SetCode"
-        }
-    }
-
     # Check SetTarget has chk==0 pattern
     $targetFuncs = [regex]::Matches($Content, 'SetTarget\s*\(\s*s\.(\w+)')
     foreach ($match in $targetFuncs) {
-        $funcName = "s.$($match.Groups[1].Value)"
-        $funcPattern = "function\s+$funcName\s*\([^)]*\)[^}]*end"
-        $funcMatch = [regex]::Match($Content, $funcPattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
-        if ($funcMatch.Success) {
-            $funcBody = $funcMatch.Value
-            if ($funcBody -notmatch 'chk\s*==\s*0') {
-                $funcNameClean = $match.Groups[1].Value
-                $warnings += "SetTarget $funcNameClean may be missing 'if chk==0' check"
-            }
+        $funcNameClean = $match.Groups[1].Value
+        $funcBody = Get-LuaFunctionBody -Content $Content -FuncName "s.$funcNameClean"
+        if ($funcBody -and $funcBody -notmatch 'chk\s*==\s*0') {
+            $warnings += "SetTarget $funcNameClean may be missing 'if chk==0' check"
         }
     }
 
     # Check operation functions have IsRelateToEffect
     $opFuncs = [regex]::Matches($Content, 'SetOperation\s*\(\s*s\.(\w+)')
     foreach ($match in $opFuncs) {
-        $funcName = "s.$($match.Groups[1].Value)"
         $funcNameClean = $match.Groups[1].Value
-        if ($funcNameClean -ne 'initial_effect') {
-            $funcPattern = "function\s+$funcName\s*\([^)]*\).*?end\s*$"
-            $funcMatch = [regex]::Match($Content, $funcPattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
-            if ($funcMatch.Success) {
-                $funcBody = $funcMatch.Value
-                if ($funcBody -match 'e:GetHandler\s*\(\s*\)' -and $funcBody -notmatch 'IsRelateToEffect') {
-                    $warnings += "Operation $funcNameClean uses GetHandler() but may be missing IsRelateToEffect check"
-                }
-            }
+        if ($funcNameClean -eq 'initial_effect') { continue }
+        $funcBody = Get-LuaFunctionBody -Content $Content -FuncName "s.$funcNameClean"
+        if ($funcBody -and $funcBody -match 'e:GetHandler\s*\(\s*\)' -and $funcBody -notmatch 'IsRelateToEffect') {
+            $warnings += "Operation $funcNameClean uses GetHandler() but may be missing IsRelateToEffect check"
         }
     }
 
@@ -179,29 +139,59 @@ function Test-ScriptStructure {
 
 function Test-LuaConstants {
     param([string]$Content)
-    
-    # 2. Clean comments and strings
-    $clean = $Content
-    $clean = [regex]::Replace($clean, '(?s)--\[\[.*?\]\]', '') # block comments
-    $clean = [regex]::Replace($clean, '--.*', '')              # line comments
-    $clean = [regex]::Replace($clean, '"(?:[^"\\]|\\.)*"', '')  # double quotes
-    $clean = [regex]::Replace($clean, "'(?:[^'\\]|\\.)*'", '')  # single quotes
+    # Lua tra ve nil cho ten khong ton tai thay vi bao loi, nen hang so go sai
+    # qua duoc buoc kiem tra cu phap roi moi crash trong duel -> bat o day.
+    $clean = Remove-LuaNoise $Content
 
-    # 3. Find all uppercase words starting with common prefixes or containing underscores
-    $matches = [regex]::Matches($clean, '\b[A-Z_][A-Z0-9_]{3,}\b')
-    $warnings = @()
-    foreach ($m in $matches) {
-        $val = $m.Value
-        # Filter out common false positives
-        if ($val -eq "TRUE" -or $val -eq "FALSE" -or $val -eq "NULL" -or $val -eq "CARD" -or $val -eq "DUEL") { continue }
-        
-        # Check if it starts with one of the standard EDOPro prefixes
-        $hasPrefix = $val -match '^(LOCATION_|TYPE_|ATTRIBUTE_|RACE_|CATEGORY_|EVENT_|PHASE_|EFFECT_|POS_|REASON_|SUMMON_|TIMING|HINT)'
-        if ($hasPrefix -and -not $Global:ValidConstants.Contains($val)) {
-            $warnings += "Undefined or non-standard constant used: '$val'"
-        }
+    # Hang so khai bao ngay trong file (local COUNTER_X = 0x1) la hop le
+    $localDefs = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($m in [regex]::Matches($clean, '(?m)^\s*(?:local\s+)?([A-Z][A-Z0-9_]{2,})\s*=')) {
+        [void]$localDefs.Add($m.Groups[1].Value)
     }
-    return $warnings | Select-Object -Unique
+
+    $errors = @()
+    # (?<![.:\w]) bo qua truy cap field: aux.TRUE, c:GetCode
+    foreach ($m in [regex]::Matches($clean, '(?<![.:\w])([A-Z][A-Z0-9_]{3,})\b')) {
+        $val = $m.Groups[1].Value
+        if ($Global:ValidConstants.Contains($val) -or $localDefs.Contains($val)) { continue }
+        $errors += "Constant '$val' khong ton tai trong EDOPro - runtime doc ra nil"
+    }
+    return $errors | Select-Object -Unique
+}
+
+function Test-LuaApis {
+    param([string]$Content)
+    # Ham bia ra ('Card.IsAbleToHandOrExtra') cung la nil -> 'attempt to call a nil value'
+    $clean = Remove-LuaNoise $Content
+
+    $localFns = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($m in [regex]::Matches($clean, 'function\s+\w+\.([A-Za-z_]\w*)')) {
+        [void]$localFns.Add($m.Groups[1].Value)
+    }
+    # Bang cuc bo khai bao trong chinh file: local MyTable = {}
+    $localTables = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($m in [regex]::Matches($clean, '(?m)^\s*(?:local\s+)?([A-Z][A-Za-z0-9_]*)\s*=')) {
+        [void]$localTables.Add($m.Groups[1].Value)
+    }
+
+    $errors = @()
+    # Ten thuong cung phai xet: 'aux' la namespace duoc dung nhieu nhat trong script card.
+    foreach ($m in [regex]::Matches($clean, '(?<![.:\w])([A-Za-z_]\w*)\.([A-Za-z_]\w*)')) {
+        $ns = $m.Groups[1].Value
+        $fn = $m.Groups[2].Value
+        if ($localTables.Contains($ns)) { continue }
+        if (-not $Global:ValidNamespaces.Contains($ns)) {
+            # Ten thuong khong ro la bang hay bien cuc bo (s, e, tc...) nen bo qua;
+            # ten viet hoa dau moi du chac chan de bao bang khong ton tai.
+            if ($ns -cmatch '^[A-Z]') {
+                $errors += "Bang '$ns' khong ton tai trong EDOPro (goi '$ns.$fn')"
+            }
+            continue
+        }
+        if ($Global:ValidApis.Contains("$ns.$fn") -or $localFns.Contains($fn)) { continue }
+        $errors += "'$ns.$fn' khong ton tai trong EDOPro - runtime 'attempt to call a nil value'"
+    }
+    return $errors | Select-Object -Unique
 }
 
 function Test-ConstantsDependency {
@@ -209,12 +199,7 @@ function Test-ConstantsDependency {
     $errors = @()
     if ($FileName -eq "constants.lua") { return $errors }
 
-    # Clean comments and strings to avoid false positives
-    $clean = $Content
-    $clean = [regex]::Replace($clean, '(?s)--\[\[.*?\]\]', '')
-    $clean = [regex]::Replace($clean, '--.*', '')
-    $clean = [regex]::Replace($clean, '"(?:[^"\\]|\\.)*"', '""')
-    $clean = [regex]::Replace($clean, "'(?:[^'\\]|\\.)*'", "''")
+    $clean = Remove-LuaNoise $Content
 
     # EDOPro KHONG tu load script/constants.lua — script nao dung dinh danh
     # tu file do bat buoc phai co Duel.LoadScript("constants.lua") o dau file,
@@ -229,7 +214,7 @@ function Test-ConstantsDependency {
     # Cac "API ma" (ham khong ton tai trong EDOPro) tung gay crash truoc day
     foreach ($api in $Global:PhantomApis) {
         if ($clean -match [regex]::Escape($api)) {
-            $errors += "Phantom API '$api' does not exist in EDOPro - crashes at runtime (see script-test/phantom_apis.txt)"
+            $errors += "Phantom API '$api' does not exist in EDOPro - crashes at runtime (see tools/phantom_apis.txt)"
         }
     }
     return $errors
@@ -263,12 +248,25 @@ function Test-ScriptFile {
 # MAIN
 # ============================================================
 
-# Load standard constants once at startup
-$ConstantsFile = Join-Path $PSScriptRoot "edopro_constants.txt"
-if (Test-Path $ConstantsFile) {
-    $Global:ValidConstants = [System.Collections.Generic.HashSet[string]]::new([string[]](Get-Content $ConstantsFile), [System.StringComparer]::Ordinal)
-} else {
-    $Global:ValidConstants = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+function Read-ReferenceList {
+    param([string]$FilePath)
+    $set = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    if (Test-Path $FilePath) {
+        foreach ($line in Get-Content $FilePath) {
+            $trimmed = $line.Trim()
+            if ($trimmed -and -not $trimmed.StartsWith('#')) { [void]$set.Add($trimmed) }
+        }
+    }
+    return $set
+}
+
+# Hang so va API that cua EDOPro, sinh tu ban cai game bang
+# tools/sync_edopro_refs.py. Thieu file thi hai kiem tra tuong ung bi tat.
+$Global:ValidConstants = Read-ReferenceList (Join-Path $PSScriptRoot "edopro_constants.txt")
+$Global:ValidApis = Read-ReferenceList (Join-Path $PSScriptRoot "edopro_apis.txt")
+$Global:ValidNamespaces = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+foreach ($api in $Global:ValidApis) {
+    [void]$Global:ValidNamespaces.Add($api.Split('.')[0])
 }
 
 # Add custom constants from constants.lua if exists
@@ -304,9 +302,9 @@ Write-Host ""
 
 $luaAvailable = Get-Command lua -ErrorAction SilentlyContinue
 if (-not $luaAvailable) {
-    Write-Host "WARNING: Lua not found in PATH. Syntax checks will use fallback method." -ForegroundColor Yellow
-    Write-Host "Install Lua 5.3+ from https://luabinaries.sourceforge.net/ for full validation."
-    Write-Host ""
+    Write-Host "ERROR: Lua parser not found in PATH. Static validation cannot pass without syntax checking." -ForegroundColor Red
+    Write-Host "Install Lua 5.3+ and rerun validation. Runtime behavior still requires EDOPro tests."
+    exit 1
 }
 
 if ($Path -ne "") {
@@ -349,11 +347,7 @@ foreach ($file in $files) {
 
     if (-not $hasError) {
         # 3. Syntax check
-        if ($luaAvailable) {
-            $syntax = Test-LuaSyntax -FilePath $filePath
-        } else {
-            $syntax = Test-LuaSyntaxFallback -FilePath $filePath
-        }
+        $syntax = Test-LuaSyntax -FilePath $filePath
         if (-not $syntax.Ok) {
             $allMessages += "SYNTAX: $($syntax.Message)"
             $hasError = $true
@@ -364,22 +358,33 @@ foreach ($file in $files) {
         foreach ($e in $struct.Errors) { $allMessages += "STRUCT: $e"; $hasError = $true }
         foreach ($w in $struct.Warnings) { $allMessages += "STRUCT: $w"; $hasWarning = $true }
 
-        # 5. Constants check
-        $constWarnings = Test-LuaConstants -Content $content
-        foreach ($w in $constWarnings) { $allMessages += "CONST: $w"; $hasWarning = $true }
+        # 5. Constants check — ten khong ton tai la nil luc chay, khong phai canh bao
+        if ($Global:ValidConstants.Count -gt 0) {
+            $constErrors = Test-LuaConstants -Content $content
+            foreach ($e in $constErrors) { $allMessages += "CONST: $e"; $hasError = $true }
+        }
+
+        # 5b. API check — ham/bang bia ra gay 'attempt to call a nil value'
+        if ($Global:ValidApis.Count -gt 0) {
+            $apiErrors = Test-LuaApis -Content $content
+            foreach ($e in $apiErrors) { $allMessages += "API: $e"; $hasError = $true }
+        }
 
         # 6. constants.lua dependency + phantom API check (FAIL — gay crash runtime)
         $depErrors = Test-ConstantsDependency -Content $content -FileName $fileName
         foreach ($e in $depErrors) { $allMessages += "DEPEND: $e"; $hasError = $true }
     }
 
+    # -Quiet chi giau dong OK; file co canh bao van phai duoc dem dung
     if ($hasError) {
         Write-Host ("[*] FAIL $fileName") -ForegroundColor Red
         foreach ($msg in $allMessages) { Write-Host "     $msg" -ForegroundColor Red }
         $TotalFail++
-    } elseif ($hasWarning -and -not $Quiet) {
-        Write-Host ("[!] WARN $fileName") -ForegroundColor Yellow
-        foreach ($msg in $allMessages) { Write-Host "     $msg" -ForegroundColor Yellow }
+    } elseif ($hasWarning) {
+        if (-not $Quiet) {
+            Write-Host ("[!] WARN $fileName") -ForegroundColor Yellow
+            foreach ($msg in $allMessages) { Write-Host "     $msg" -ForegroundColor Yellow }
+        }
         $TotalWarn++
     } else {
         if (-not $Quiet) { Write-Host ("[ ] OK   $fileName") -ForegroundColor Green }
@@ -395,4 +400,5 @@ Write-Host "$TotalWarn WARN, " -NoNewline -ForegroundColor Yellow
 Write-Host "$TotalFail FAIL" -ForegroundColor Red
 Write-Host "=======================================" -ForegroundColor Cyan
 
+Write-Host "Static validation only; EDOPro runtime behavior is unverified." -ForegroundColor Gray
 if ($TotalFail -gt 0) { exit 1 } else { exit 0 }
