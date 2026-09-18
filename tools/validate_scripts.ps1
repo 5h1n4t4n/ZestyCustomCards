@@ -257,7 +257,9 @@ function Read-ReferenceList {
             if ($trimmed -and -not $trimmed.StartsWith('#')) { [void]$set.Add($trimmed) }
         }
     }
-    return $set
+    # Dau phay bat buoc: 'return $set' se unroll HashSet ra pipeline va nguoi goi
+    # nhan lai Object[] co dinh kich thuoc, khien cac lenh Add() sau do nem loi.
+    return ,$set
 }
 
 # Hang so va API that cua EDOPro, sinh tu ban cai game bang
