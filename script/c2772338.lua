@@ -11,7 +11,7 @@ function s.initial_effect(c)
     e0:SetValue(84012625)
     c:RegisterEffect(e0)
 
-    -- EFFECT 1: Special Summon from Hand/GY when a "Sky Striker" or "Sky Striker Ace" monster is Summoned
+    -- EFFECT 1: Special Summon from Hand/GY when a "Sky Striker" or "Sky Striker Ace" monster is Normal or Special Summoned (From Hand, Deck, Extra Deck, GY, Banished)
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -131,7 +131,7 @@ function s.exspop(e,tp,eg,ep,ev,re,r,rp)
             tc:RegisterEffect(e2)
 
             local spell_count=Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_GRAVE,0,nil,TYPE_SPELL)
-                local rmg=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,0,LOCATION_GRAVE,nil,POS_FACEDOWN)
+            local rmg=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,0,LOCATION_GRAVE,nil,POS_FACEDOWN)
             if spell_count>=3 and #rmg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,4)) then
                 Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
                 local rm=rmg:Select(tp,1,1,nil)
