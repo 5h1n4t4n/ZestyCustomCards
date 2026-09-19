@@ -19,13 +19,13 @@ function s.initial_effect(c)
     e1:SetOperation(s.negop)
     c:RegisterEffect(e1)
 
-    -- HIỆU ỨNG 2 (CHỦ ĐỘNG): (Quick Effect) Gửi 1 Phép "Sky Striker" từ tay xuống Mộ -> Copy và kích hoạt hiệu ứng của lá đó
+    -- HIỆU ỨNG 2 (QUICK EFFECT): Gửi 1 Phép Sky Striker trên tay xuống Mộ -> Copy và kích hoạt hiệu ứng (Bỏ qua Main Zone, dùng được nhiều lần)
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetType(EFFECT_TYPE_QUICK_O)
     e2:SetCode(EVENT_FREE_CHAIN)
     e2:SetRange(LOCATION_MZONE)
-    e2:SetCountLimit(1,id)
+    e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_MAIN_END)
     e2:SetCost(s.cpcost)
     e2:SetTarget(s.cptg)
     e2:SetOperation(s.cpop)
@@ -93,11 +93,10 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 2 (CHỌN PHÉP TRÊN TAY GỬI XUỐNG MỘ RỒI COPY HIỆU ỨNG)
+-- LOGIC HIỆU ỨNG 2 (QUICK EFFECT COPY & CAST KHÔNG GIỚI HẠN SỐ LẦN TRONG LƯỢT)
 --------------------------------------------------------------------------------
 function s.cpfilter(c,e,tp,eg,ep,ev,re,r,rp)
     if not ((c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsType(TYPE_SPELL) and c:IsAbleToGraveAsCost()) then return false end
-    -- Giả lập kiểm tra hiệu ứng của lá bài đó có thể thực thi được không
     local te=c:CheckActivateEffect(false,true,false)
     return te~=nil
 end
@@ -106,7 +105,7 @@ function s.cpcost(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(s.cpfilter,tp,LOCATION_HAND,0,1,nil,e,tp,eg,ep,ev,re,r,rp) end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
     local g=Duel.SelectMatchingCard(tp,s.cpfilter,tp,LOCATION_HAND,0,1,1,nil,e,tp,eg,ep,ev,re,r,rp)
-    e:SetLabelObject(g:GetFirst()) -- Lưu lại lá bài vừa chọn để dùng ở phần Operation
+    e:SetLabelObject(g:GetFirst())
     Duel.SendtoGrave(g,REASON_COST)
 end
 
