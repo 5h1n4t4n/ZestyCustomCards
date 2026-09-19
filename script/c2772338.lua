@@ -3,7 +3,7 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-    -- Always treated as a "Sky Striker Ace - Roze" card (ID: 84012625)
+    -- Luôn được coi là "Sky Striker Ace - Roze" (ID: 84012625)
     local e0=Effect.CreateEffect(c)
     e0:SetType(EFFECT_TYPE_SINGLE)
     e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
@@ -11,7 +11,7 @@ function s.initial_effect(c)
     e0:SetValue(84012625)
     c:RegisterEffect(e0)
 
-    -- EFFECT 1: Special Summon from Hand/GY when a "Sky Striker" or "Sky Striker Ace" monster is Normal or Special Summoned (From Hand, Deck, Extra Deck, GY, Banished)
+    -- HIỆU ỨNG 1: Tự Triệu hồi Đặc biệt từ Tay/Mộ khi có quái "Sky Striker" / "Sky Striker Ace" được Triệu hồi (Thường hoặc Đặc biệt)
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -19,6 +19,7 @@ function s.initial_effect(c)
     e1:SetProperty(EFFECT_FLAG_DELAY)
     e1:SetCode(EVENT_SUMMON_SUCCESS)
     e1:SetRange(LOCATION_HAND+LOCATION_GRAVE)
+    e1:SetCountLimit(1,id)
     e1:SetCondition(s.spcon)
     e1:SetTarget(s.sptg)
     e1:SetOperation(s.spop)
@@ -27,7 +28,7 @@ function s.initial_effect(c)
     e1b:SetCode(EVENT_SPSUMMON_SUCCESS)
     c:RegisterEffect(e1b)
 
-    -- EFFECT 2: (Quick Effect) Tribute -> Special Summon "Sky Striker" from Extra Deck -> Target 1 opponent's card to negate (+ Banish 1 from opponent's GY face-down if 3+ Spells)
+    -- HIỆU ỨNG 2: (Quick Effect) Hiến tế -> Triệu hồi quái "Sky Striker" từ Extra Deck -> Vô hiệu hóa 1 lá bài của đối thủ (+ Trục xuất úp 1 lá từ Mộ đối thủ nếu có 3+ Phép)
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DISABLE+CATEGORY_REMOVE)
@@ -36,20 +37,20 @@ function s.initial_effect(c)
     e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
     e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_MAIN_END)
     e2:SetRange(LOCATION_MZONE)
-    e2:SetCountLimit(1,id)
+    e2:SetCountLimit(1,id+100)
     e2:SetCost(s.exspcost)
     e2:SetTarget(s.exsptg)
     e2:SetOperation(s.exspop)
     c:RegisterEffect(e2)
 
-    -- EFFECT 3: Sent from Field to GY -> Search 1 "Sky Striker" or "Rank-Up-Magic" Spell
+    -- HIỆU ỨNG 3: Bị gửi từ Sân xuống Mộ -> Lấy 1 Phép "Sky Striker" hoặc "Rank-Up-Magic" từ Deck/Mộ lên tay
     local e3=Effect.CreateEffect(c)
     e3:SetDescription(aux.Stringid(id,2))
     e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
     e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
     e3:SetProperty(EFFECT_FLAG_DELAY)
     e3:SetCode(EVENT_TO_GRAVE)
-    e3:SetCountLimit(1,id+100)
+    e3:SetCountLimit(1,id+200)
     e3:SetCondition(s.thcon)
     e3:SetTarget(s.thtg)
     e3:SetOperation(s.thop)
@@ -57,14 +58,14 @@ function s.initial_effect(c)
 end
 
 --------------------------------------------------------------------------------
--- EFFECT 1 LOGIC
+-- LOGIC HIỆU ỨNG 1 (Chuẩn cấu trúc Six Samurai)
 --------------------------------------------------------------------------------
-function s.spfilter(c,tp)
-    return (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsControler(tp) and c:IsFaceup()
+function s.cfilter(c,tp)
+    return c:IsFaceup() and c:IsSummonPlayer(tp) and (c:IsSetCard(0x115) or c:IsSetCard(0x1115))
 end
 
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-    return eg:IsExists(s.spfilter,1,nil,tp)
+    return eg:IsExists(s.cfilter,1,nil,tp)
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -82,7 +83,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------------------------------------
--- EFFECT 2 LOGIC
+-- LOGIC HIỆU ỨNG 2
 --------------------------------------------------------------------------------
 function s.exspcost(e,tp,eg,ep,ev,re,r,rp,chk)
     local c=e:GetHandler()
@@ -144,7 +145,7 @@ function s.exspop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------------------------------------
--- EFFECT 3 LOGIC
+-- LOGIC HIỆU ỨNG 3
 --------------------------------------------------------------------------------
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
     return e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
