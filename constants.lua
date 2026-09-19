@@ -10,5 +10,11 @@ SET_WEZAEMON                       = 0x783
 SET_FLOWER_SPIRIT                = 0x702
 SET_HALOVIAN                       = 0x987
 SET_STAR_RAIL                      = 0x986
+SET_MAVERICK_BOOST                 = 0x304
+SET_MAVERICK_ANALYZER              = 0x305
+SET_MAVERICK_HUNTER                = 0x303
+SET_ZERO                           = 0x306
+SET_CHRYSOS_HEIRS                  = 0xffa
 -- Custom counter
 COUNTER_MANA                      = 0x177
+COUNTER_CHRYSOS                   = 0x1ffa
