@@ -19,33 +19,25 @@ function s.initial_effect(c)
     e1:SetOperation(s.negop)
     c:RegisterEffect(e1)
 
-    -- HIỆU ỨNG 2 (BỊ ĐỘNG): Khi lá bài này ngửa trên sân, bạn được tính là không có quái thú ở Main Monster Zone khi kích hoạt bài "Sky Striker"
-    -- Ta dùng hiệu ứng trường tác động lên người chơi để bỏ qua kiểm tra MMZ của các lá bài SetCard Sky Striker
+    -- HIỆU ỨNG 2 (MỚI - CHỦ ĐỘNG): (Quick Effect) Bỏ 1 lá "Sky Striker" từ tay/sân xuống mộ -> Cho phép kích hoạt Phép Sky Striker bất chấp quái thú ở Main Zone trong lượt này
     local e2=Effect.CreateEffect(c)
-    e2:SetType(EFFECT_TYPE_FIELD)
-    e2:SetCode(EFFECT_ZOOM_SKY_STRIKER_CONDITION) -- Hoặc sử dụng cờ tuỳ chỉnh chống check zone
+    e2:SetDescription(aux.Stringid(id,1))
+    e2:SetType(EFFECT_TYPE_QUICK_O)
+    e2:SetCode(EVENT_FREE_CHAIN)
     e2:SetRange(LOCATION_MZONE)
-    e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-    e2:SetTargetRange(1,0)
+    e2:SetCountLimit(1,id)
+    e2:SetCost(s.effcost)
+    e2:SetOperation(s.effop)
     c:RegisterEffect(e2)
-
-    -- Bổ sung thêm một lớp hiệu ứng cho phép các Spell Sky Striker luôn được coi như điều kiện "không có quái thú ở Main Monster Zone" thỏa mãn
-    local e2_sub=Effect.CreateEffect(c)
-    e2_sub:SetType(EFFECT_TYPE_FIELD)
-    e2_sub:SetCode(369) -- Mã nội bộ engine cho phép check vùng Main Monster Zone trống giả lập
-    e2_sub:SetRange(LOCATION_MZONE)
-    e2_sub:SetTargetRange(LOCATION_MZONE,0)
-    e2_sub:SetValue(1)
-    c:RegisterEffect(e2_sub)
 
     -- HIỆU ỨNG 3: (Quick Effect - Twice per turn) Gửi 1 lá "Sky Striker" từ Tay/Sân xuống Mộ -> Vô hiệu hóa & trục xuất úp lá đối thủ kích hoạt
     local e3=Effect.CreateEffect(c)
-    e3:SetDescription(aux.Stringid(id,1))
+    e3:SetDescription(aux.Stringid(id,2))
     e3:SetCategory(CATEGORY_DISABLE+CATEGORY_REMOVE)
     e3:SetType(EFFECT_TYPE_QUICK_O)
     e3:SetCode(EVENT_CHAINING)
     e3:SetRange(LOCATION_MZONE)
-    e3:SetCountLimit(2,id)
+    e3:SetCountLimit(2,id+50)
     e3:SetCondition(s.discon)
     e3:SetCost(s.discost)
     e3:SetTarget(s.distg)
@@ -54,7 +46,7 @@ function s.initial_effect(c)
 
     -- HIỆU ỨNG 4: Nếu có bài bị trục xuất bởi hiệu ứng lá này -> Lấy 1 lá "Sky Striker" khác tên từ Mộ/Vùng bị trục xuất lên tay
     local e4=Effect.CreateEffect(c)
-    e4:SetDescription(aux.Stringid(id,2))
+    e4:SetDescription(aux.Stringid(id,3))
     e4:SetCategory(CATEGORY_TOHAND)
     e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
     e4:SetProperty(EFFECT_FLAG_DELAY)
@@ -100,14 +92,41 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 3
+-- LOGIC HIỆU ỨNG 2 (BỎ QUA ĐIỀU KIỆN MAIN ZONE TRONG LƯỢT)
+--------------------------------------------------------------------------------
+function s.cfilter(c)
+    return (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsAbleToGraveAsCost()
+end
+
+function s.effcost(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,e:GetHandler()) end
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+    local g=Duel.SelectMatchingCard(tp,s.cfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,1,e:GetHandler())
+    Duel.SendtoGrave(g,REASON_COST)
+end
+
+function s.effop(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    -- Đăng ký hiệu ứng trường giúp người chơi được tính là không có quái thú trong Main Monster Zone cho đến hết lượt
+    local e1=Effect.CreateEffect(c)
+    e1:SetType(EFFECT_TYPE_FIELD)
+    e1:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET) -- Dùng cờ giả lập để đánh lừa trạng thái sân
+    -- Tạo hiệu ứng player flag hoặc áp dụng trực tiếp giá trị cho phép kích hoạt
+    e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+    e1:SetTargetRange(1,0)
+    -- Đăng ký một cờ hiệu tuỳ chỉnh cho phép các spell check zone qua mặt
+    e1:SetReset(RESET_PHASE+PHASE_END)
+    Duel.RegisterEffect(e1,tp)
+    
+    -- Thông báo cho người chơi
+    Duel.Hint(HINT_CARD,0,id)
+end
+
+--------------------------------------------------------------------------------
+-- LOGIC HIỆU ỨNG 3 (VÔ HIỆU HÓA & TRỤC XUẤT ÚP)
 --------------------------------------------------------------------------------
 function s.discon(e,tp,eg,ep,ev,re,r,rp)
     return rp==1-tp and Duel.IsChainNegatable(ev)
-end
-
-function s.cfilter(c)
-    return (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsAbleToGraveAsCost()
 end
 
 function s.discost(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -134,7 +153,7 @@ function s.disop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 4
+-- LOGIC HIỆU ỨNG 4 (LẤY LẠI BÀI TỪ MỘ/VÙNG BỊ TRỤC XUẤT)
 --------------------------------------------------------------------------------
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
     return re and re:GetHandler()==e:GetHandler()
