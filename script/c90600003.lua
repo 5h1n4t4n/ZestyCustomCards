@@ -19,15 +19,16 @@ function s.initial_effect(c)
     e1:SetOperation(s.negop)
     c:RegisterEffect(e1)
 
-    -- HIỆU ỨNG 2 (MỚI - CHỦ ĐỘNG): (Quick Effect) Bỏ 1 lá "Sky Striker" từ tay/sân xuống mộ -> Cho phép kích hoạt Phép Sky Striker bất chấp quái thú ở Main Zone trong lượt này
+    -- HIỆU ỨNG 2 (CHỦ ĐỘNG): (Quick Effect) Gửi 1 Phép "Sky Striker" từ tay xuống Mộ -> Copy và kích hoạt hiệu ứng của lá đó
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetType(EFFECT_TYPE_QUICK_O)
     e2:SetCode(EVENT_FREE_CHAIN)
     e2:SetRange(LOCATION_MZONE)
     e2:SetCountLimit(1,id)
-    e2:SetCost(s.effcost)
-    e2:SetOperation(s.effop)
+    e2:SetCost(s.cpcost)
+    e2:SetTarget(s.cptg)
+    e2:SetOperation(s.cpop)
     c:RegisterEffect(e2)
 
     -- HIỆU ỨNG 3: (Quick Effect - Twice per turn) Gửi 1 lá "Sky Striker" từ Tay/Sân xuống Mộ -> Vô hiệu hóa & trục xuất úp lá đối thủ kích hoạt
@@ -92,34 +93,47 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 2 (BỎ QUA ĐIỀU KIỆN MAIN ZONE TRONG LƯỢT)
+-- LOGIC HIỆU ỨNG 2 (CHỌN PHÉP TRÊN TAY GỬI XUỐNG MỘ RỒI COPY HIỆU ỨNG)
 --------------------------------------------------------------------------------
-function s.cfilter(c)
-    return (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsAbleToGraveAsCost()
+function s.cpfilter(c,e,tp,eg,ep,ev,re,r,rp)
+    if not ((c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsType(TYPE_SPELL) and c:IsAbleToGraveAsCost()) then return false end
+    -- Giả lập kiểm tra hiệu ứng của lá bài đó có thể thực thi được không
+    local te=c:CheckActivateEffect(false,true,false)
+    return te~=nil
 end
 
-function s.effcost(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,e:GetHandler()) end
+function s.cpcost(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.IsExistingMatchingCard(s.cpfilter,tp,LOCATION_HAND,0,1,nil,e,tp,eg,ep,ev,re,r,rp) end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-    local g=Duel.SelectMatchingCard(tp,s.cfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,1,e:GetHandler())
+    local g=Duel.SelectMatchingCard(tp,s.cpfilter,tp,LOCATION_HAND,0,1,1,nil,e,tp,eg,ep,ev,re,r,rp)
+    e:SetLabelObject(g:GetFirst()) -- Lưu lại lá bài vừa chọn để dùng ở phần Operation
     Duel.SendtoGrave(g,REASON_COST)
 end
 
-function s.effop(e,tp,eg,ep,ev,re,r,rp)
-    local c=e:GetHandler()
-    -- Đăng ký hiệu ứng trường giúp người chơi được tính là không có quái thú trong Main Monster Zone cho đến hết lượt
-    local e1=Effect.CreateEffect(c)
-    e1:SetType(EFFECT_TYPE_FIELD)
-    e1:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET) -- Dùng cờ giả lập để đánh lừa trạng thái sân
-    -- Tạo hiệu ứng player flag hoặc áp dụng trực tiếp giá trị cho phép kích hoạt
-    e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-    e1:SetTargetRange(1,0)
-    -- Đăng ký một cờ hiệu tuỳ chỉnh cho phép các spell check zone qua mặt
-    e1:SetReset(RESET_PHASE+PHASE_END)
-    Duel.RegisterEffect(e1,tp)
+function s.cptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+    if chk==0 then return true end
+    local tc=e:GetLabelObject()
+    if tc then
+        local te=tc:CheckActivateEffect(false,true,false)
+        if te then
+            local tg=te:GetTarget()
+            if tg then tg(e,tp,eg,ep,ev,re,r,rp,0) end
+        end
+    end
+end
+
+function s.cpop(e,tp,eg,ep,ev,re,r,rp)
+    local tc=e:GetLabelObject()
+    if not tc then return end
+    local te,ceg,cep,cev,cre,cr,crp=tc:CheckActivateEffect(false,true,true)
+    if not te then return end
     
-    -- Thông báo cho người chơi
-    Duel.Hint(HINT_CARD,0,id)
+    e:SetProperty(te:GetProperty())
+    local tg=te:GetTarget()
+    if tg then tg(e,tp,ceg,cep,cev,cre,cr,crp,1) end
+    
+    local op=te:GetOperation()
+    if op then op(e,tp,ceg,cep,cev,cre,cr,crp) end
 end
 
 --------------------------------------------------------------------------------
@@ -127,6 +141,10 @@ end
 --------------------------------------------------------------------------------
 function s.discon(e,tp,eg,ep,ev,re,r,rp)
     return rp==1-tp and Duel.IsChainNegatable(ev)
+end
+
+function s.cfilter(c)
+    return (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsAbleToGraveAsCost()
 end
 
 function s.discost(e,tp,eg,ep,ev,re,r,rp,chk)
