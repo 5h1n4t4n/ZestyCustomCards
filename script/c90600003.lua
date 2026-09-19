@@ -1,35 +1,54 @@
 -- Sky Striker Ace - The Fallen Automaton
--- ID: 02772337
+-- ID: 2772337 (Tuyệt đối không thêm số 0 ở đầu ID trong code Lua)
 local s,id=GetID()
 
 --------------------------------------------------------------------------------
--- GLOBAL HOOK: Can thiệp hệ thống để bỏ qua điều kiện MMZ của bài Sky Striker
+-- GLOBAL HOOK: Đánh lừa hệ thống khi check điều kiện Main Monster Zone
 --------------------------------------------------------------------------------
 if not s.global_check then
     s.global_check=true
 
-    function s.bypass_filter(c)
-        return c:IsFaceup() and c:IsCode(02772337) and not c:IsDisabled()
+    -- Hàm kiểm tra xem player (tp) có đang điều khiển "The Fallen Automaton" ngửa và có hiệu lực hay không
+    local function has_automaton(tp)
+        return Duel.IsExistingMatchingCard(function(c)
+            return c:IsFaceup() and c:IsCode(id) and not c:IsDisabled()
+        end, tp, LOCATION_MZONE, 0, 1, nil)
     end
 
-    local raw_GetFieldGroupCount = Duel.GetFieldGroupCount
+    -- 1. Hook hàm GetFieldGroupCount (Hàm chính mà Engage, Widow Anchor... hay dùng)
+    _G.SkyStriker_Old_GetFieldGroupCount = Duel.GetFieldGroupCount
     Duel.GetFieldGroupCount = function(tp, loc1, loc2)
-        if loc1 == LOCATION_MMZONE and loc2 == 0 then
-            if Duel.IsExistingMatchingCard(s.bypass_filter, tp, LOCATION_MZONE, 0, 1, nil) then
-                return 0
-            end
+        if loc1 == LOCATION_MMZONE and loc2 == 0 and not s.hook_lock then
+            s.hook_lock = true
+            local bypass = has_automaton(tp)
+            s.hook_lock = false
+            if bypass then return 0 end -- Giả lập trên sân MMZ không có quái thú
         end
-        return raw_GetFieldGroupCount(tp, loc1, loc2)
+        return _G.SkyStriker_Old_GetFieldGroupCount(tp, loc1, loc2)
     end
 
-    local raw_GetMatchingGroupCount = Duel.GetMatchingGroupCount
-    Duel.GetMatchingGroupCount = function(f, tp, loc1, loc2, ex, ...)
-        if loc1 == LOCATION_MMZONE and loc2 == 0 then
-            if Duel.IsExistingMatchingCard(s.bypass_filter, tp, LOCATION_MZONE, 0, 1, nil) then
-                return 0
-            end
+    -- 2. Hook hàm GetLocationCount (Phòng hờ một số custom core dùng hàm này kiểm tra ô trống)
+    _G.SkyStriker_Old_GetLocationCount = Duel.GetLocationCount
+    Duel.GetLocationCount = function(tp, loc, player, reason, zone)
+        if loc == LOCATION_MMZONE and not s.hook_lock then
+            s.hook_lock = true
+            local bypass = has_automaton(tp)
+            s.hook_lock = false
+            if bypass then return 5 end -- Giả lập có đủ 5 ô trống
         end
-        return raw_GetMatchingGroupCount(f, tp, loc1, loc2, ex, ...)
+        return _G.SkyStriker_Old_GetLocationCount(tp, loc, player, reason, zone)
+    end
+
+    -- 3. Hook hàm GetMatchingGroupCount
+    _G.SkyStriker_Old_GetMatchingGroupCount = Duel.GetMatchingGroupCount
+    Duel.GetMatchingGroupCount = function(f, tp, loc1, loc2, ex, ...)
+        if loc1 == LOCATION_MMZONE and loc2 == 0 and not s.hook_lock then
+            s.hook_lock = true
+            local bypass = has_automaton(tp)
+            s.hook_lock = false
+            if bypass then return 0 end
+        end
+        return _G.SkyStriker_Old_GetMatchingGroupCount(f, tp, loc1, loc2, ex, ...)
     end
 end
 
@@ -49,6 +68,8 @@ function s.initial_effect(c)
     e1:SetTarget(s.negtg)
     e1:SetOperation(s.negop)
     c:RegisterEffect(e1)
+
+    -- HIỆU ỨNG 2: Bỏ qua điều kiện Ô Quái Thú Chính (Đã được xử lý triệt để bởi Global Hook ở trên)
 
     -- HIỆU ỨNG 3: (Quick Effect - Twice per turn) Gửi 1 lá "Sky Striker" từ Tay/Sân xuống Mộ -> Vô hiệu hóa & trục xuất úp lá đối thủ kích hoạt
     local e3=Effect.CreateEffect(c)
