@@ -2,6 +2,37 @@
 -- ID: 02772337
 local s,id=GetID()
 
+--------------------------------------------------------------------------------
+-- GLOBAL HOOK: Can thiệp hệ thống để bỏ qua điều kiện MMZ của bài Sky Striker
+--------------------------------------------------------------------------------
+if not s.global_check then
+    s.global_check=true
+
+    function s.bypass_filter(c)
+        return c:IsFaceup() and c:IsCode(02772337) and not c:IsDisabled()
+    end
+
+    local raw_GetFieldGroupCount = Duel.GetFieldGroupCount
+    Duel.GetFieldGroupCount = function(tp, loc1, loc2)
+        if loc1 == LOCATION_MMZONE and loc2 == 0 then
+            if Duel.IsExistingMatchingCard(s.bypass_filter, tp, LOCATION_MZONE, 0, 1, nil) then
+                return 0
+            end
+        end
+        return raw_GetFieldGroupCount(tp, loc1, loc2)
+    end
+
+    local raw_GetMatchingGroupCount = Duel.GetMatchingGroupCount
+    Duel.GetMatchingGroupCount = function(f, tp, loc1, loc2, ex, ...)
+        if loc1 == LOCATION_MMZONE and loc2 == 0 then
+            if Duel.IsExistingMatchingCard(s.bypass_filter, tp, LOCATION_MZONE, 0, 1, nil) then
+                return 0
+            end
+        end
+        return raw_GetMatchingGroupCount(f, tp, loc1, loc2, ex, ...)
+    end
+end
+
 function s.initial_effect(c)
     -- Điều kiện triệu hồi Link: 2 quái thú "Sky Striker"
     c:EnableReviveLimit()
@@ -19,14 +50,6 @@ function s.initial_effect(c)
     e1:SetOperation(s.negop)
     c:RegisterEffect(e1)
 
-    -- HIỆU ỨNG 2: Bỏ qua điều kiện Ô Quái Thú Chính (Main Monster Zone) trống khi kích hoạt các lá "Sky Striker"
-    local e2=Effect.CreateEffect(c)
-    e2:SetType(EFFECT_TYPE_FIELD)
-    e2:SetCode(EFFECT_SKY_STRIKER_MMZ_BYPASS) -- Đánh dấu trạng thái hỗ trợ kích hoạt bài Sky Striker khi MMZ có quái
-    e2:SetRange(LOCATION_MZONE)
-    e2:SetTargetRange(LOCATION_HAND+LOCATION_SZONE,0)
-    c:RegisterEffect(e2)
-
     -- HIỆU ỨNG 3: (Quick Effect - Twice per turn) Gửi 1 lá "Sky Striker" từ Tay/Sân xuống Mộ -> Vô hiệu hóa & trục xuất úp lá đối thủ kích hoạt
     local e3=Effect.CreateEffect(c)
     e3:SetDescription(aux.Stringid(id,1))
@@ -34,7 +57,7 @@ function s.initial_effect(c)
     e3:SetType(EFFECT_TYPE_QUICK_O)
     e3:SetCode(EVENT_CHAINING)
     e3:SetRange(LOCATION_MZONE)
-    e3:SetCountLimit(2,id) -- Kích hoạt tối đa 2 lần mỗi lượt
+    e3:SetCountLimit(2,id)
     e3:SetCondition(s.discon)
     e3:SetCost(s.discost)
     e3:SetTarget(s.distg)
@@ -131,7 +154,6 @@ end
 
 function s.thfilter(c,banished_group)
     if not ((c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsAbleToHand()) then return false end
-    -- Kiểm tra khác tên với lá bài vừa bị trục xuất
     return not banished_group or not banished_group:IsExists(Card.IsCode,1,nil,c:GetCode())
 end
 
