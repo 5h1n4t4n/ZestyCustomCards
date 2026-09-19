@@ -11,24 +11,43 @@ function s.initial_effect(c)
     e0:SetValue(84012625)
     c:RegisterEffect(e0)
 
-    -- HIỆU ỨNG 1: Tự Triệu hồi Đặc biệt từ Tay/Mộ khi có quái "Sky Striker" / "Sky Striker Ace" được Triệu hồi (Thường hoặc Đặc biệt)
-    local e1=Effect.CreateEffect(c)
-    e1:SetDescription(aux.Stringid(id,0))
-    e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-    e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-    e1:SetProperty(EFFECT_FLAG_DELAY)
-    e1:SetCode(EVENT_SUMMON_SUCCESS)
-    e1:SetRange(LOCATION_HAND+LOCATION_GRAVE)
-    e1:SetCountLimit(1,id)
-    e1:SetCondition(s.spcon)
-    e1:SetTarget(s.sptg)
-    e1:SetOperation(s.spop)
-    c:RegisterEffect(e1)
-    local e1b=e1:Clone()
+    ----------------------------------------------------------------------------
+    -- HIỆU ỨNG 1: Tự Special Summon từ Tay hoặc Mộ
+    -- Tách riêng 4 Effect để Core YGOPro nhận diện chuẩn 100% mọi nguồn triệu hồi
+    ----------------------------------------------------------------------------
+    -- 1a. Từ Tay khi Normal Summon
+    local e1a=Effect.CreateEffect(c)
+    e1a:SetDescription(aux.Stringid(id,0))
+    e1a:SetCategory(CATEGORY_SPECIAL_SUMMON)
+    e1a:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+    e1a:SetProperty(EFFECT_FLAG_DELAY)
+    e1a:SetCode(EVENT_SUMMON_SUCCESS)
+    e1a:SetRange(LOCATION_HAND)
+    e1a:SetCountLimit(1,id)
+    e1a:SetCondition(s.spcon)
+    e1a:SetTarget(s.sptg)
+    e1a:SetOperation(s.spop)
+    c:RegisterEffect(e1a)
+
+    -- 1b. Từ Tay khi Special Summon (từ Hand, Deck, Extra Deck, GY, Banished)
+    local e1b=e1a:Clone()
     e1b:SetCode(EVENT_SPSUMMON_SUCCESS)
     c:RegisterEffect(e1b)
 
-    -- HIỆU ỨNG 2: (Quick Effect) Hiến tế -> Triệu hồi quái "Sky Striker" từ Extra Deck -> Vô hiệu hóa 1 lá bài của đối thủ (+ Trục xuất úp 1 lá từ Mộ đối thủ nếu có 3+ Phép)
+    -- 1c. Từ Mộ khi Normal Summon
+    local e1c=e1a:Clone()
+    e1c:SetRange(LOCATION_GRAVE)
+    c:RegisterEffect(e1c)
+
+    -- 1d. Từ Mộ khi Special Summon (từ Hand, Deck, Extra Deck, GY, Banished)
+    local e1d=e1a:Clone()
+    e1d:SetCode(EVENT_SPSUMMON_SUCCESS)
+    e1d:SetRange(LOCATION_GRAVE)
+    c:RegisterEffect(e1d)
+
+    ----------------------------------------------------------------------------
+    -- HIỆU ỨNG 2: Quick Effect Hiến tế -> Summon "Sky Striker" từ Extra Deck
+    ----------------------------------------------------------------------------
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DISABLE+CATEGORY_REMOVE)
@@ -43,7 +62,9 @@ function s.initial_effect(c)
     e2:SetOperation(s.exspop)
     c:RegisterEffect(e2)
 
-    -- HIỆU ỨNG 3: Bị gửi từ Sân xuống Mộ -> Lấy 1 Phép "Sky Striker" hoặc "Rank-Up-Magic" từ Deck/Mộ lên tay
+    ----------------------------------------------------------------------------
+    -- HIỆU ỨNG 3: Bị gửi từ Sân xuống Mộ -> Search Phép
+    ----------------------------------------------------------------------------
     local e3=Effect.CreateEffect(c)
     e3:SetDescription(aux.Stringid(id,2))
     e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
@@ -58,14 +79,14 @@ function s.initial_effect(c)
 end
 
 --------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 1 (Chuẩn cấu trúc Six Samurai)
+-- LOGIC HIỆU ỨNG 1
 --------------------------------------------------------------------------------
-function s.cfilter(c,tp)
-    return c:IsFaceup() and c:IsSummonPlayer(tp) and (c:IsSetCard(0x115) or c:IsSetCard(0x1115))
+function s.spfilter(c,tp)
+    return c:IsControler(tp) and c:IsFaceup() and (c:IsSetCard(0x115) or c:IsSetCard(0x1115))
 end
 
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-    return eg:IsExists(s.cfilter,1,nil,tp)
+    return eg:IsExists(s.spfilter,1,nil,tp)
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
