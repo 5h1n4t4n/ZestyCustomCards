@@ -1,5 +1,5 @@
 -- Sky Striker Ace - Violet
--- ID: 02772338
+-- ID: 02772337
 local s,id=GetID()
 
 function s.initial_effect(c)
@@ -27,16 +27,17 @@ function s.initial_effect(c)
     e1b:SetCode(EVENT_SPSUMMON_SUCCESS)
     c:RegisterEffect(e1b)
 
-    -- EFFECT 2: (Quick Effect) Tribute + Special Summon from Extra Deck + Negate effect (+ Banishes face-down)
+    -- EFFECT 2: (Quick Effect) Tribute -> Special Summon "Sky Striker" from Extra Deck -> Target 1 opponent's card to negate (+ Banish 1 from opponent's GY face-down if 3+ Spells)
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DISABLE+CATEGORY_REMOVE)
     e2:SetType(EFFECT_TYPE_QUICK_O)
     e2:SetCode(EVENT_FREE_CHAIN)
+    e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
     e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_MAIN_END)
     e2:SetRange(LOCATION_MZONE)
     e2:SetCountLimit(1,id)
-    e2:SetCost(aux.ReleaseCost)
+    e2:SetCost(s.exspcost)
     e2:SetTarget(s.exsptg)
     e2:SetOperation(s.exspop)
     c:RegisterEffect(e2)
@@ -83,57 +84,62 @@ end
 --------------------------------------------------------------------------------
 -- EFFECT 2 LOGIC
 --------------------------------------------------------------------------------
+function s.exspcost(e,tp,eg,ep,ev,re,r,rp,chk)
+    local c=e:GetHandler()
+    if chk==0 then return c:IsReleasable() end
+    Duel.Release(c,REASON_COST)
+end
+
 function s.exspfilter(c,e,tp)
     return c:IsSetCard(0x115) and c:IsType(TYPE_MONSTER)
-        and Duel.GetLocationCountFromEx(tp,tp,e:GetHandler(),c)>0
+        and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
         and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
-function s.disfilter(c)
-    return c:IsFaceup() and not c:IsDisabled()
-end
-
-function s.exsptg(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.exsptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+    if chkc then return chkc:IsOnField() and chkc:IsControler(1-tp) and chkc:IsFaceup() and aux.NegateAnyFilter(chkc) end
     if chk==0 then return Duel.IsExistingMatchingCard(s.exspfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp) end
+    
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
+    
+    -- Target option: optional target 1 face-up card opponent controls
+    if Duel.IsExistingTarget(aux.NegateAnyFilter,tp,0,LOCATION_ONFIELD,1,nil) 
+        and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
+        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_NEGATE)
+        local g=Duel.SelectTarget(tp,aux.NegateAnyFilter,tp,0,LOCATION_ONFIELD,1,1,nil)
+        Duel.SetOperationInfo(0,CATEGORY_DISABLE,g,1,0,0)
+    end
 end
 
 function s.exspop(e,tp,eg,ep,ev,re,r,rp)
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
     local g=Duel.SelectMatchingCard(tp,s.exspfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp)
     if #g>0 and Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)>0 then
-        -- Target 1 face-up card opponent controls to negate
-        local disg=Duel.GetMatchingGroup(s.disfilter,tp,0,LOCATION_ONFIELD,nil)
-        if #disg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
+        local tc=Duel.GetFirstTarget()
+        if tc and tc:IsRelateToEffect(e) and tc:IsFaceup() and tc:IsCanBeDisabledByEffect(e) then
             Duel.BreakEffect()
-            Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_NEGATE)
-            local sg=disg:Select(tp,1,1,nil)
-            local tc=sg:GetFirst()
-            if tc then
-                Duel.HintSelection(sg)
-                local c=e:GetHandler()
-                
-                -- Negate effects until the end of this turn
-                local e1=Effect.CreateEffect(c)
-                e1:SetType(EFFECT_TYPE_SINGLE)
-                e1:SetCode(EFFECT_DISABLE)
-                e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-                tc:RegisterEffect(e1)
-                local e2=Effect.CreateEffect(c)
-                e2:SetType(EFFECT_TYPE_SINGLE)
-                e2:SetCode(EFFECT_DISABLE_EFFECT)
-                e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-                tc:RegisterEffect(e2)
+            local c=e:GetHandler()
+            
+            -- Negate effects until end of turn
+            local e1=Effect.CreateEffect(c)
+            e1:SetType(EFFECT_TYPE_SINGLE)
+            e1:SetCode(EFFECT_DISABLE)
+            e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+            tc:RegisterEffect(e1)
+            local e2=Effect.CreateEffect(c)
+            e2:SetType(EFFECT_TYPE_SINGLE)
+            e2:SetCode(EFFECT_DISABLE_EFFECT)
+            e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+            tc:RegisterEffect(e2)
 
-                -- Check condition: 3 or more Spells in GY -> Banish 1 card from opponent's GY face-down
-                local spell_count=Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_GRAVE,0,nil,TYPE_SPELL)
-                local rmg=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,0,LOCATION_GRAVE,nil,POS_FACEDOWN)
-                if spell_count>=3 and #rmg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,4)) then
-                    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-                    local rm=rmg:Select(tp,1,1,nil)
-                    if #rm>0 then
-                        Duel.Remove(rm,POS_FACEDOWN,REASON_EFFECT)
-                    end
+            -- If 3 or more Spells in GY -> Banish 1 card from opponent's GY face-down
+            local spell_count=Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_GRAVE,0,nil,TYPE_SPELL)
+            local rmg=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,0,LOCATION_GRAVE,nil,POS_FACEDOWN)
+            if spell_count>=3 and #rmg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,4)) then
+                Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+                local rm=rmg:Select(tp,1,1,nil)
+                if #rm>0 then
+                    Duel.Remove(rm,POS_FACEDOWN,REASON_EFFECT)
                 end
             end
         end
