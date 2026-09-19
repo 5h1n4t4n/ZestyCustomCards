@@ -55,7 +55,7 @@ end
 -- LOGIC HIỆU ỨNG 1
 --------------------------------------------------------------------------------
 function s.cfilter(c)
-    return c:IsFaceup() and not c:IsSetCard(0x115)
+    return c:IsFaceup() and not (c:IsSetCard(0x115) or c:IsSetCard(0x1115))
 end
 
 function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
@@ -87,13 +87,13 @@ function s.xyzcost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.xyzfilter(c,e,tp)
-    return c:IsSetCard(0x115) and c:IsType(TYPE_XYZ) and c:IsRank(4)
+    return (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsType(TYPE_XYZ) and c:IsRank(4)
         and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
         and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
-function s.matfilter(c,e,tp)
-    return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) and c:IsCanBeXyzMaterial(nil,tp)
+function s.matfilter(c)
+    return (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsType(TYPE_SPELL)
 end
 
 function s.xyztg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -107,13 +107,15 @@ function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
     local tc=g:GetFirst()
     if tc and Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)>0 then
         local spell_count=Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_GRAVE,0,nil,TYPE_SPELL)
-        local matg=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.matfilter),tp,LOCATION_DECK+LOCATION_GRAVE,0,nil,e,tp)
-        if spell_count>=3 and #matg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
-            Duel.BreakEffect()
-            Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-            local sg=aux.SelectUnselectGroup(matg,e,tp,1,2,aux.dncheck,1,tp,HINTMSG_XMATERIAL)
-            if #sg>0 then
-                Duel.Overlay(tc,sg)
+        if spell_count>=3 then
+            local matg=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.matfilter),tp,LOCATION_DECK+LOCATION_GRAVE,0,nil)
+            if #matg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
+                Duel.BreakEffect()
+                Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
+                local sg=aux.SelectUnselectGroup(matg,e,tp,1,2,aux.dncheck,1,tp,HINTMSG_XMATERIAL)
+                if #sg>0 then
+                    Duel.Overlay(tc,sg)
+                end
             end
         end
     end
@@ -123,8 +125,11 @@ end
 -- LOGIC HIỆU ỨNG 3
 --------------------------------------------------------------------------------
 function s.gyfilter(c,tp)
-    return c:IsPreviousSetCard(0x115) and c:IsPreviousLocation(LOCATION_MZONE)
-        and c:IsPreviousControler(tp) and c:IsReason(REASON_EFFECT) and c:GetReasonPlayer()==1-tp
+    return (c:IsPreviousSetCard(0x115) or c:IsPreviousSetCard(0x1115))
+        and c:IsPreviousLocation(LOCATION_MZONE)
+        and c:IsPreviousControler(tp)
+        and c:IsReason(REASON_EFFECT)
+        and c:GetReasonPlayer()==1-tp
 end
 
 function s.gycon(e,tp,eg,ep,ev,re,r,rp)
@@ -140,7 +145,7 @@ function s.gytg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.thfilter(c)
-    return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) and c:IsAbleToHand()
+    return (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsType(TYPE_SPELL) and c:IsAbleToHand()
 end
 
 function s.gyop(e,tp,eg,ep,ev,re,r,rp)
