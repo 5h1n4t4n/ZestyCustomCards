@@ -1,7 +1,7 @@
 -- Emperor P.L Founder
 local s,id=GetID()
 function s.initial_effect(c)
-	--Quick Normal Summon
+	--Quick Normal Summon during Battle Phase
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SUMMON)
@@ -15,7 +15,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.nsop)
 	c:RegisterEffect(e1)
 
-	--Add and Normal Summon
+	--Add 1 "P.L" card and immediately Normal Summon 1 Warrior monster
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SUMMON)
@@ -57,7 +57,7 @@ function s.nsop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- Đã sửa: bỏ GetOriginalName, chỉ check IsSetCard(0x751)
+-- Filter "P.L" card (bỏ hoàn toàn GetOriginalName để không bị crash)
 function s.thfilter(c)
 	return c:IsSetCard(0x751) and not c:IsCode(id) and c:IsAbleToHand()
 end
