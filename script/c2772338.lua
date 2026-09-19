@@ -1,5 +1,5 @@
 -- Sky Striker Ace - Violet
--- ID: 02772337
+-- ID: 02772338
 local s,id=GetID()
 
 function s.initial_effect(c)
@@ -11,7 +11,7 @@ function s.initial_effect(c)
     e0:SetValue(84012625)
     c:RegisterEffect(e0)
 
-    -- EFFECT 1: Special Summon from Hand/GY when a "Sky Striker" monster is Summoned
+    -- EFFECT 1: Special Summon from Hand/GY when a "Sky Striker" or "Sky Striker Ace" monster is Summoned
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -60,7 +60,7 @@ end
 -- EFFECT 1 LOGIC
 --------------------------------------------------------------------------------
 function s.spfilter(c,tp)
-    return c:IsSetCard(0x115) and c:IsControler(tp) and c:IsFaceup()
+    return (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsControler(tp) and c:IsFaceup()
 end
 
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
@@ -91,7 +91,7 @@ function s.exspcost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.exspfilter(c,e,tp)
-    return c:IsSetCard(0x115) and c:IsType(TYPE_MONSTER)
+    return (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsType(TYPE_MONSTER)
         and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
         and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
@@ -102,7 +102,6 @@ function s.exsptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
     
-    -- Target option: optional target 1 face-up card opponent controls
     if Duel.IsExistingTarget(aux.NegateAnyFilter,tp,0,LOCATION_ONFIELD,1,nil) 
         and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
         Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_NEGATE)
@@ -120,7 +119,6 @@ function s.exspop(e,tp,eg,ep,ev,re,r,rp)
             Duel.BreakEffect()
             local c=e:GetHandler()
             
-            -- Negate effects until end of turn
             local e1=Effect.CreateEffect(c)
             e1:SetType(EFFECT_TYPE_SINGLE)
             e1:SetCode(EFFECT_DISABLE)
@@ -132,9 +130,8 @@ function s.exspop(e,tp,eg,ep,ev,re,r,rp)
             e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
             tc:RegisterEffect(e2)
 
-            -- If 3 or more Spells in GY -> Banish 1 card from opponent's GY face-down
             local spell_count=Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_GRAVE,0,nil,TYPE_SPELL)
-            local rmg=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,0,LOCATION_GRAVE,nil,POS_FACEDOWN)
+                local rmg=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,0,LOCATION_GRAVE,nil,POS_FACEDOWN)
             if spell_count>=3 and #rmg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,4)) then
                 Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
                 local rm=rmg:Select(tp,1,1,nil)
@@ -154,7 +151,7 @@ function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.thfilter(c)
-    local is_ss_spell = c:IsSetCard(0x115) and c:IsType(TYPE_SPELL)
+    local is_ss_spell = (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsType(TYPE_SPELL)
     local is_rum_spell = c:IsSetCard(0x95) and c:IsType(TYPE_SPELL)
     return (is_ss_spell or is_rum_spell) and c:IsAbleToHand()
 end
