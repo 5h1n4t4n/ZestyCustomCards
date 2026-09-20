@@ -29,7 +29,8 @@ function s.initial_effect(c)
 	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e3:SetCode(EFFECT_CANNOT_TO_GRAVE)
 	e3:SetRange(LOCATION_MZONE)
-	e3:SetCondition(s.protcon) -- Xử lý logic trực tiếp tại Condition
+	e3:SetCondition(s.protcon)
+	e3:SetValue(s.protval)
 	c:RegisterEffect(e3)
 	
 	-- Effect 4: Quick Effect (Fusion on your turn, Ritual on opponent's turn)
@@ -70,30 +71,20 @@ function s.atkval(e,c)
 end
 
 -- ==========================================================
--- HIỆU ỨNG BẢO VỆ (FIX DỨT ĐIỂM BẰNG GETEXECUTINGEFFECT)
+-- HIỆU ỨNG BẢO VỆ (FIX CHUẨN ENGINE EDOPro)
 -- ==========================================================
 function s.protcon(e)
 	local c=e:GetHandler()
-	local tp=e:GetHandlerPlayer()
-	
-	-- 1. Phải chỉ vào ít nhất 1 quái thú phe mình
 	local lg=c:GetLinkedGroup()
-	if not (lg and lg:IsExists(Card.IsControler,1,nil,tp)) then 
-		return false 
-	end
-	
-	-- 2. Kiểm tra xem có phải ĐỐI THỦ đang thực thi hiệu ứng để gửi lá này xuống Mộ hay không
-	local re=Duel.GetExecutingEffect()
-	if re then
-		return re:GetOwnerPlayer() == 1 - tp
-	end
-	
-	local ev, p = Duel.GetChainInfo(0, CHAININFO_CHAIN_ID, CHAININFO_TRIGGERING_PLAYER)
-	if ev and p == 1 - tp then
-		return true
-	end
-	
-	return false
+	-- Chỉ kích hoạt bảo vệ khi đang point tới quái thú phe mình
+	return lg and lg:IsExists(Card.IsControler,1,nil,e:GetHandlerPlayer())
+end
+
+function s.protval(e,re,rp)
+	-- BẮT BỘC: Nếu không phải do Effect kích hoạt (nguyên liệu Link, Cost, Luật) thì re = nil -> Cho phép xuống Mộ (return false)
+	if not re then return false end
+	-- Chỉ chặn khi tác nhân là Hiệu ứng và do ĐỐI THỦ kích hoạt
+	return rp == 1 - e:GetHandlerPlayer()
 end
 
 -- ==========================================================
