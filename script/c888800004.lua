@@ -3,15 +3,15 @@
 local s,id=GetID()
 
 local SET_CHRYSOS_HEIRS = 0xffa
-local CARD_ERA_NOVA	 = 888800001
+local CARD_ERA_NOVA  = 888800001
 
 s.listed_series={SET_CHRYSOS_HEIRS}
 s.listed_names={CARD_ERA_NOVA}
 
 function s.initial_effect(c)
 	-- Pendulum Summon & Ritual Procedure
-	Pendulum.AddProcedure(c)
 	c:EnableReviveLimit()
+	Pendulum.AddProcedure(c)
 
 	-- Quy tắc: Luôn được coi là lá "Chrysos Heirs"
 	local e0=Effect.CreateEffect(c)
