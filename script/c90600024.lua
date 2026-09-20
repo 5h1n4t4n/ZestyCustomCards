@@ -1,183 +1,73 @@
--- Sky Striker Airspace - Sector Omega
-local s,id=GetID()
-function s.initial_effect(c)
-	-- Kích hoạt Field Spell
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_ACTIVATE)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-	c:RegisterEffect(e1)
-
-	-- Hiệu ứng 1: Đào 4 lá trên cùng Bộ bài (Excavate)
-	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,0))
-	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_DECKDES)
-	e2:SetType(EFFECT_TYPE_IGNITION)
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e2:SetRange(LOCATION_FZONE)
-	e2:SetCountLimit(1)
-	e2:SetTarget(s.thtg)
-	e2:SetOperation(s.thop)
-	c:RegisterEffect(e2)
-
-	-- Hiệu ứng 2: Cho phép kích hoạt Sky Striker Spell kể cả khi có quái thú ở Main Monster Zone
-	-- Tương tự logic The Fallen Automaton, cài đặt qua Hook toàn cục
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e3:SetCode(EVENT_ADJUST)
-	e3:SetRange(LOCATION_FZONE)
-	e3:SetOperation(s.adjustop)
-	c:RegisterEffect(e3)
-
-	-- Hiệu ứng 3: Tăng công thủ (100 ATK/DEF cho mỗi Spell trong Mộ)
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_FIELD)
-	e4:SetCode(EFFECT_UPDATE_ATTACK)
-	e4:SetRange(LOCATION_FZONE)
-	e4:SetTargetRange(LOCATION_MZONE,0)
-	e4:SetTarget(s.atktg)
-	e4:SetValue(s.atkval)
-	c:RegisterEffect(e4)
-	local e5=e4:Clone()
-	e5:SetCode(EFFECT_UPDATE_DEFENSE)
-	c:RegisterEffect(e5)
-end
-s.listed_series={0x115} -- Setcode Sky Striker
-
--- Các hàm Hook để vô hiệu hóa điều kiện kiểm tra Main Monster Zone
-if not s.sky_striker_hooked then
-	s.sky_striker_hooked=true
-	
-	local old_GetFieldGroupCount=Duel.GetFieldGroupCount
-	local old_GetFieldGroup=Duel.GetFieldGroup
-	local old_GetMatchingGroupCount=Duel.GetMatchingGroupCount
-	local old_IsExistingMatchingCard=Duel.IsExistingMatchingCard
-
-	local function is_omega_active(tp)
-		return old_IsExistingMatchingCard(function(c) return c:IsFaceup() and c:IsCode(id) and not c:IsDisabled() end, tp, LOCATION_FZONE, 0, 1, nil)
-	end
-
-	local function is_mmzone(loc)
-		if not loc then return false end
-		local mmz = rawget(_G, "LOCATION_MMZONE")
-		return (mmz and loc == mmz)
-	end
-
-	if old_GetFieldGroupCount then
-		Duel.GetFieldGroupCount=function(p, s_loc, o_loc, ...)
-			if is_mmzone(s_loc) and is_omega_active(p) then
-				return 0
-			end
-			return old_GetFieldGroupCount(p, s_loc, o_loc, ...)
-		end
-	end
-
-	if old_GetFieldGroup then
-		Duel.GetFieldGroup=function(p, s_loc, o_loc, ...)
-			if is_mmzone(s_loc) and is_omega_active(p) then
-				return Group.CreateGroup()
-			end
-			return old_GetFieldGroup(p, s_loc, o_loc, ...)
-		end
-	end
-
-	if old_GetMatchingGroupCount then
-		Duel.GetMatchingGroupCount=function(f, p, s_loc, o_loc, ex, ...)
-			if is_mmzone(s_loc) and is_omega_active(p) then
-				return 0
-			end
-			return old_GetMatchingGroupCount(f, p, s_loc, o_loc, ex, ...)
-		end
-	end
-
-	if old_IsExistingMatchingCard then
-		Duel.IsExistingMatchingCard=function(f, p, s_loc, o_loc, ct, ex, ...)
-			if is_mmzone(s_loc) and is_omega_active(p) then
-				return false
-			end
-			return old_IsExistingMatchingCard(f, p, s_loc, o_loc, ct, ex, ...)
-		end
-	end
-end
-s.patched_tables = {}
-function s.patch_cfilter()
-	for k,v in pairs(_G) do
-		if type(k)=="string" and k:sub(1,1)=="c" and type(v)=="table" and not s.patched_tables[v] then
-			if type(v.cfilter)=="function" then
-				local old_cfilter=v.cfilter
-				v.cfilter=function(c,...)
-					if Duel.IsExistingMatchingCard(function(tc) return tc:IsFaceup() and tc:IsCode(id) and not tc:IsDisabled() end,c:GetControler(),LOCATION_FZONE,0,1,nil) then
-						return false
-					end
-					return old_cfilter(c,...)
-				end
-				s.patched_tables[v]=true
-			end
-		end
-	end
-end
-s.patch_cfilter()
-
-function s.adjustop(e,tp,eg,ep,ev,re,r,rp)
-	s.patch_cfilter()
-end
-
--- Hiệu ứng 1: Đào (Excavate)
+-- Hiệu ứng 1: Đào (Excavate) 4 lá bài trên cùng
 function s.tgtcfilter(c)
 	return c:IsFaceup()
 end
+
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsControler(tp) and chkc:IsOnField() and s.tgtcfilter(chkc) and chkc~=e:GetHandler() end
 	if chk==0 then return Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=4 
 		and Duel.IsExistingTarget(s.tgtcfilter,tp,LOCATION_ONFIELD,0,1,e:GetHandler()) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
 	Duel.SelectTarget(tp,s.tgtcfilter,tp,LOCATION_ONFIELD,0,1,1,e:GetHandler())
+	-- Thiết lập thông tin operation cho hệ thống EDOPro biết trước sẽ có lá bài được thêm vào tay hoặc đưa vào Mộ/Xyz
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,0,tp,LOCATION_DECK)
 end
-function s.excfilter(c,xyz_check)
-	return c:IsSetCard(0x115) and (c:IsAbleToHand() or (xyz_check and c:IsCanBeXyzMaterial(nil)))
+
+function s.excfilter(c)
+	-- Lọc các lá bài thuộc set Sky Striker trong nhóm 4 lá được lật lên
+	return c:IsSetCard(0x115)
 end
+
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if not e:GetHandler():IsRelateToEffect(e) or not tc:IsRelateToEffect(e) then return end
 	if Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)<4 then return end
+	
+	-- Lật 4 lá bài trên cùng của Deck
 	Duel.ConfirmDecktop(tp,4)
 	local g=Duel.GetDecktopGroup(tp,4)
 	
-	-- Kiểm tra xem có quái thú Xyz "Sky Striker" hợp lệ để gắn nguyên liệu không
-	local xyzg=Duel.GetMatchingGroup(function(c) return c:IsFaceup() and c:IsType(TYPE_XYZ) and c:IsSetCard(0x115) end,tp,LOCATION_MZONE,0,nil)
-	local xyz_check = #xyzg > 0
-	
-	local sg=g:Filter(s.excfilter,nil,xyz_check)
-	if #sg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_OPERATECARD)
-		local sc=sg:Select(tp,1,1,nil):GetFirst()
+	if #g>0 then
+		-- Lọc các lá bài Sky Striker có thể tương tác được trong 4 lá lật ra
+		local sg=g:Filter(s.excfilter,nil)
 		
-		-- Lựa chọn Add lên tay hoặc Xyz Material
-		local op=0
-		if sc:IsAbleToHand() and (xyz_check and sc:IsCanBeXyzMaterial(nil)) then
-			op=Duel.SelectOption(tp,1190,aux.Stringid(id,2)) -- 1190: Add to Hand
-		elseif sc:IsAbleToHand() then
-			op=0
-		else
-			op=1
+		-- Kiểm tra xem có quái thú Xyz "Sky Striker" hợp lệ trên sân để gắn nguyên liệu không
+		local xyzg=Duel.GetMatchingGroup(function(c) return c:IsFaceup() and c:IsType(TYPE_XYZ) and c:IsSetCard(0x115) end,tp,LOCATION_MZONE,0,nil)
+		
+		if #sg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SELECT)
+			-- Cho phép người chơi chọn 1 lá Sky Striker hợp lệ trong các lá đã lật
+			local sc=sg:Select(tp,1,1,nil):GetFirst()
+			
+			local b1 = sc:IsAbleToHand()
+			local b2 = #xyzg > 0
+			local op = 0
+			
+			-- Hộp thoại lựa chọn: Thêm lên tay (0) hay Gắn làm nguyên liệu Xyz (1)
+			if b1 and b2 then
+				op=Duel.SelectOption(tp,1190,aux.Stringid(id,2))
+			elseif b1 then
+				op=0
+			elseif b2 then
+				op=1
+			else
+				op=99 -- Không thỏa mãn cả hai thì bỏ qua
+			end
+			
+			if op==0 then
+				Duel.SendtoHand(sc,nil,REASON_EFFECT)
+				Duel.ConfirmCards(1-tp,sc)
+			elseif op==1 then
+				Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
+				local xyz_tc=xyzg:Select(tp,1,1,nil):GetFirst()
+				-- Đưa trực tiếp lá bài từ nhóm lật vào làm nguyên liệu Xyz mà không bị kẹt bộ lọc cũ
+				if xyz_tc then
+					Duel.Overlay(xyz_tc,sc)
+				end
+			end
 		end
 		
-		if op==0 then
-			Duel.SendtoHand(sc,nil,REASON_EFFECT)
-			Duel.ConfirmCards(1-tp,sc)
-		else
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
-			local xyz_tc=xyzg:Select(tp,1,1,nil):GetFirst()
-			Duel.Overlay(xyz_tc,sc)
-		end
+		-- Sắp xếp/Xáo lại các lá bài không được chọn về lại Deck theo cơ chế chuẩn của game
+		Duel.ShuffleDeck(tp)
 	end
-	Duel.ShuffleDeck(tp)
-end
-
--- Hiệu ứng 3: Tăng ATK/DEF
-function s.atktg(e,c)
-	return c:IsSetCard(0x115)
-end
-function s.atkval(e,c)
-	return Duel.GetMatchingGroupCount(Card.IsType,c:GetControler(),LOCATION_GRAVE,0,nil,TYPE_SPELL)*100
 end
