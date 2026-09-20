@@ -43,7 +43,9 @@ function s.initial_effect(c)
 end
 s.listed_series={0x115} -- Setcode Sky Striker
 
--- Các hàm Hook để vô hiệu hóa điều kiện kiểm tra Main Monster Zone
+-- ==================================================
+-- HỆ THỐNG HOOK: Override lỗi Main Monster Zone
+-- ==================================================
 if not s.sky_striker_hooked then
 	s.sky_striker_hooked=true
 	
@@ -122,7 +124,9 @@ function s.adjustop(e,tp,eg,ep,ev,re,r,rp)
 	s.patch_cfilter()
 end
 
--- Hiệu ứng 1: Đào bài (Excavate)
+-- ==================================================
+-- HIỆU ỨNG 1: Đào bài (Excavate)
+-- ==================================================
 function s.tgtcfilter(c)
 	return c:IsFaceup()
 end
@@ -132,27 +136,35 @@ function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 		and Duel.IsExistingTarget(s.tgtcfilter,tp,LOCATION_ONFIELD,0,1,e:GetHandler()) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
 	Duel.SelectTarget(tp,s.tgtcfilter,tp,LOCATION_ONFIELD,0,1,1,e:GetHandler())
+	-- Đã thêm SetOperationInfo để core game nhận chuẩn hiệu ứng TOHAND
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK) 
 end
 
 function s.excfilter(c,xyz_check)
 	return c:IsSetCard(0x115) and (c:IsAbleToHand() or xyz_check)
 end
+
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if not e:GetHandler():IsRelateToEffect(e) or not tc:IsRelateToEffect(e) then return end
+	if not e:GetHandler():IsRelateToEffect(e) then return end
 	if Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)<4 then return end
 	
 	Duel.ConfirmDecktop(tp,4)
 	local g=Duel.GetDecktopGroup(tp,4)
+	if #g==0 then return end
 	
-	-- Kiểm tra xem có quái thú Xyz "Sky Striker" hợp lệ trên sân không
+	-- QUAN TRỌNG NHẤT LÀ DÒNG NÀY: Khóa xáo bài ngay lập tức để game không bị mất dấu lá bài
+	Duel.DisableShuffleCheck()
+	
 	local xyzg=Duel.GetMatchingGroup(function(c) return c:IsFaceup() and c:IsType(TYPE_XYZ) and c:IsSetCard(0x115) end,tp,LOCATION_MZONE,0,nil)
 	local xyz_check = #xyzg > 0
 	
 	local sg=g:Filter(s.excfilter,nil,xyz_check)
 	if #sg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_OPERATECARD)
-		local sc=sg:Select(tp,1,1,nil):GetFirst()
+		
+		-- Ép lá bài được chọn thành đối tượng Group để xử lý không bao giờ lỗi
+		local tg=sg:Select(tp,1,1,nil)
+		local sc=tg:GetFirst()
 		
 		local b1 = sc:IsAbleToHand()
 		local b2 = xyz_check
@@ -168,24 +180,24 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 			op=1
 		end
 		
-		-- Rất quan trọng: Ngăn Deck tự xáo trộn bài trước khi xử lý xong (tránh lỗi rớt tham chiếu)
-		Duel.DisableShuffleCheck()
-		
 		if op==0 then
-			Duel.SendtoHand(sc,nil,REASON_EFFECT)
-			Duel.ConfirmCards(1-tp,sc)
+			-- SendtoHand dùng 'tg' (Group) thay vì 'sc' (Single Card)
+			Duel.SendtoHand(tg,nil,REASON_EFFECT)
+			Duel.ConfirmCards(1-tp,tg)
 		else
 			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
 			local xyz_tc=xyzg:Select(tp,1,1,nil):GetFirst()
 			if xyz_tc then
-				Duel.Overlay(xyz_tc,sc)
+				Duel.Overlay(xyz_tc,tg)
 			end
 		end
 	end
 	Duel.ShuffleDeck(tp)
 end
 
--- Hiệu ứng 3: Tăng ATK/DEF
+-- ==================================================
+-- HIỆU ỨNG 3: Tăng ATK/DEF
+-- ==================================================
 function s.atktg(e,c)
 	return c:IsSetCard(0x115)
 end
