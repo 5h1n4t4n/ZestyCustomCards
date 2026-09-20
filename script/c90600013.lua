@@ -3,27 +3,16 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-    -- Xyz Summon: 2 quái thú Level 4 "Sky Striker"
-    Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0x115),4,2)
+    -- Xyz Summon: 2 quái thú Level 4 "Sky Striker" HOẶC chồng lên 1 quái thú Link "Sky Striker" bạn điều khiển
+    Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0x115),4,2,s.ovfilter,aux.Stringid(id,0))
     c:EnableReviveLimit()
-
-    -- Triệu hồi Xyz thay thế bằng 1 quái thú Link "Sky Striker" bạn điều khiển
-    local e0=Effect.CreateEffect(c)
-    e0:SetType(EFFECT_TYPE_FIELD)
-    e0:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-    e0:SetCode(EFFECT_SPSUMMON_PROC)
-    e0:SetRange(LOCATION_EXTRA)
-    e0:SetCondition(s.xyzcon)
-    e0:SetTarget(s.xyztg)
-    e0:SetOperation(s.xyzop)
-    c:RegisterEffect(e0)
 
     -- Giới hạn chỉ được Special Summon 1 lần mỗi lượt
     c:SetSPSummonOnce(id)
 
     -- HIỆU ỨNG 1: Tách 1 nguyên liệu; Đặc biệt triệu hồi 1 quái thú Level 4 "Sky Striker" từ tay, Deck hoặc Mộ
     local e1=Effect.CreateEffect(c)
-    e1:SetDescription(aux.Stringid(id,0))
+    e1:SetDescription(aux.Stringid(id,1))
     e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
     e1:SetType(EFFECT_TYPE_IGNITION)
     e1:SetRange(LOCATION_MZONE)
@@ -53,49 +42,30 @@ function s.initial_effect(c)
 end
 
 --------------------------------------------------------------------------------
--- LOGIC HỖ TRỢ & HIỆU ỨNG
+-- ĐIỀU KIỆN TRIỆU HỒI
 --------------------------------------------------------------------------------
-
--- Thay thế điều kiện Xyz Summon bằng Link Monster
-function s.xyzfilter(c,tp,xyzc)
-    return c:IsFaceup() and c:IsType(TYPE_LINK) and c:IsSetCard(0x115) and c:IsCanBeXyzMaterial(xyzc,tp)
-end
-function s.xyzcon(e,c)
-    if c==nil then return true end
-    local tp=c:GetControler()
-    return Duel.CheckXyzMaterial(c,s.xyzfilter,1,1,1,e,tp)
-end
-function s.xyztg(e,tp,eg,ep,ev,re,r,rp,c)
-    local g=Duel.SelectXyzMaterial(tp,c,s.xyzfilter,1,1,1,e,tp)
-    if g then
-        g:KeepAlive()
-        e:SetLabelObject(g)
-        return true
-    end
-    return false
-end
-function s.xyzop(e,tp,eg,ep,ev,re,r,rp,c)
-    local g=e:GetLabelObject()
-    if g then
-        c:SetMaterial(g)
-        Duel.Overlay(c,g)
-        g:Delete()
-    end
+function s.ovfilter(c,tp,lc)
+    return c:IsFaceup() and c:IsSetCard(0x115) and c:IsType(TYPE_LINK,lc,SUMMON_TYPE_XYZ,tp)
 end
 
--- Hiệu ứng 1
+--------------------------------------------------------------------------------
+-- HIỆU ỨNG 1: ĐẶC BIỆT TRIỆU HỒI QUÁI THÚ "SKY STRIKER"
+--------------------------------------------------------------------------------
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
     e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
+
 function s.spfilter(c,e,tp)
     return c:IsLevel(4) and c:IsSetCard(0x115) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
+
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
         and Duel.IsExistingMatchingCard(aux.NecroValleyFilter(s.spfilter),tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,nil,e,tp) end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE)
 end
+
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
     if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
@@ -105,32 +75,42 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 
--- Hiệu ứng 2 (Trao hiệu ứng cho quái Link)
+--------------------------------------------------------------------------------
+-- HIỆU ỨNG 2: TRAO HIỆU ỨNG CHO QUÁI LINK
+--------------------------------------------------------------------------------
 function s.lkcon(e,tp,eg,ep,ev,re,r,rp)
     local rc=e:GetHandler():GetReasonCard()
-    return r==REASON_LINK and rc:IsSetCard(0x115)
+    return r==REASON_LINK and rc and rc:IsSetCard(0x115)
 end
+
 function s.lkop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
     local rc=c:GetReasonCard()
     local e1=Effect.CreateEffect(rc)
+    e1:SetDescription(aux.Stringid(id,2))
     e1:SetType(EFFECT_TYPE_SINGLE)
+    e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
     e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
     e1:SetValue(1)
     e1:SetReset(RESET_EVENT+RESETS_STANDARD)
     rc:RegisterEffect(e1)
 end
 
--- Hiệu ứng 3 (Trao hiệu ứng cho quái Xyz Rank 8)
+--------------------------------------------------------------------------------
+-- HIỆU ỨNG 3: TRAO HIỆU ỨNG CHO QUÁI XYZ RANK 8
+--------------------------------------------------------------------------------
 function s.efcon(e,tp,eg,ep,ev,re,r,rp)
     local rc=e:GetHandler():GetReasonCard()
-    return r==REASON_XYZ and rc:IsRank(8) and rc:IsSetCard(0x115)
+    return r==REASON_XYZ and rc and rc:IsRank(8) and rc:IsSetCard(0x115)
 end
+
 function s.efop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
     local rc=c:GetReasonCard()
     local e1=Effect.CreateEffect(rc)
+    e1:SetDescription(aux.Stringid(id,2))
     e1:SetType(EFFECT_TYPE_SINGLE)
+    e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
     e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
     e1:SetValue(1)
     e1:SetReset(RESET_EVENT+RESETS_STANDARD)
