@@ -20,43 +20,19 @@ function s.initial_effect(c)
     e1:SetOperation(s.drop)
     c:RegisterEffect(e1)
 
-    -- HIỆU ỨNG 2: Quái thú đối thủ điều khiển mất 100 ATK/DEF cho mỗi lá Phép trong Mộ của bạn
+    -- HIỆU ỨNG 2: Quái thú đối thủ điều khiển mất 100 ATK/DEF cho mỗi lá Phép trong Mộ của bạn (Đã sửa setValue thành SetValue)
     local e2=Effect.CreateEffect(c)
     e2:SetType(EFFECT_TYPE_FIELD)
     e2:SetCode(EFFECT_UPDATE_ATTACK)
     e2:SetRange(LOCATION_MZONE)
     e2:SetTargetRange(0,LOCATION_MZONE)
-    e2:setValue(s.atkval)
+    e2:SetValue(s.atkval)
     c:RegisterEffect(e2)
     local e2_def=e2:Clone()
     e2_def:SetCode(EFFECT_UPDATE_DEFENSE)
     c:RegisterEffect(e2_def)
 
     -- HIỆU ỨNG 3: Nếu được gắn vào quái thú Xyz làm nguyên liệu -> Chọn mục tiêu 1 Phép "Sky Striker" trong Mộ; gắn nó vào quái thú Xyz đó
-    local e3=Effect.CreateEffect(c)
-    e3:SetDescription(aux.Stringid(id,1))
-    e3:SetCategory(CATEGORY_LEAVE_GRAVE)
-    e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-    e3:SetCode(EVENT_DETACHED_FROM_XYZ) -- hoặc khi được gắn / tách làm nguyên liệu Xyz
-    e3:SetRange(LOCATION_MZONE) -- Hoặc xử lý khi ở trạng thái nguyên liệu Xyz
-    -- Lưu ý: Trong môi trường viết script EDOPro, hiệu ứng gắn nguyên liệu từ Mộ khi làm nguyên liệu Xyz thường được check ở dạng Effect gắn sẵn trên Xyz Monster hoặc thông qua sự kiện Material.
-    -- Dưới đây viết theo dạng Trigger khi lá bài này nằm ở ô nguyên liệu Xyz (ATTACHED):
-    local e3=Effect.CreateEffect(c)
-    e3:SetDescription(aux.Stringid(id,1))
-    e3:SetCategory(CATEGORY_LEAVE_GRAVE)
-    e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-    e3:SetCode(EVENT_CHAINING) -- Tùy biến theo cơ chế check nguyên liệu Xyz
-    -- Để đảm bảo tính ổn định cấu trúc tiêu chuẩn, ta cấu hình hiệu ứng 3 dạng Trigger khi nằm trong nguyên liệu Xyz:
-    -- (Trong OCG/TCG, các hiệu ứng kiểu này thường kích hoạt khi quái Xyz kích hoạt hiệu ứng bằng cách tách nó ra hoặc khi nó được gắn)
-    -- Ta viết code hỗ trợ bắt sự kiện Xyz Material:
-    local e3=Effect.CreateEffect(c)
-    e3:SetDescription(aux.Stringid(id,1))
-    e3:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_IGNITION)
-    e3:SetCountLimit(1,{id,2})
-    e3:SetTarget(s.mattg)
-    e3:SetOperation(s.matop)
-    -- Chú ý: Một số bản cơ chế Xyz Material áp dụng hiệu ứng trực tiếp từ card mẹ, ta thiết lập qua hàm chuẩn:
-    -- Nếu lá bài này được gắn vào quái Xyz:
     local e3_alt=Effect.CreateEffect(c)
     e3_alt:SetDescription(aux.Stringid(id,1))
     e3_alt:SetCategory(CATEGORY_LEAVE_GRAVE)
