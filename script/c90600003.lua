@@ -1,196 +1,202 @@
 -- Sky Striker Ace - The Fallen Automaton
--- ID: 2772337
 local s,id=GetID()
-
 function s.initial_effect(c)
-    -- Điều kiện triệu hồi Link: 2 quái thú "Sky Striker"
-    c:EnableReviveLimit()
-    Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0x115,0x1115),2,2)
+	c:EnableReviveLimit()
+	if Link and Link.AddProcedure then
+		Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0x115),2,2)
+	else
+		aux.AddLinkProcedure(c,aux.FilterBoolFunction(Card.IsSetCard,0x115),2,2)
+	end
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_DISABLE)
+	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e1:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
+	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e1:SetCondition(s.negcon1)
+	e1:SetTarget(s.negtg1)
+	e1:SetOperation(s.negop1)
+	c:RegisterEffect(e1)
 
-    -- HIỆU ỨNG 1: Khi được Triệu hồi Link -> Vô hiệu hóa 1 lá bài của đối thủ đến cuối lượt
-    local e1=Effect.CreateEffect(c)
-    e1:SetDescription(aux.Stringid(id,0))
-    e1:SetCategory(CATEGORY_DISABLE)
-    e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-    e1:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY)
-    e1:SetCode(EVENT_SPSUMMON_SUCCESS)
-    e1:SetCondition(s.negcon)
-    e1:SetTarget(s.negtg)
-    e1:SetOperation(s.negop)
-    c:RegisterEffect(e1)
-
-    -- HIỆU ỨNG 2 (QUICK EFFECT): Gửi 1 Phép Sky Striker trên tay xuống Mộ -> Copy và kích hoạt hiệu ứng (Bỏ qua Main Zone, dùng được nhiều lần)
-    local e2=Effect.CreateEffect(c)
-    e2:SetDescription(aux.Stringid(id,1))
-    e2:SetType(EFFECT_TYPE_QUICK_O)
-    e2:SetCode(EVENT_FREE_CHAIN)
-    e2:SetRange(LOCATION_MZONE)
-    e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_MAIN_END)
-    e2:SetCost(s.cpcost)
-    e2:SetTarget(s.cptg)
-    e2:SetOperation(s.cpop)
-    c:RegisterEffect(e2)
-
-    -- HIỆU ỨNG 3: (Quick Effect - Twice per turn) Gửi 1 lá "Sky Striker" từ Tay/Sân xuống Mộ -> Vô hiệu hóa & trục xuất úp lá đối thủ kích hoạt
-    local e3=Effect.CreateEffect(c)
-    e3:SetDescription(aux.Stringid(id,2))
-    e3:SetCategory(CATEGORY_DISABLE+CATEGORY_REMOVE)
-    e3:SetType(EFFECT_TYPE_QUICK_O)
-    e3:SetCode(EVENT_CHAINING)
-    e3:SetRange(LOCATION_MZONE)
-    e3:SetCountLimit(2,id+50)
-    e3:SetCondition(s.discon)
-    e3:SetCost(s.discost)
-    e3:SetTarget(s.distg)
-    e3:SetOperation(s.disop)
-    c:RegisterEffect(e3)
-
-    -- HIỆU ỨNG 4: Nếu có bài bị trục xuất bởi hiệu ứng lá này -> Lấy 1 lá "Sky Striker" khác tên từ Mộ/Vùng bị trục xuất lên tay
-    local e4=Effect.CreateEffect(c)
-    e4:SetDescription(aux.Stringid(id,3))
-    e4:SetCategory(CATEGORY_TOHAND)
-    e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-    e4:SetProperty(EFFECT_FLAG_DELAY)
-    e4:SetCode(EVENT_REMOVE)
-    e4:SetRange(LOCATION_MZONE)
-    e4:SetCountLimit(1,id+100)
-    e4:SetCondition(s.thcon)
-    e4:SetTarget(s.thtg)
-    e4:SetOperation(s.thop)
-    c:RegisterEffect(e4)
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e2:SetCode(EVENT_ADJUST)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetOperation(s.adjustop)
+	c:RegisterEffect(e2)
+	
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetCategory(CATEGORY_NEGATE+CATEGORY_REMOVE)
+	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetCode(EVENT_CHAINING)
+	e3:SetRange(LOCATION_MZONE)
+	e3:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
+	e3:SetCountLimit(2)
+	e3:SetCondition(s.discon)
+	e3:SetCost(s.discost)
+	e3:SetTarget(s.distg)
+	e3:SetOperation(s.disop)
+	c:RegisterEffect(e3)
+	
+	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,2))
+	e4:SetCategory(CATEGORY_TOHAND)
+	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e4:SetCode(EVENT_REMOVE)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetProperty(EFFECT_FLAG_DELAY)
+	e4:SetCondition(s.thcon)
+	e4:SetTarget(s.thtg)
+	e4:SetOperation(s.thop)
+	c:RegisterEffect(e4)
 end
 
---------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 1
---------------------------------------------------------------------------------
-function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-    return e:GetHandler():IsSummonType(SUMMON_TYPE_LINK)
+if not s.sky_striker_hooked then
+	s.sky_striker_hooked=true
+	
+	local old_GetFieldGroupCount=Duel.GetFieldGroupCount
+	local old_GetFieldGroup=Duel.GetFieldGroup
+	local old_GetMatchingGroupCount=Duel.GetMatchingGroupCount
+	local old_IsExistingMatchingCard=Duel.IsExistingMatchingCard
+
+	local function is_fallen_active(tp)
+		return old_IsExistingMatchingCard(function(c) return c:IsFaceup() and c:IsCode(id) end, tp, LOCATION_MZONE, 0, 1, nil)
+	end
+
+	local function is_mmzone(loc)
+		if not loc then return false end
+		local mmz = rawget(_G, "LOCATION_MMZONE")
+		return (mmz and loc == mmz)
+	end
+
+	if old_GetFieldGroupCount then
+		Duel.GetFieldGroupCount=function(p, s_loc, o_loc, ...)
+			if is_mmzone(s_loc) and is_fallen_active(p) then
+				return 0
+			end
+			return old_GetFieldGroupCount(p, s_loc, o_loc, ...)
+		end
+	end
+
+	if old_GetFieldGroup then
+		Duel.GetFieldGroup=function(p, s_loc, o_loc, ...)
+			if is_mmzone(s_loc) and is_fallen_active(p) then
+				return Group.CreateGroup()
+			end
+			return old_GetFieldGroup(p, s_loc, o_loc, ...)
+		end
+	end
+
+	if old_GetMatchingGroupCount then
+		Duel.GetMatchingGroupCount=function(f, p, s_loc, o_loc, ex, ...)
+			if is_mmzone(s_loc) and is_fallen_active(p) then
+				return 0
+			end
+			return old_GetMatchingGroupCount(f, p, s_loc, o_loc, ex, ...)
+		end
+	end
+
+	if old_IsExistingMatchingCard then
+		Duel.IsExistingMatchingCard=function(f, p, s_loc, o_loc, ct, ex, ...)
+			if is_mmzone(s_loc) and is_fallen_active(p) then
+				return false
+			end
+			return old_IsExistingMatchingCard(f, p, s_loc, o_loc, ct, ex, ...)
+		end
+	end
+end
+s.patched_tables = {}
+function s.patch_cfilter()
+	for k,v in pairs(_G) do
+		if type(k)=="string" and k:sub(1,1)=="c" and type(v)=="table" and not s.patched_tables[v] then
+			if type(v.cfilter)=="function" then
+				local old_cfilter=v.cfilter
+				v.cfilter=function(c,...)
+					if Duel.IsExistingMatchingCard(function(tc) return tc:IsFaceup() and tc:IsCode(id) end,c:GetControler(),LOCATION_MZONE,0,1,nil) then
+						return false
+					end
+					return old_cfilter(c,...)
+				end
+				s.patched_tables[v]=true
+			end
+		end
+	end
+end
+s.patch_cfilter()
+
+function s.adjustop(e,tp,eg,ep,ev,re,r,rp)
+	s.patch_cfilter()
 end
 
-function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-    if chkc then return chkc:IsOnField() and chkc:IsControler(1-tp) and aux.NegateAnyFilter(chkc) end
-    if chk==0 then return Duel.IsExistingTarget(aux.NegateAnyFilter,tp,0,LOCATION_ONFIELD,1,nil) end
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_NEGATE)
-    local g=Duel.SelectTarget(tp,aux.NegateAnyFilter,tp,0,LOCATION_ONFIELD,1,1,nil)
-    Duel.SetOperationInfo(0,CATEGORY_DISABLE,g,1,0,0)
+function s.negcon1(e,tp,eg,ep,ev,re,r,rp)
+	return e:GetHandler():IsSummonType(SUMMON_TYPE_LINK)
+end
+function s.negtg1(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsControler(1-tp) and chkc:IsOnField() and chkc:IsFaceup() and not chkc:IsDisabled() end
+	if chk==0 then return Duel.IsExistingTarget(function(c) return c:IsFaceup() and not c:IsDisabled() end,tp,0,LOCATION_ONFIELD,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_NEGATE)
+	local g=Duel.SelectTarget(tp,function(c) return c:IsFaceup() and not c:IsDisabled() end,tp,0,LOCATION_ONFIELD,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_DISABLE,g,1,0,0)
+end
+function s.negop1(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	if tc and tc:IsFaceup() and tc:IsRelateToEffect(e) and not tc:IsDisabled() then
+		Duel.NegateRelatedChain(tc,RESET_TURN_SET)
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_DISABLE)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+		tc:RegisterEffect(e1)
+		local e2=Effect.CreateEffect(e:GetHandler())
+		e2:SetType(EFFECT_TYPE_SINGLE)
+		e2:SetCode(EFFECT_DISABLE_EFFECT)
+		e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+		tc:RegisterEffect(e2)
+	end
 end
 
-function s.negop(e,tp,eg,ep,ev,re,r,rp)
-    local tc=Duel.GetFirstTarget()
-    if tc and tc:IsRelateToEffect(e) and tc:IsFaceup() and tc:IsCanBeDisabledByEffect(e) then
-        local c=e:GetHandler()
-        local e1=Effect.CreateEffect(c)
-        e1:SetType(EFFECT_TYPE_SINGLE)
-        e1:SetCode(EFFECT_DISABLE)
-        e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-        tc:RegisterEffect(e1)
-        local e2=Effect.CreateEffect(c)
-        e2:SetType(EFFECT_TYPE_SINGLE)
-        e2:SetCode(EFFECT_DISABLE_EFFECT)
-        e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-        tc:RegisterEffect(e2)
-    end
-end
-
---------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 2 (QUICK EFFECT COPY & CAST KHÔNG GIỚI HẠN SỐ LẦN TRONG LƯỢT)
---------------------------------------------------------------------------------
-function s.cpfilter(c,e,tp,eg,ep,ev,re,r,rp)
-    if not ((c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsType(TYPE_SPELL) and c:IsAbleToGraveAsCost()) then return false end
-    local te=c:CheckActivateEffect(false,true,false)
-    return te~=nil
-end
-
-function s.cpcost(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(s.cpfilter,tp,LOCATION_HAND,0,1,nil,e,tp,eg,ep,ev,re,r,rp) end
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-    local g=Duel.SelectMatchingCard(tp,s.cpfilter,tp,LOCATION_HAND,0,1,1,nil,e,tp,eg,ep,ev,re,r,rp)
-    e:SetLabelObject(g:GetFirst())
-    Duel.SendtoGrave(g,REASON_COST)
-end
-
-function s.cptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-    if chk==0 then return true end
-    local tc=e:GetLabelObject()
-    if tc then
-        local te=tc:CheckActivateEffect(false,true,false)
-        if te then
-            local tg=te:GetTarget()
-            if tg then tg(e,tp,eg,ep,ev,re,r,rp,0) end
-        end
-    end
-end
-
-function s.cpop(e,tp,eg,ep,ev,re,r,rp)
-    local tc=e:GetLabelObject()
-    if not tc then return end
-    local te,ceg,cep,cev,cre,cr,crp=tc:CheckActivateEffect(false,true,true)
-    if not te then return end
-    
-    e:SetProperty(te:GetProperty())
-    local tg=te:GetTarget()
-    if tg then tg(e,tp,ceg,cep,cev,cre,cr,crp,1) end
-    
-    local op=te:GetOperation()
-    if op then op(e,tp,ceg,cep,cev,cre,cr,crp) end
-end
-
---------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 3 (VÔ HIỆU HÓA & TRỤC XUẤT ÚP)
---------------------------------------------------------------------------------
 function s.discon(e,tp,eg,ep,ev,re,r,rp)
-    return rp==1-tp and Duel.IsChainNegatable(ev)
+	return rp==1-tp and Duel.IsChainNegatable(ev)
 end
-
-function s.cfilter(c)
-    return (c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsAbleToGraveAsCost()
+function s.costfilter(c)
+	return c:IsSetCard(0x115) and c:IsAbleToGraveAsCost()
 end
-
 function s.discost(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,e:GetHandler()) end
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-    local g=Duel.SelectMatchingCard(tp,s.cfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,1,e:GetHandler())
-    Duel.SendtoGrave(g,REASON_COST)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local g=Duel.SelectMatchingCard(tp,s.costfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,1,nil)
+	Duel.SendtoGrave(g,REASON_COST)
 end
-
 function s.distg(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return true end
-    Duel.SetOperationInfo(0,CATEGORY_DISABLE,eg,1,0,0)
-    if re:GetHandler():IsRelateToEffect(re) and re:GetHandler():IsAbleToRemove(tp,POS_FACEDOWN) then
-        Duel.SetOperationInfo(0,CATEGORY_REMOVE,eg,1,0,0)
-    end
+	if chk==0 then return true end
+	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
+	if re:GetHandler():IsRelateToEffect(re) then
+		Duel.SetOperationInfo(0,CATEGORY_REMOVE,eg,1,0,0)
+	end
 end
-
 function s.disop(e,tp,eg,ep,ev,re,r,rp)
-    local ec=re:GetHandler()
-    if Duel.NegateEffect(ev) and ec and ec:IsRelateToEffect(re) then
-        ec:CancelToGrave()
-        Duel.Remove(ec,POS_FACEDOWN,REASON_EFFECT)
-    end
+	if Duel.NegateEffect(ev) and re:GetHandler():IsRelateToEffect(re) then
+		Duel.Remove(eg,POS_FACEDOWN,REASON_EFFECT)
+	end
 end
 
---------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 4 (LẤY LẠI BÀI TỪ MỘ/VÙNG BỊ TRỤC XUẤT)
---------------------------------------------------------------------------------
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
-    return re and re:GetHandler()==e:GetHandler()
+	return re and re:GetHandler()==e:GetHandler()
 end
-
-function s.thfilter(c,banished_group)
-    if not ((c:IsSetCard(0x115) or c:IsSetCard(0x1115)) and c:IsAbleToHand()) then return false end
-    return not banished_group or not banished_group:IsExists(Card.IsCode,1,nil,c:GetCode())
+function s.thfilter(c,eg)
+	return c:IsSetCard(0x115) and (c:IsLocation(LOCATION_GRAVE) or c:IsFaceup()) and c:IsAbleToHand()
+		and not eg:IsExists(Card.IsCode,1,nil,c:GetCode())
 end
-
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,eg) end
-    Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_GRAVE+LOCATION_REMOVED)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,eg) end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_GRAVE+LOCATION_REMOVED)
 end
-
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-    local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.thfilter),tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil,eg)
-    if #g>0 then
-        Duel.SendtoHand(g,nil,REASON_EFFECT)
-        Duel.ConfirmCards(1-tp,g)
-    end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(function(c) return s.thfilter(c,eg) end),tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
+	end
 end
