@@ -23,14 +23,14 @@ function s.initial_effect(c)
 	e2:SetValue(s.atkval)
 	c:RegisterEffect(e2)
 	
-	-- Effect 3: Cannot be sent to the GY by opponent's card effects
+	-- Effect 3: Cannot be destroyed by opponent's card effects
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE)
 	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e3:SetCode(EFFECT_CANNOT_TO_GRAVE)
+	e3:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCondition(s.protcon)
-	e3:SetValue(s.protval)
+	e3:SetValue(s.indval)
 	c:RegisterEffect(e3)
 	
 	-- Effect 4: Quick Effect (Fusion on your turn, Ritual on opponent's turn)
@@ -71,19 +71,14 @@ function s.atkval(e,c)
 end
 
 -- ==========================================================
--- HIỆU ỨNG BẢO VỆ (FIX CHUẨN ENGINE EDOPro)
+-- HIỆU ỨNG BẢO VỆ (KHÔNG THỂ BỊ PHÁ HỦY BỞI HIỆU ỨNG ĐỐI THỦ)
 -- ==========================================================
 function s.protcon(e)
 	local c=e:GetHandler()
 	local lg=c:GetLinkedGroup()
-	-- Chỉ kích hoạt bảo vệ khi đang point tới quái thú phe mình
 	return lg and lg:IsExists(Card.IsControler,1,nil,e:GetHandlerPlayer())
 end
-
-function s.protval(e,re,rp)
-	-- BẮT BỘC: Nếu không phải do Effect kích hoạt (nguyên liệu Link, Cost, Luật) thì re = nil -> Cho phép xuống Mộ (return false)
-	if not re then return false end
-	-- Chỉ chặn khi tác nhân là Hiệu ứng và do ĐỐI THỦ kích hoạt
+function s.indval(e,re,rp)
 	return rp == 1 - e:GetHandlerPlayer()
 end
 
