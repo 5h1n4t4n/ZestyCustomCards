@@ -29,13 +29,14 @@ function s.initial_effect(c)
     e2:SetValue(s.atkval)
     c:RegisterEffect(e2)
 
-    -- HIỆU ỨNG 3: Nếu lá bài này bị tách khỏi quái thú Xyz để kích hoạt hiệu ứng -> Thêm 1 Phép "Sky Striker" từ Deck, Mộ, hoặc vùng trục xuất lên tay
+    -- HIỆU ỨNG 3: Khi lá bài này được gửi xuống Mộ vì làm nguyên liệu Xyz (Đã thay thế sự kiện chuẩn an toàn tuyệt đối)
     local e3=Effect.CreateEffect(c)
     e3:SetDescription(aux.Stringid(id,0))
     e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
     e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
     e3:SetProperty(EFFECT_FLAG_DELAY)
-    e3:SetCode(EVENT_DETACHED_FROM_XYZ)
+    e3:SetCode(EVENT_BE_MATERIAL)
+    e3:SetCondition(s.mtcon)
     e3:SetCountLimit(1,{id,2})
     e3:SetTarget(s.thtg)
     e3:SetOperation(s.thop)
@@ -79,6 +80,10 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
         Duel.SendtoHand(g,nil,REASON_EFFECT)
         Duel.ConfirmCards(1-tp,g)
     end
+end
+
+function s.mtcon(e,tp,eg,ep,ev,re,r,rp)
+    return r==REASON_XYZ
 end
 
 function s.atkval(e,c)
