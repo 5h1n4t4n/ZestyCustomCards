@@ -29,8 +29,7 @@ function s.initial_effect(c)
 	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e3:SetCode(EFFECT_CANNOT_TO_GRAVE)
 	e3:SetRange(LOCATION_MZONE)
-	e3:SetCondition(s.protcon)
-	e3:SetValue(s.protval)
+	e3:SetCondition(s.protcon) -- Xử lý logic trực tiếp tại Condition
 	c:RegisterEffect(e3)
 	
 	-- Effect 4: Quick Effect (Fusion on your turn, Ritual on opponent's turn)
@@ -45,7 +44,6 @@ function s.initial_effect(c)
 	e4:SetOperation(s.qcop)
 	c:RegisterEffect(e4)
 end
--- Hỗ trợ archetype: 0x3b là "Red-Eyes", 0x2a9 là "Flame Swordsman"
 s.listed_series={0x3b, 0x2a9}
 
 -- ==========================================================
@@ -55,7 +53,6 @@ function s.matfilter(c,lc,sumtype,tp)
 	return c:IsRace(RACE_DRAGON|RACE_WARRIOR,lc,sumtype,tp)
 end
 function s.lcheck(g,lc,sumtype,tp)
-	-- Chỉ cho phép 2 Rồng HOẶC 2 Chiến Binh (không được lai 1 Rồng + 1 Chiến Binh)
 	return g:FilterCount(Card.IsRace,nil,RACE_DRAGON,lc,sumtype,tp)==2
 		or g:FilterCount(Card.IsRace,nil,RACE_WARRIOR,lc,sumtype,tp)==2
 end
@@ -73,19 +70,30 @@ function s.atkval(e,c)
 end
 
 -- ==========================================================
--- HIỆU ỨNG BẢO VỆ (ĐÃ FIX LỖI XUỐNG MỘ)
+-- HIỆU ỨNG BẢO VỆ (FIX DỨT ĐIỂM BẰNG GETEXECUTINGEFFECT)
 -- ==========================================================
 function s.protcon(e)
 	local c=e:GetHandler()
+	local tp=e:GetHandlerPlayer()
+	
+	-- 1. Phải chỉ vào ít nhất 1 quái thú phe mình
 	local lg=c:GetLinkedGroup()
-	-- Chỉ hoạt động khi đang point tới ít nhất 1 quái thú phe mình
-	return lg and lg:IsExists(Card.IsControler,1,nil,e:GetHandlerPlayer())
-end
-function s.protval(e,re,rp)
-	-- QUAN TRỌNG: Nếu re là nil (tức là dùng làm nguyên liệu Link, Synchro, bị đánh chết) -> Trả về false (Cho phép xuống mộ)
-	if not re then return false end
-	-- Chỉ chặn nếu là hiệu ứng và do ĐỐI THỦ kích hoạt
-	return re:IsActiveType(TYPE_SPELL+TYPE_TRAP+TYPE_MONSTER) and rp == 1 - e:GetHandlerPlayer()
+	if not (lg and lg:IsExists(Card.IsControler,1,nil,tp)) then 
+		return false 
+	end
+	
+	-- 2. Kiểm tra xem có phải ĐỐI THỦ đang thực thi hiệu ứng để gửi lá này xuống Mộ hay không
+	local re=Duel.GetExecutingEffect()
+	if re then
+		return re:GetOwnerPlayer() == 1 - tp
+	end
+	
+	local ev, p = Duel.GetChainInfo(0, CHAININFO_CHAIN_ID, CHAININFO_TRIGGERING_PLAYER)
+	if ev and p == 1 - tp then
+		return true
+	end
+	
+	return false
 end
 
 -- ==========================================================
@@ -160,7 +168,6 @@ function s.fusion_op(e,tp)
 		if sg1:IsContains(tc) and (sg2==nil or not sg2:IsContains(tc) or not Duel.SelectYesNo(tp,ce:GetDescription())) then
 			local mat1=Duel.SelectFusionMaterial(tp,tc,mg1,nil,chkf)
 			tc:SetMaterial(mat1)
-			-- Banish nguyên liệu từ Mộ
 			Duel.Remove(mat1,POS_FACEUP,REASON_EFFECT+REASON_MATERIAL+REASON_FUSION)
 			Duel.BreakEffect()
 			Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)
@@ -175,17 +182,14 @@ end
 
 -- ================= LOGIC LƯỢT ĐỐI THỦ (RITUAL) ==================
 function s.ritual_mat_filter(c)
-	-- Nguyên liệu phải nằm dưới Mộ hoặc đang bị Banish ngửa
 	return c:IsType(TYPE_MONSTER) and c:IsAbleToDeck() and (c:IsLocation(LOCATION_GRAVE) or c:IsFaceup())
 end
 function s.rit_filter(c,e,tp,mg)
 	if not c:IsType(TYPE_RITUAL) or not c:IsAttribute(ATTRIBUTE_FIRE|ATTRIBUTE_DARK) then return false end
 	if not c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,false,true) then return false end
-	-- Loại bỏ chính lá bài đang định gọi ra khỏi danh sách nguyên liệu (để tránh lỗi trộn luôn nó vào Deck)
 	local m=mg:Filter(Card.IsAbleToDeck,c) 
 	if #m==0 then return false end
 	Duel.SetSelectedCard(Group.CreateGroup())
-	-- Check level "bằng hoặc vượt quá" (Equal or exceed)
 	return m:CheckWithSumGreater(Card.GetRitualLevel,c:GetLevel(),c)
 end
 function s.ritual_chk(e,tp)
@@ -201,10 +205,8 @@ function s.ritual_op(e,tp)
 		local m=mg:Filter(Card.IsAbleToDeck,tc)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
 		Duel.SetSelectedCard(Group.CreateGroup())
-		-- Chọn nguyên liệu thỏa mãn Level "bằng hoặc lớn hơn"
 		local mat=m:SelectWithSumGreater(tp,Card.GetRitualLevel,tc:GetLevel(),tc)
 		tc:SetMaterial(mat)
-		-- Trộn (Shuffle) nguyên liệu vào Deck
 		Duel.SendtoDeck(mat,nil,SEQ_DECKSHUFFLE,REASON_EFFECT+REASON_MATERIAL+REASON_RITUAL)
 		Duel.BreakEffect()
 		Duel.SpecialSummon(tc,SUMMON_TYPE_RITUAL,tp,tp,false,true,POS_FACEUP)
