@@ -3,18 +3,12 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-    -- Xyz Summon chuẩn (2 quái thú Level 4 "Sky Striker")
-    Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0x115),4,2,s.ovfilter,aux.Stringid(id,0),s.ovop)
+    -- Xyz Summon chuẩn (2 quái thú Level 4 "Sky Striker") hoặc chồng lên 1 quái thú Link
+    Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0x115),4,2,s.ovfilter,aux.Stringid(id,0))
     c:EnableReviveLimit()
     
     -- Chỉ được Special Summon "Sky Striker Ace - Kagutsuchi" một lần mỗi lượt
-    aux.GlobalCheck(s,function()
-        local ge1=Effect.CreateEffect(c)
-        ge1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-        ge1:SetCode(EVENT_SPSUMMON_SUCCESS)
-        ge1:SetOperation(s.checkop)
-        Duel.RegisterEffect(ge1,0)
-    end)
+    c:SetSPSummonOnce(id)
 
     -- HIỆU ỨNG 1: Đào 3 lá từ Deck, thêm lá "Sky Striker" lên tay và gửi phần còn lại xuống Mộ (hoặc xáo cả 3 vào Deck nếu không có)
     local e1=Effect.CreateEffect(c)
@@ -23,7 +17,7 @@ function s.initial_effect(c)
     e1:SetType(EFFECT_TYPE_IGNITION)
     e1:SetRange(LOCATION_MZONE)
     e1:SetCountLimit(1)
-    e1:SetCost(aux.dxmcost(1,1,nil))
+    e1:SetCost(s.thcost) -- Đã thay thế aux.dxmcost bằng hàm s.thcost
     e1:SetTarget(s.thtg)
     e1:SetOperation(s.thop)
     c:RegisterEffect(e1)
@@ -54,17 +48,14 @@ function s.ovfilter(c,tp,lc)
     return c:IsFaceup() and c:IsSetCard(0x115) and c:IsType(TYPE_LINK,lc,SUMMON_TYPE_XYZ,tp)
 end
 
-function s.ovop(e,tp,chk0)
-    return true
-end
-
-function s.checkop(e,tp,eg,ep,ev,re,r,rp)
-    -- Logic giới hạn 1 lần Special Summon mỗi lượt nếu cần thiết
-end
-
 --------------------------------------------------------------------------------
 -- HIỆU ỨNG 1 (ĐÀO 3 LÁ TỪ DECK)
 --------------------------------------------------------------------------------
+function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
+    e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
+end
+
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=3 end
     Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)

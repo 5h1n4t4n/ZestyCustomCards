@@ -9,7 +9,7 @@ function s.initial_effect(c)
 
     -- Triệu hồi Xyz thay thế bằng 1 quái thú Link "Sky Striker" bạn điều khiển
     local e0=Effect.CreateEffect(c)
-    e0:SetType(EFFECT_TYPE)
+    e0:SetType(EFFECT_TYPE_FIELD) -- Đã sửa từ EFFECT_TYPE thành EFFECT_TYPE_FIELD
     e0:SetProperty(EFFECT_FLAG_UNCOPYABLE)
     e0:SetCode(EFFECT_SPSUMMON_PROC)
     e0:SetRange(LOCATION_EXTRA)

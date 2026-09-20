@@ -17,7 +17,7 @@ function s.initial_effect(c)
     e1:SetRange(LOCATION_MZONE)
     e1:SetCountLimit(1,{id,1})
     e1:SetCondition(s.negcon)
-    e1:SetCost(aux.dxmcost(1,1,nil))
+    e1:SetCost(s.cost)
     e1:SetTarget(s.negtg)
     e1:SetOperation(s.negop)
     c:RegisterEffect(e1)
@@ -65,10 +65,18 @@ function s.initial_effect(c)
 end
 
 --------------------------------------------------------------------------------
+-- TÁCH NGUYÊN LIỆU (COST)
+--------------------------------------------------------------------------------
+function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
+    e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
+end
+
+--------------------------------------------------------------------------------
 -- ĐIỀU KIỆN TRIỆU HỒI
 --------------------------------------------------------------------------------
 function s.ovfilter(c,tp,lc)
-    return c:IsFaceup() and c:IsSetCard(0x115) and c:IsType(TYPE_XYZ,lc,SUMMON_TYPE_XYZ,tp) and c:IsRank(7) -- Hoặc điều kiện áp dụng từ Rank-Up-Magic
+    return c:IsFaceup() and c:IsSetCard(0x115) and c:IsType(TYPE_XYZ,lc,SUMMON_TYPE_XYZ,tp) and c:IsRank(7)
 end
 
 --------------------------------------------------------------------------------
@@ -143,7 +151,7 @@ end
 
 function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_GRAVE+LOCATION_REMOVED) and s.matfilter(chkc) end
-    if chk==0 then return e:GetHandler()->IsType(TYPE_XYZ) 
+    if chk==0 then return e:GetHandler():IsType(TYPE_XYZ) 
         and Duel.IsExistingTarget(s.matfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil) end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
     local g=Duel.SelectTarget(tp,s.matfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil)
