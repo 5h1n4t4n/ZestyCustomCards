@@ -1,5 +1,5 @@
 -- Sky Striker Ace - Corrupted Striker
--- ID: 2772337
+-- ID: 90600013
 local s,id=GetID()
 
 function s.initial_effect(c)
@@ -9,7 +9,7 @@ function s.initial_effect(c)
 
     -- Triệu hồi Xyz thay thế bằng 1 quái thú Link "Sky Striker" bạn điều khiển
     local e0=Effect.CreateEffect(c)
-    e0:SetType(EFFECT_TYPE)
+    e0:SetType(EFFECT_TYPE_FIELD)
     e0:SetProperty(EFFECT_FLAG_UNCOPYABLE)
     e0:SetCode(EFFECT_SPSUMMON_PROC)
     e0:SetRange(LOCATION_EXTRA)
@@ -33,17 +33,16 @@ function s.initial_effect(c)
     e1:SetOperation(s.spop)
     c:RegisterEffect(e1)
 
-    -- HIỆU ỨNG 2: Quái thú "Sky Striker" được Link Summon sử dụng lá bài này làm nguyên liệu không thể bị phá hủy bởi hiệu ứng bài
+    -- HIỆU ỨNG 2: Quái thú Link "Sky Striker" sử dụng lá này làm nguyên liệu không thể bị phá hủy bởi hiệu ứng bài
     local e2=Effect.CreateEffect(c)
-    e2:SetType(EFFECT_TYPE_FIELD)
-    e2:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-    e2:SetRange(LOCATION_MZONE)
-    e2:SetTargetRange(LOCATION_MZONE,0)
-    e2:SetTarget(s.immtg)
-    e2:SetValue(1)
+    e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+    e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+    e2:SetCode(EVENT_BE_MATERIAL)
+    e2:SetCondition(s.lkcon)
+    e2:SetOperation(s.lkop)
     c:RegisterEffect(e2)
 
-    -- HIỆU ỨNG 3: Nếu lá bài này được dùng làm nguyên liệu cho việc Xyz Summon quái Rank 8 "Sky Striker", quái đó không thể bị phá hủy bởi hiệu ứng bài
+    -- HIỆU ỨNG 3: Quái thú Xyz Rank 8 "Sky Striker" sử dụng lá này làm nguyên liệu không thể bị phá hủy bởi hiệu ứng bài
     local e3=Effect.CreateEffect(c)
     e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
     e3:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
@@ -94,24 +93,35 @@ function s.spfilter(c,e,tp)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-        and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,nil,e,tp) end
+        and Duel.IsExistingMatchingCard(aux.NecroValleyFilter(s.spfilter),tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,nil,e,tp) end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
     if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-    local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,e,tp)
+    local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter),tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,e,tp)
     if #g>0 then
         Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
     end
 end
 
--- Hiệu ứng 2
-function s.immtg(e,c)
-    return c:IsType(TYPE_LINK) and c:IsSetCard(0x115) and c:GetMaterial():IsContains(e:GetHandler())
+-- Hiệu ứng 2 (Trao hiệu ứng cho quái Link)
+function s.lkcon(e,tp,eg,ep,ev,re,r,rp)
+    local rc=e:GetHandler():GetReasonCard()
+    return r==REASON_LINK and rc:IsSetCard(0x115)
+end
+function s.lkop(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    local rc=c:GetReasonCard()
+    local e1=Effect.CreateEffect(rc)
+    e1:SetType(EFFECT_TYPE_SINGLE)
+    e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+    e1:SetValue(1)
+    e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+    rc:RegisterEffect(e1)
 end
 
--- Hiệu ứng 3
+-- Hiệu ứng 3 (Trao hiệu ứng cho quái Xyz Rank 8)
 function s.efcon(e,tp,eg,ep,ev,re,r,rp)
     local rc=e:GetHandler():GetReasonCard()
     return r==REASON_XYZ and rc:IsRank(8) and rc:IsSetCard(0x115)

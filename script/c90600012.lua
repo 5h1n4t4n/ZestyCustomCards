@@ -1,5 +1,5 @@
 -- Sky Striker Ace - Divine Zero
--- ID: 2772337
+-- ID: 90600012
 local s,id=GetID()
 
 function s.initial_effect(c)
@@ -7,8 +7,9 @@ function s.initial_effect(c)
     Xyz.AddProcedure(c,nil,8,3)
     c:EnableReviveLimit()
 
-    -- Triệu hồi Xyz thay thế bằng "Rank-Up-Magic Sky Striker Rising"
+    -- Triệu hồi Xyz bằng cách overlay 1 Phép "Sky Striker" bạn điều khiển hoặc trên tay
     local e0=Effect.CreateEffect(c)
+    e0:SetDescription(aux.Stringid(id,4))
     e0:SetType(EFFECT_TYPE_FIELD)
     e0:SetProperty(EFFECT_FLAG_UNCOPYABLE)
     e0:SetCode(EFFECT_SPSUMMON_PROC)
@@ -37,7 +38,7 @@ function s.initial_effect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
     e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-    e2:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
+    e2:SetProperty(EFFECT_FLAG_DELAY)
     e2:SetCode(EVENT_REMOVE)
     e2:SetRange(LOCATION_MZONE)
     e2:SetCountLimit(1,{id,1})
@@ -77,18 +78,20 @@ end
 -- LOGIC HỖ TRỢ & HIỆU ỨNG
 --------------------------------------------------------------------------------
 
--- RUM Check
-function s.rumfilter(c,e,tp,xyzc)
-    return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) and c:IsCanBeXyzMaterial(xyzc,tp)
+-- Quy trình triệu hồi Xyz đặc biệt bằng Phép Sky Striker
+function s.rumfilter(c)
+    return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) and (c:IsFaceup() or c:IsLocation(LOCATION_HAND))
 end
 function s.rumcon(e,c)
     if c==nil then return true end
     local tp=c:GetControler()
-    return Duel.CheckXyzMaterial(c,s.rumfilter,1,1,1,e,tp)
+    return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
+        and Duel.IsExistingMatchingCard(s.rumfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,nil)
 end
 function s.rumtg(e,tp,eg,ep,ev,re,r,rp,c)
-    local g=Duel.SelectXyzMaterial(tp,c,s.rumfilter,1,1,1,e,tp)
-    if g then
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
+    local g=Duel.SelectMatchingCard(tp,s.rumfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,1,nil)
+    if #g>0 then
         g:KeepAlive()
         e:SetLabelObject(g)
         return true
@@ -104,7 +107,7 @@ function s.rumop(e,tp,eg,ep,ev,re,r,rp,c)
     end
 end
 
--- Hiệu ứng 1
+-- Hiệu ứng 1: Quick Effect Negate
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
     return not e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED) and Duel.IsChainNegatable(ev)
 end
@@ -131,29 +134,27 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 
--- Hiệu ứng 2
+-- Hiệu ứng 2: Lấy Phép khi đối thủ bị trục xuất úp
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
     return rp~=tp and eg:IsExists(function(c) return c:IsReason(REASON_EFFECT) and c:IsFacedown() and c:IsLocation(LOCATION_REMOVED) and c:IsControler(1-tp) end,1,nil)
 end
 function s.thfilter(c)
     return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) and c:IsAbleToHand()
 end
-function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-    if chkc then return chkc:IsLocation(LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED) and chkc:IsControler(tp) and s.thfilter(chkc) end
-    if chk==0 then return Duel.IsExistingTarget(s.thfilter,tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil) end
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-    local g=Duel.SelectTarget(tp,s.thfilter,tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil)
-    Duel.SetOperationInfo(0,CATEGORY_TOHAND,g,1,0,0)
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.IsExistingMatchingCard(aux.NecroValleyFilter(s.thfilter),tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil) end
+    Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED)
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
-    local tc=Duel.GetFirstTarget()
-    if tc and tc:IsRelateToEffect(e) then
-        Duel.SendtoHand(tc,nil,REASON_EFFECT)
-        Duel.ConfirmCards(1-tp,tc)
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+    local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.thfilter),tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil)
+    if #g>0 then
+        Duel.SendtoHand(g,nil,REASON_EFFECT)
+        Duel.ConfirmCards(1-tp,g)
     end
 end
 
--- Hiệu ứng 3
+-- Hiệu ứng 3: Gắn nguyên liệu khi bài khác rời sân
 function s.matfilter_check(c,tp,ec)
     return c:IsPreviousControler(tp) and c:IsPreviousLocation(LOCATION_FIELD) and c~=ec and c:IsReason(REASON_EFFECT) and c:GetReasonPlayer()~=tp
 end
@@ -165,9 +166,9 @@ function s.attfilter(c)
 end
 function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_GRAVE+LOCATION_REMOVED) and chkc:IsControler(tp) and s.attfilter(chkc) end
-    if chk==0 then return Duel.IsExistingTarget(s.attfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil) end
+    if chk==0 then return Duel.IsExistingTarget(aux.NecroValleyFilter(s.attfilter),tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil) end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-    local g=Duel.SelectTarget(tp,s.attfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil)
+    local g=Duel.SelectTarget(tp,aux.NecroValleyFilter(s.attfilter),tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil)
     Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,g,1,0,0)
 end
 function s.matop(e,tp,eg,ep,ev,re,r,rp)
@@ -178,28 +179,28 @@ function s.matop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 
--- Hiệu ứng 4
+-- Hiệu ứng 4: Gọi quái & search khi bị tiêu diệt
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
     return c:IsSummonType(SUMMON_TYPE_XYZ) and rp~=tp and c:IsReason(REASON_DESTROY) and c:GetReasonPlayer()~=tp
 end
 function s.spfilter(c,e,tp)
-    return c:IsSetCard(0x115) and c:IsCanBeSpecialSummoned(e,0,tp,false,false) and (c:IsLocation(LOCATION_GRAVE) or c:IsLocation(LOCATION_REMOVED))
+    return c:IsSetCard(0x115) and c:IsCanBeSpecialSummoned(e,0,tp,false,false) and (c:IsLocation(LOCATION_GRAVE) or (c:IsLocation(LOCATION_REMOVED) and c:IsFaceup()))
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-        and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,e,tp)
-        and Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil) end
+        and Duel.IsExistingMatchingCard(aux.NecroValleyFilter(s.spfilter),tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,e,tp)
+        and Duel.IsExistingMatchingCard(aux.NecroValleyFilter(s.thfilter),tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil) end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE+LOCATION_REMOVED)
     Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_GRAVE+LOCATION_REMOVED)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
     if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-    local g1=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil,e,tp)
+    local g1=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter),tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil,e,tp)
     if #g1>0 and Duel.SpecialSummon(g1,0,tp,tp,false,false,POS_FACEUP)~=0 then
         Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-        local g2=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil)
+        local g2=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.thfilter),tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil)
         if #g2>0 then
             Duel.SendtoHand(g2,nil,REASON_EFFECT)
             Duel.ConfirmCards(1-tp,g2)
