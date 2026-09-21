@@ -20,7 +20,7 @@ function s.initial_effect(c)
     e1:SetOperation(s.drop)
     c:RegisterEffect(e1)
 
-    -- HIỆU ỨNG 2: Quái thú đối thủ điều khiển mất 100 ATK/DEF cho mỗi lá Phép trong Mộ của bạn (Đã sửa setValue thành SetValue)
+    -- HIỆU ỨNG 2: Quái thú đối thủ điều khiển mất 100 ATK/DEF cho mỗi lá Phép trong Mộ của bạn
     local e2=Effect.CreateEffect(c)
     e2:SetType(EFFECT_TYPE_FIELD)
     e2:SetCode(EFFECT_UPDATE_ATTACK)
@@ -116,9 +116,10 @@ function s.matop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 
+-- Đã sửa: Sử dụng IsPreviousLocation và GetTurnID thay vì hằng số REASON_TOGRAVE bị lỗi
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    return c:IsReason(REASON_TOGRAVE) and c:GetTurnID()==Duel.GetTurnCount()
+    return c:IsPreviousLocation(LOCATION_ONFIELD) and c:GetTurnID()==Duel.GetTurnCount()
 end
 
 function s.thfilter(c)

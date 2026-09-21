@@ -90,8 +90,9 @@ function s.atkval(e,c)
     return Duel.GetMatchingGroupCount(function(x) return x:IsSetCard(0x115) and x:IsType(TYPE_SPELL) end, c:GetControler(), LOCATION_GRAVE+LOCATION_REMOVED, 0, nil) * 100
 end
 
+-- Đã sửa: Xóa IsReason(REASON_TOGRAVE) vì hằng số này không tồn tại. Chỉ cần check TurnID là đủ.
 function s.tdcon(e,tp,eg,ep,ev,re,r,rp)
-    return e:GetHandler():IsReason(REASON_TOGRAVE) and e:GetHandler():GetTurnID()==Duel.GetTurnCount()
+    return e:GetHandler():GetTurnID()==Duel.GetTurnCount()
 end
 
 function s.tdtg(e,tp,eg,ep,ev,re,r,rp,chk)

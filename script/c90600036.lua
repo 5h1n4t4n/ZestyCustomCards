@@ -34,8 +34,8 @@ function s.myfilter(c,tp)
     end
 end
 
--- Bộ lọc cho lá bài của đối thủ (trên sân hoặc trong Mộ)
-function s.oppfilter(c)
+-- Đã sửa: Thêm tham số tp vào hàm oppfilter
+function s.oppfilter(c,tp)
     return (c:IsLocation(LOCATION_ONFIELD) or c:IsLocation(LOCATION_GRAVE)) and c:IsControler(1-tp) and c:IsAbleToRemove()
 end
 
@@ -43,13 +43,15 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return false end
     if chk==0 then 
         return Duel.IsExistingTarget(s.myfilter,tp,LOCATION_MZONE+LOCATION_GRAVE,0,1,nil,tp)
-            and Duel.IsExistingTarget(s.oppfilter,tp,0,LOCATION_ONFIELD+LOCATION_GRAVE,1,nil)
+            -- Đã sửa: Truyền tp vào cuối hàm IsExistingTarget
+            and Duel.IsExistingTarget(s.oppfilter,tp,0,LOCATION_ONFIELD+LOCATION_GRAVE,1,nil,tp)
     end
     
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
     local g1=Duel.SelectTarget(tp,s.myfilter,tp,LOCATION_MZONE+LOCATION_GRAVE,0,1,1,nil,tp)
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-    local g2=Duel.SelectTarget(tp,s.oppfilter,tp,0,LOCATION_ONFIELD+LOCATION_GRAVE,1,1,nil)
+    -- Đã sửa: Truyền tp vào cuối hàm SelectTarget
+    local g2=Duel.SelectTarget(tp,s.oppfilter,tp,0,LOCATION_ONFIELD+LOCATION_GRAVE,1,1,nil,tp)
     
     g1:Merge(g2)
     Duel.SetOperationInfo(0,CATEGORY_REMOVE,g1,#g1,tp,LOCATION_ONFIELD+LOCATION_GRAVE)
