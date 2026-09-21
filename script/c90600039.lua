@@ -40,7 +40,7 @@ function s.tgfilter(c)
 end
 
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(0x115) and c:IsMonster() and (c:IsAbleToHand() or c:IsCanBeSpecialSummoned(e,0,tp,true,false))
+	return c:IsSetCard(0x115) and c:IsMonster() and (c:IsAbleToHand() or c:IsCanBeSpecialSummoned(e,0,tp,false,false))
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -62,7 +62,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		local tc=sg:GetFirst()
 		if tc then
 			local b1=tc:IsAbleToHand()
-			local b2=tc:IsCanBeSpecialSummoned(e,0,tp,true,false)
+			local b2=tc:IsCanBeSpecialSummoned(e,0,tp,false,false)
 			local op=0
 			if b1 and b2 then
 				op=Duel.SelectOption(tp,aux.Stringid(id,2),aux.Stringid(id,3))
@@ -75,7 +75,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 				Duel.SendtoHand(tc,nil,REASON_EFFECT)
 				Duel.ConfirmCards(1-tp,tc)
 			else
-				Duel.SpecialSummon(tc,0,tp,tp,true,false,POS_FACEUP)
+				Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
 			end
 		end
 	end
