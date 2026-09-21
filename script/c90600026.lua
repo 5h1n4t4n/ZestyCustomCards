@@ -1,5 +1,5 @@
 -- Sky Striker Mecha - Hyper Booster
--- ID: 02772337
+-- ID: 90600026
 local s,id=GetID()
 function s.initial_effect(c)
 	-- Kích hoạt: Thêm 1 lá "Sky Striker" từ Mộ lên tay, nếu có từ 3 Phép trở lên trong Mộ -> Triệu hồi đặc biệt 1 quái thú "Sky Striker Ace" từ Mộ
@@ -20,8 +20,19 @@ s.listed_series={SET_SKY_STRIKER}
 --------------------------------------------------------------------------------
 -- LOGIC KIỂM TRA ĐIỀU KIỆN KÍCH HOẠT (Main Monster Zone trống)
 --------------------------------------------------------------------------------
+function s.cfilter(c)
+	return c:GetSequence()<5
+end
+
 function s.actcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetFieldGroupCount(tp,LOCATION_MZONE,0)==0 or not Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsLocation,LOCATION_MZONE),tp,LOCATION_MZONE,0,1,nil)
+	-- Bỏ qua điều kiện nếu có hiệu ứng hỗ trợ trên sân
+	if Duel.IsPlayerAffectedByEffect(tp, 90600033+TYPE_SPELL) 
+		or Duel.IsPlayerAffectedByEffect(tp, EFFECT_SKIP_MAIN_ZONE_CHECK) then 
+		return true 
+	end
+
+	-- Kiểm tra chuẩn: Main Monster Zone (ô 0 đến 4) không có quái thú nào
+	return not Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
 end
 
 --------------------------------------------------------------------------------

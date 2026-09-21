@@ -1,5 +1,5 @@
 -- Sky Striker Mobilize - Vanguard
--- ID: 02772337
+-- ID: 90600033
 local s,id=GetID()
 function s.initial_effect(c)
 	-- Kích hoạt: Đào 5 lá từ đỉnh Deck, thêm 1 lá "Sky Striker" lên tay, phần còn lại xáo vào Deck, nếu có từ 3 Phép trở lên trong Mộ -> Đưa tối đa 2 lá "Sky Striker" bị loại bỏ vào Mộ
@@ -19,8 +19,19 @@ s.listed_series={SET_SKY_STRIKER}
 --------------------------------------------------------------------------------
 -- LOGIC KIỂM TRA ĐIỀU KIỆN KÍCH HOẠT (Main Monster Zone trống)
 --------------------------------------------------------------------------------
+function s.cfilter(c)
+	return c:GetSequence()<5
+end
+
 function s.actcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetFieldGroupCount(tp,LOCATION_MZONE,0)==0 or not Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsLocation,LOCATION_MZONE),tp,LOCATION_MZONE,0,1,nil)
+	-- Kiểm tra nếu có lá bài khác trên sân cấp quyền bỏ qua điều kiện Main Zone
+	if Duel.IsPlayerAffectedByEffect(tp, 90600033+TYPE_SPELL) -- Giả định cờ bỏ qua điều kiện của bạn
+		or Duel.IsPlayerAffectedByEffect(tp, EFFECT_SKIP_MAIN_ZONE_CHECK) then 
+		return true 
+	end
+
+	-- Kiểm tra chuẩn: Main Monster Zone (ô 0 đến 4) không có quái thú nào
+	return not Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
 end
 
 --------------------------------------------------------------------------------
