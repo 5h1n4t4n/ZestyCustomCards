@@ -123,7 +123,8 @@ end
 
 -- Hiệu ứng 3: Gắn nguyên liệu khi bài khác rời sân
 function s.matfilter_check(c,tp,ec)
-    return c:IsPreviousControler(tp) and c:IsPreviousLocation(LOCATION_FIELD) and c~=ec and c:IsReason(REASON_EFFECT) and c:GetReasonPlayer()~=tp
+    -- Đã sửa LOCATION_FIELD thành LOCATION_ONFIELD
+    return c:IsPreviousControler(tp) and c:IsPreviousLocation(LOCATION_ONFIELD) and c~=ec and c:IsReason(REASON_EFFECT) and c:GetReasonPlayer()~=tp
 end
 function s.matcon(e,tp,eg,ep,ev,re,r,rp)
     return eg:IsExists(s.matfilter_check,1,nil,tp,e:GetHandler())
