@@ -1,5 +1,5 @@
 -- Sky Striker Special Maneuver - Paradox Gate!
--- ID: 2772337
+-- ID: 90600037
 local s,id=GetID()
 
 function s.initial_effect(c)
@@ -35,6 +35,10 @@ function s.tdfilter(c)
     return (c:IsLocation(LOCATION_GRAVE) or c:IsLocation(LOCATION_REMOVED)) and c:IsAbleToDeck()
 end
 
+function s.thfilter1(c)
+    return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) and c:IsAbleToHand()
+end
+
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(s.tdfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil) end
     Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_GRAVE+LOCATION_REMOVED)
@@ -58,11 +62,11 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
             end
             
             -- Kiểm tra xem trong số các lá xáo vào Deck có từ 3 lá "Sky Striker" Spells trở lên không
-            local sk_count = g:FilterCount(function(c) return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) end)
-            if sk_count>=3 and Duel.IsExistingMatchingCard(function(c) return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) and c:IsAbleToHand() end,tp,LOCATION_DECK,0,1,nil) then
+            local sk_count = g:FilterCount(function(c) return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) end, nil)
+            if sk_count>=3 and Duel.IsExistingMatchingCard(s.thfilter1,tp,LOCATION_DECK,0,1,nil) then
                 if Duel.SelectYesNo(tp, aux.Stringid(id, 2)) then
                     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-                    local sc=Duel.SelectMatchingCard(tp,function(c) return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) and c:IsAbleToHand() end,tp,LOCATION_DECK,0,1,1,nil):GetFirst()
+                    local sc=Duel.SelectMatchingCard(tp,s.thfilter1,tp,LOCATION_DECK,0,1,1,nil):GetFirst()
                     if sc then
                         Duel.SendtoHand(sc,nil,REASON_EFFECT)
                         Duel.ConfirmCards(1-tp,sc)
