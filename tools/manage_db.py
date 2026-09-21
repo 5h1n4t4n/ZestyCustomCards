@@ -147,7 +147,14 @@ def get_db_path() -> Path:
 # ============================================================
 
 # CDB trong repo thuộc luồng dữ liệu khác (docs/database-workflow.md).
-SIBLING_CDB_NAMES = ("custom_cards_zesty.cdb", "mycard.cdb")
+SIBLING_CDB_NAMES = (
+    "custom_cards_zesty.cdb",
+    "mycard.cdb",
+    "Chrysos Heirs.cdb",
+    "FlowerSpirit.cdb",
+    "Madoka.cdb",
+    "Mecha Three Kingdom.cdb",
+)
 DEFAULT_EDOPRO_DIR = "F:/Game/ProjectIgnis"
 
 
