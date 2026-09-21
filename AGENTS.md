@@ -4,9 +4,10 @@
 
 ## Nguồn dữ liệu và ranh giới
 
+- Nhánh chính của repo là **`master`** (đồng bộ với `upstream/master`). Tạo feature branch từ `master` khi làm card/tính năng mới.
 - `card-data/c<ID>.json`: nguồn dữ liệu cho card được quản lý bằng specs; compiler sinh **`card-data.cdb`**.
 - `script/c<ID>.lua`: code chạy trong game. `tools/`: công cụ phát triển và templates, không phải script game.
-- `custom_cards_zesty.cdb`, `mycard.cdb`: dữ liệu còn lại của dev khác. Không compile đè, dump đè specs hoặc giải quyết conflict bằng chọn cả file ours/theirs.
+- `custom_cards_zesty.cdb`, `mycard.cdb` và các CDB cộng đồng (`Chrysos Heirs.cdb`, `FlowerSpirit.cdb`, `Madoka.cdb`, `Mecha Three Kingdom.cdb`): dữ liệu của dev khác. Không compile đè, dump đè specs hoặc giải quyết conflict bằng chọn cả file ours/theirs.
 - `feature_list.json`: hàng đợi và trạng thái; dùng Harness CLI để thay đổi, không chỉnh thủ công.
 - Git diff/log là lịch sử thay đổi. Nhật ký phiên cũ nằm trong `docs/archive/`, chỉ đọc khi điều tra lịch sử; không tạo lại nhật ký bắt buộc.
 

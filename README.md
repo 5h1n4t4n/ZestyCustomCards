@@ -13,11 +13,15 @@ Project này chứa các card do nhóm TTF tự thiết kế: script Lua, databa
    ```
    expansions/
    ├── card-data.cdb                 ← card từ card-data/
-   ├── custom_cards_zesty.cdb   ← card còn lại của dev khác
-   ├── mycard.cdb               ← card còn lại của dev khác
-   ├── script/                  ← Lua scripts
-   ├── pics/                    ← artwork
-   └── strings.conf             ← tên archetype
+   ├── custom_cards_zesty.cdb        ← card còn lại của dev khác
+   ├── mycard.cdb                    ← card còn lại của dev khác
+   ├── Chrysos Heirs.cdb             ← card cộng đồng
+   ├── FlowerSpirit.cdb              ← card cộng đồng
+   ├── Madoka.cdb                    ← card cộng đồng
+   ├── Mecha Three Kingdom.cdb       ← card cộng đồng
+   ├── script/                       ← Lua scripts
+   ├── pics/                         ← artwork
+   └── strings.conf                  ← tên archetype và counter
    ```
 3. Mở EDOPro → bật "Alternate format" để thấy card tùy chỉnh
 
@@ -31,12 +35,13 @@ Danh sách card đầy đủ xem trực tiếp trong game sau khi cài. Tra nhan
 script/          — Lua script cho mỗi card (tên file = passcode)
 pics/            — Artwork (tên file = passcode)
 docs/            — Tài liệu nội bộ
-tools/     — Công cụ CLI, linter và templates:
+tools/           — Công cụ CLI, linter và templates:
   ├── templates/        — Templates để tạo script mới
   ├── manage_harness.py — Quản lý quy trình (Harness CLI)
   └── manage_db.py      — Quản lý CDB (CDB Compiler)
-card-data.cdb         — Database sinh từ card-data/
-custom_cards_zesty.cdb, mycard.cdb — Dữ liệu riêng của dev khác
+card-data/       — Card specs định dạng JSON
+card-data.cdb    — Database sinh từ card-data/
+*.cdb            — Dữ liệu CDB khác (legacy & cộng đồng)
 strings.conf     — Tên archetype hiển thị trong game
 ```
 
@@ -44,7 +49,7 @@ strings.conf     — Tên archetype hiển thị trong game
 
 ## Dữ liệu và công cụ
 
-Đọc [workflow CDB](docs/database-workflow.md) trước khi cập nhật database. Chỉ copy CDB, `script/`, `pics/` và `strings.conf` vào game; không copy `tools/`, queue hay backup. Thay đồng bộ cả ba CDB sau lần tách database đầu tiên để tránh trùng ID với bản cũ.
+Đọc [workflow CDB](docs/database-workflow.md) trước khi cập nhật database. Chỉ copy CDB, `script/`, `pics/` và `strings.conf` vào game; không copy `tools/`, queue hay backup. Thay đồng bộ các file CDB sau lần cập nhật database để tránh trùng ID với bản cũ.
 
 ---
 

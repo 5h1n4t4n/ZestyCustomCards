@@ -39,7 +39,7 @@ python tools/manage_harness.py verify <ID>
 
 ### Trùng passcode giữa các CDB
 
-`validate` và `compile` đối chiếu mọi ID trong `card-data/` với `custom_cards_zesty.cdb`, `mycard.cdb` và toàn bộ `*.cdb` của bản cài EDOPro; trùng là ERROR và chặn biên dịch (quy tắc tại `docs/agent-rules.md` §2.1). `scan` dùng cùng nguồn đó để không cấp passcode đã có người dùng.
+`validate` và `compile` đối chiếu mọi ID trong `card-data/` với toàn bộ CDB trong repo (`custom_cards_zesty.cdb`, `mycard.cdb`, `Chrysos Heirs.cdb`, `FlowerSpirit.cdb`, `Madoka.cdb`, `Mecha Three Kingdom.cdb`) và toàn bộ `*.cdb` của bản cài EDOPro; trùng là ERROR và chặn biên dịch (quy tắc tại `docs/agent-rules.md` §2.1). `scan` dùng cùng nguồn đó để không cấp passcode đã có người dùng.
 
 CDB trong game trùng tên file với CDB của repo bị bỏ qua — đó là bản phân phối của chính repo này. Thư mục game đọc từ `$EDOPRO_DIR`, mặc định `F:/Game/ProjectIgnis`; không thấy thì chỉ còn đối chiếu CDB trong repo và tool báo warning, lúc đó phải tự kiểm tra trước khi phát hành.
 
@@ -96,4 +96,4 @@ Test trong client/core đúng phiên bản với deck và trạng thái tái hi�
 
 ## 5. Bàn giao
 
-Nêu ID sửa, official reference, hành vi thay đổi, lệnh đã chạy/kết quả và test duel còn thiếu. Review `git diff --check` và `git diff --stat`. Đọc `docs/database-workflow.md` trước khi commit/migrate CDB. Chỉ commit/push khi được yêu cầu.
+Nêu ID sửa, official reference, hành vi thay đổi, lệnh đã chạy/kết quả và test duel còn thiếu. Review `git diff --check` và `git diff --stat`. Đọc `docs/database-workflow.md` trước khi commit/migrate CDB. Chỉ commit/push khi được yêu cầu. Nhánh chính là `master`; tạo feature branch từ `master` khi mở Pull Request sang `upstream/master`.
