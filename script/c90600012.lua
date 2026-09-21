@@ -3,21 +3,9 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-    -- Xyz Summon: 3 quái thú Level 8
-    Xyz.AddProcedure(c,nil,8,3)
+    -- Xyz Summon: 3 quái thú Level 8 HOẶC dùng 1 Phép "Sky Striker" (trên tay hoặc trên sân) làm nguyên liệu
+    Xyz.AddProcedure(c,nil,8,3,s.ovfilter,aux.Stringid(id,4))
     c:EnableReviveLimit()
-
-    -- Triệu hồi Xyz bằng cách overlay 1 Phép "Sky Striker" bạn điều khiển hoặc trên tay
-    local e0=Effect.CreateEffect(c)
-    e0:SetDescription(aux.Stringid(id,4))
-    e0:SetType(EFFECT_TYPE_FIELD)
-    e0:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-    e0:SetCode(EFFECT_SPSUMMON_PROC)
-    e0:SetRange(LOCATION_EXTRA)
-    e0:SetCondition(s.rumcon)
-    e0:SetTarget(s.rumtg)
-    e0:SetOperation(s.rumop)
-    c:RegisterEffect(e0)
 
     -- HIỆU ỨNG 1 (Quick Effect): Tách 2 nguyên liệu; vô hiệu hóa hiệu ứng
     local e1=Effect.CreateEffect(c)
@@ -75,37 +63,16 @@ function s.initial_effect(c)
 end
 
 --------------------------------------------------------------------------------
--- LOGIC HỖ TRỢ & HIỆU ỨNG
+-- ĐIỀU KIỆN OVERLAY ĐẶC BIỆT (Cho phép chọn Phép Sky Striker trên tay hoặc trên sân)
 --------------------------------------------------------------------------------
+function s.ovfilter(c,tp,lc)
+    return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL,lc,SUMMON_TYPE_XYZ,tp) 
+        and (c:IsFaceup() or c:IsLocation(LOCATION_HAND))
+end
 
--- Quy trình triệu hồi Xyz đặc biệt bằng Phép Sky Striker
-function s.rumfilter(c)
-    return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) and (c:IsFaceup() or c:IsLocation(LOCATION_HAND))
-end
-function s.rumcon(e,c)
-    if c==nil then return true end
-    local tp=c:GetControler()
-    return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
-        and Duel.IsExistingMatchingCard(s.rumfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,nil)
-end
-function s.rumtg(e,tp,eg,ep,ev,re,r,rp,c)
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-    local g=Duel.SelectMatchingCard(tp,s.rumfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,1,nil)
-    if #g>0 then
-        g:KeepAlive()
-        e:SetLabelObject(g)
-        return true
-    end
-    return false
-end
-function s.rumop(e,tp,eg,ep,ev,re,r,rp,c)
-    local g=e:GetLabelObject()
-    if g then
-        c:SetMaterial(g)
-        Duel.Overlay(c,g)
-        g:Delete()
-    end
-end
+--------------------------------------------------------------------------------
+-- LOGIC CÁC HIỆU ỨNG VÀO TRẬN
+--------------------------------------------------------------------------------
 
 -- Hiệu ứng 1: Quick Effect Negate
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)

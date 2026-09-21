@@ -1,6 +1,10 @@
 -- Sky Striker Mecha - Hyper Booster
 -- ID: 90600026
 local s,id=GetID()
+
+-- Định nghĩa Custom Code để kiểm tra cờ bỏ qua Main Zone (tránh bị nil)
+CUSTOM_EFFECT_SKIP_MAIN_ZONE = 90600000
+
 function s.initial_effect(c)
 	-- Kích hoạt: Thêm 1 lá "Sky Striker" từ Mộ lên tay, nếu có từ 3 Phép trở lên trong Mộ -> Triệu hồi đặc biệt 1 quái thú "Sky Striker Ace" từ Mộ
 	local e1=Effect.CreateEffect(c)
@@ -26,8 +30,7 @@ end
 
 function s.actcon(e,tp,eg,ep,ev,re,r,rp)
 	-- Bỏ qua điều kiện nếu có hiệu ứng hỗ trợ trên sân
-	if Duel.IsPlayerAffectedByEffect(tp, 90600033+TYPE_SPELL) 
-		or Duel.IsPlayerAffectedByEffect(tp, EFFECT_SKIP_MAIN_ZONE_CHECK) then 
+	if Duel.IsPlayerAffectedByEffect(tp, CUSTOM_EFFECT_SKIP_MAIN_ZONE) then 
 		return true 
 	end
 

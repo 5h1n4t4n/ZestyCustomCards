@@ -1,6 +1,10 @@
 -- Sky Striker Mobilize - Vanguard
 -- ID: 90600033
 local s,id=GetID()
+
+-- Định nghĩa hằng số Custom Code cho hiệu ứng bỏ qua kiểm tra Main Zone (tránh bị nil)
+CUSTOM_EFFECT_SKIP_MAIN_ZONE = 90600000 
+
 function s.initial_effect(c)
 	-- Kích hoạt: Đào 5 lá từ đỉnh Deck, thêm 1 lá "Sky Striker" lên tay, phần còn lại xáo vào Deck, nếu có từ 3 Phép trở lên trong Mộ -> Đưa tối đa 2 lá "Sky Striker" bị loại bỏ vào Mộ
 	local e1=Effect.CreateEffect(c)
@@ -24,9 +28,8 @@ function s.cfilter(c)
 end
 
 function s.actcon(e,tp,eg,ep,ev,re,r,rp)
-	-- Kiểm tra nếu có lá bài khác trên sân cấp quyền bỏ qua điều kiện Main Zone
-	if Duel.IsPlayerAffectedByEffect(tp, 90600033+TYPE_SPELL) -- Giả định cờ bỏ qua điều kiện của bạn
-		or Duel.IsPlayerAffectedByEffect(tp, EFFECT_SKIP_MAIN_ZONE_CHECK) then 
+	-- Kiểm tra nếu có lá bài khác trên sân cấp cờ bỏ qua điều kiện Main Zone
+	if Duel.IsPlayerAffectedByEffect(tp, CUSTOM_EFFECT_SKIP_MAIN_ZONE) then 
 		return true 
 	end
 
