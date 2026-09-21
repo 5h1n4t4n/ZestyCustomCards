@@ -60,11 +60,11 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 
 	if op==0 then
 		e:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
-		e1:SetProperty(0)
+		e:SetProperty(0)
 		Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED)
 	else
 		e:SetCategory(0)
-		e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
+		e:SetProperty(EFFECT_FLAG_CARD_TARGET)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATTACH)
 		local g=Duel.SelectTarget(tp,aux.TRUE,tp,0,LOCATION_GRAVE,1,1,nil)
 		Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,g,1,0,0)
