@@ -75,6 +75,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 				Duel.SendtoHand(tc,nil,REASON_EFFECT)
 				Duel.ConfirmCards(1-tp,tc)
 			else
+				-- Đảm bảo truyền chính xác playerid (tp) và vị trí gọi quân cờ
 				Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
 			end
 		end
