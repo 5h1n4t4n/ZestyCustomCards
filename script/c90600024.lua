@@ -136,7 +136,6 @@ function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 		and Duel.IsExistingTarget(s.tgtcfilter,tp,LOCATION_ONFIELD,0,1,e:GetHandler()) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
 	Duel.SelectTarget(tp,s.tgtcfilter,tp,LOCATION_ONFIELD,0,1,1,e:GetHandler())
-	-- Đã thêm SetOperationInfo để core game nhận chuẩn hiệu ứng TOHAND
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK) 
 end
 
@@ -152,7 +151,6 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetDecktopGroup(tp,4)
 	if #g==0 then return end
 	
-	-- QUAN TRỌNG NHẤT LÀ DÒNG NÀY: Khóa xáo bài ngay lập tức để game không bị mất dấu lá bài
 	Duel.DisableShuffleCheck()
 	
 	local xyzg=Duel.GetMatchingGroup(function(c) return c:IsFaceup() and c:IsType(TYPE_XYZ) and c:IsSetCard(0x115) end,tp,LOCATION_MZONE,0,nil)
@@ -160,9 +158,10 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	
 	local sg=g:Filter(s.excfilter,nil,xyz_check)
 	if #sg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_OPERATECARD)
 		
-		-- Ép lá bài được chọn thành đối tượng Group để xử lý không bao giờ lỗi
+		-- Đã sửa HINTMSG_OPERATECARD thành HINTMSG_ATOHAND
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+		
 		local tg=sg:Select(tp,1,1,nil)
 		local sc=tg:GetFirst()
 		
@@ -170,10 +169,8 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		local b2 = xyz_check
 		
 		local op=0
-		-- Nếu có Xyz trên sân, hiện tùy chọn Add hoặc Attach
 		if b1 and b2 then
-			op=Duel.SelectOption(tp,1190,aux.Stringid(id,2)) -- 1190: Add to hand
-		-- Nếu không có Xyz, tự động gán op = 0 (Chỉ Add to hand)
+			op=Duel.SelectOption(tp,1190,aux.Stringid(id,2)) 
 		elseif b1 then
 			op=0
 		else
@@ -181,7 +178,6 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		end
 		
 		if op==0 then
-			-- SendtoHand dùng 'tg' (Group) thay vì 'sc' (Single Card)
 			Duel.SendtoHand(tg,nil,REASON_EFFECT)
 			Duel.ConfirmCards(1-tp,tg)
 		else
