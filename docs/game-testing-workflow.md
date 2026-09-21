@@ -49,12 +49,22 @@ powershell -File .\tools\sync_game.ps1
   - Mục tiêu (Target hay non-target).
   - Giới hạn lượt (HOPT: "You can only use each effect... once per turn").
 
-### Bước 2: Kiểm tra tĩnh (Static Validation)
-Chạy validator từ thư mục gốc của repo:
+### Bước 2: Kiểm tra tĩnh & Chuẩn hóa hình ảnh
+1. **Kiểm tra script**:
 ```powershell
 powershell -File .\tools\validate_scripts.ps1 script\c<ID>.lua
 ```
 Đảm bảo kết quả trả về `Results: 1 OK, 0 WARN, 0 FAIL`.
+
+2. **Kiểm tra định dạng hình ảnh (Tránh lỗi JPEG FATAL ERROR)**:
+```powershell
+# Quét kiểm tra định dạng toàn bộ ảnh
+python tools/normalize_images.py
+
+# Tự động sửa lỗi sai đuôi (.jpg nhưng thực chất là PNG) và đồng bộ sang game
+python tools/normalize_images.py --apply --sync-game
+```
+*Lưu ý:* EDOPro dùng `libjpeg` cho đuôi `.jpg`, nếu lưu file PNG bằng đuôi `.jpg` thì game sẽ văng lỗi `JPEG FATAL ERROR`. Công cụ này sẽ tự động phát hiện và chuyển về đuôi chuẩn `.png` (qua `git mv`).
 
 ### Bước 3: Đồng bộ sang game và chuẩn bị Deck test
 Chạy `sync_game.ps1 -CardId <ID>` để copy file và sinh `deck/test_<ID>.ydk`.

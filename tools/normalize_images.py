@@ -1,0 +1,465 @@
+"""Chuẩn hóa và kiểm tra định dạng hình ảnh trong thư mục pics/.
+
+Hỗ trợ:
+- Phát hiện và sửa lỗi mismatch định dạng (file PNG lưu đuôi .jpg hoặc ngược lại).
+- Chuyển đổi toàn bộ kho ảnh về chuẩn JPEG (.jpg) đồng nhất theo yêu cầu.
+- Đồng bộ tự động sang thư mục game EDOPro và dọn dẹp các file cũ/sai định dạng.
+
+Cách dùng:
+  python tools/normalize_images.py                        # Kiểm tra định dạng (check / dry-run)
+  python tools/normalize_images.py --apply                # Tự động sửa lỗi mismatch
+  python tools/normalize_images.py --to-jpg               # Chuẩn hóa toàn bộ ảnh về .jpg (dry-run)
+  python tools/normalize_images.py --to-jpg --apply       # Thực hiện convert toàn bộ ảnh sang .jpg
+  python tools/normalize_images.py --to-jpg --apply --sync-game # Convert và đồng bộ sạch sang EDOPro
+"""
+from __future__ import annotations
+
+import argparse
+import os
+from pathlib import Path
+import subprocess
+import sys
+from typing import NamedTuple
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
+try:
+    from PIL import Image
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
+
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_PICS_DIR = ROOT / "pics"
+DEFAULT_GAME_DIR = Path(os.environ.get("EDOPRO_DIR", r"F:\Game\ProjectIgnis"))
+
+MAGIC_PNG = b"\x89PNG\r\n\x1a\n"
+MAGIC_JPEG = b"\xff\xd8\xff"
+MAGIC_GIF = b"GIF8"
+MAGIC_WEBP = b"RIFF"
+
+
+class ImageIssue(NamedTuple):
+    file_path: Path
+    detected_format: str
+    expected_extension: str
+    current_extension: str
+    issue_type: str  # 'MISMATCH', 'CORRUPT', 'UNSUPPORTED', 'DUPLICATE', 'NON_JPG'
+    details: str
+
+
+def detect_file_format(file_path: Path) -> tuple[str, str | None]:
+    """Xác định format thực tế của file qua magic bytes và Pillow."""
+    if not file_path.exists() or file_path.stat().st_size == 0:
+        return "EMPTY", "File rỗng (0 bytes)"
+
+    try:
+        with open(file_path, "rb") as f:
+            header = f.read(16)
+    except Exception as e:
+        return "UNREADABLE", str(e)
+
+    detected = "UNKNOWN"
+    if header.startswith(MAGIC_PNG):
+        detected = "PNG"
+    elif header.startswith(MAGIC_JPEG):
+        detected = "JPEG"
+    elif header.startswith(MAGIC_GIF):
+        detected = "GIF"
+    elif header.startswith(MAGIC_WEBP) and len(header) >= 12 and header[8:12] == b"WEBP":
+        detected = "WEBP"
+
+    if HAS_PIL:
+        try:
+            with Image.open(file_path) as img:
+                pil_fmt = img.format.upper() if img.format else detected
+                return pil_fmt, None
+        except Exception as e:
+            if detected != "UNKNOWN":
+                return detected, None
+            return "CORRUPT", f"Pillow không đọc được file: {e}"
+
+    return detected, None
+
+
+def convert_image_to_jpeg(src_path: Path, dst_path: Path, quality: int = 95) -> None:
+    """Chuyển đổi bất kỳ ảnh nào sang chuẩn JPEG (.jpg) thực thụ."""
+    if not HAS_PIL:
+        raise RuntimeError("Cần cài đặt Pillow (PIL) để thực hiện convert ảnh sang JPEG!")
+
+    with Image.open(src_path) as img:
+        # Xử lý kênh Alpha (độ trong suốt) nếu có -> chuyển sang nền trắng
+        if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+            bg = Image.new("RGB", img.size, (255, 255, 255))
+            if img.mode == "P":
+                img = img.convert("RGBA")
+            bg.paste(img, mask=img.split()[-1])
+            bg.save(dst_path, "JPEG", quality=quality)
+        else:
+            rgb_img = img.convert("RGB")
+            rgb_img.save(dst_path, "JPEG", quality=quality)
+
+
+def scan_images(pics_dir: Path, target_jpg_only: bool = False) -> list[ImageIssue]:
+    """Quét toàn bộ ảnh trong thư mục và phát hiện các lỗi định dạng."""
+    issues: list[ImageIssue] = []
+    if not pics_dir.exists():
+        return issues
+
+    passcode_map: dict[str, list[Path]] = {}
+
+    for item in sorted(pics_dir.iterdir()):
+        if not item.is_file():
+            continue
+
+        ext = item.suffix.lower()
+        if ext not in [".jpg", ".jpeg", ".png", ".webp", ".gif"]:
+            continue
+
+        passcode = item.stem
+        passcode_map.setdefault(passcode, []).append(item)
+
+        fmt, err = detect_file_format(item)
+        if err and fmt in ["EMPTY", "UNREADABLE", "CORRUPT"]:
+            issues.append(ImageIssue(
+                file_path=item,
+                detected_format=fmt,
+                expected_extension=".jpg" if target_jpg_only else ext,
+                current_extension=ext,
+                issue_type="CORRUPT",
+                details=err,
+            ))
+            continue
+
+        if target_jpg_only:
+            # Mục tiêu: toàn bộ phải là đuôi .jpg VÀ định dạng JPEG
+            if ext != ".jpg" or fmt != "JPEG":
+                issues.append(ImageIssue(
+                    file_path=item,
+                    detected_format=fmt,
+                    expected_extension=".jpg",
+                    current_extension=ext,
+                    issue_type="NON_JPG",
+                    details=f"Định dạng {fmt} (đuôi {ext}) -> cần chuẩn hóa thành JPEG (.jpg)",
+                ))
+        else:
+            # Chế độ kiểm tra tính khớp giữa format và extension
+            if fmt == "PNG" and ext in [".jpg", ".jpeg"]:
+                issues.append(ImageIssue(
+                    file_path=item,
+                    detected_format="PNG",
+                    expected_extension=".png",
+                    current_extension=ext,
+                    issue_type="MISMATCH",
+                    details=f"File định dạng PNG nhưng đặt đuôi {ext} (gây lỗi JPEG FATAL ERROR)",
+                ))
+            elif fmt == "JPEG" and ext == ".png":
+                issues.append(ImageIssue(
+                    file_path=item,
+                    detected_format="JPEG",
+                    expected_extension=".jpg",
+                    current_extension=ext,
+                    issue_type="MISMATCH",
+                    details="File định dạng JPEG nhưng đặt đuôi .png",
+                ))
+            elif fmt == "JPEG" and ext == ".jpeg":
+                issues.append(ImageIssue(
+                    file_path=item,
+                    detected_format="JPEG",
+                    expected_extension=".jpg",
+                    current_extension=ext,
+                    issue_type="MISMATCH",
+                    details="Đuôi .jpeg cần đổi thành .jpg",
+                ))
+            elif fmt not in ["PNG", "JPEG"]:
+                issues.append(ImageIssue(
+                    file_path=item,
+                    detected_format=fmt,
+                    expected_extension=".jpg",
+                    current_extension=ext,
+                    issue_type="UNSUPPORTED",
+                    details=f"Định dạng {fmt} không phải PNG hoặc JPG",
+                ))
+
+    # Kiểm tra trùng passcode
+    for passcode, files in passcode_map.items():
+        if len(files) > 1:
+            names = ", ".join(f.name for f in files)
+            for f in files:
+                issues.append(ImageIssue(
+                    file_path=f,
+                    detected_format="DUPLICATE",
+                    expected_extension=f.suffix.lower(),
+                    current_extension=f.suffix.lower(),
+                    issue_type="DUPLICATE",
+                    details=f"Passcode {passcode} có nhiều file ảnh: [{names}]",
+                ))
+
+    return issues
+
+
+def fix_issues_to_jpg(issues: list[ImageIssue], dry_run: bool = True) -> tuple[int, list[str]]:
+    """Convert toàn bộ ảnh chưa chuẩn về file .jpg thật và dọn dẹp các file cũ."""
+    converted_count = 0
+    logs: list[str] = []
+
+    target_issues = [i for i in issues if i.issue_type in ["NON_JPG", "MISMATCH"]]
+    processed_stems: set[str] = set()
+
+    for issue in target_issues:
+        src = issue.file_path
+        dst = src.with_suffix(".jpg")
+
+        if src.stem in processed_stems and src == dst:
+            continue
+        processed_stems.add(src.stem)
+
+        if dry_run:
+            logs.append(f"[DRY-RUN] Convert sang JPEG: {src.name} -> {dst.name}")
+            converted_count += 1
+            continue
+
+        try:
+            # Nếu file nguồn là file khác tên dst (ví dụ .png -> .jpg)
+            if src != dst:
+                convert_image_to_jpeg(src, dst)
+                # Dùng git rm cho file cũ nếu có quản lý git
+                is_git = False
+                try:
+                    res = subprocess.run(
+                        ["git", "ls-files", "--error-unmatch", str(src)],
+                        cwd=src.parent,
+                        capture_output=True,
+                        text=True,
+                    )
+                    is_git = (res.returncode == 0)
+                except Exception:
+                    is_git = False
+
+                if is_git:
+                    subprocess.run(["git", "rm", "-f", str(src)], cwd=src.parent, capture_output=True)
+                else:
+                    src.unlink(missing_ok=True)
+
+                # git add file mới
+                subprocess.run(["git", "add", str(dst)], cwd=dst.parent, capture_output=True)
+                logs.append(f"[CONVERT] {src.name} -> {dst.name} (đã tạo JPEG và xóa file cũ)")
+                converted_count += 1
+            else:
+                # File đã có tên .jpg nhưng bên trong là PNG/khác
+                tmp_dst = src.with_suffix(".tmp.jpg")
+                convert_image_to_jpeg(src, tmp_dst)
+                tmp_dst.replace(dst)
+                subprocess.run(["git", "add", str(dst)], cwd=dst.parent, capture_output=True)
+                logs.append(f"[RE-ENCODE] {src.name} -> chuyển đổi nội dung sang JPEG chuẩn")
+                converted_count += 1
+
+        except Exception as e:
+            logs.append(f"[ERROR] Thất bại khi convert {src.name}: {e}")
+
+    return converted_count, logs
+
+
+def fix_mismatch_renames(issues: list[ImageIssue], dry_run: bool = True) -> tuple[int, list[str]]:
+    """Đổi tên file theo đúng format thực tế (không re-encode)."""
+    fixed_count = 0
+    logs: list[str] = []
+
+    mismatches = [i for i in issues if i.issue_type == "MISMATCH"]
+    for issue in mismatches:
+        src = issue.file_path
+        dst = src.with_suffix(issue.expected_extension)
+
+        if dst.exists():
+            logs.append(f"[SKIP] Không thể đổi tên {src.name} -> {dst.name} vì {dst.name} đã tồn tại.")
+            continue
+
+        if dry_run:
+            logs.append(f"[DRY-RUN] Sẽ đổi tên: {src.name} -> {dst.name}")
+            fixed_count += 1
+        else:
+            is_git = False
+            try:
+                res = subprocess.run(
+                    ["git", "ls-files", "--error-unmatch", str(src)],
+                    cwd=src.parent,
+                    capture_output=True,
+                    text=True,
+                )
+                is_git = (res.returncode == 0)
+            except Exception:
+                is_git = False
+
+            if is_git:
+                try:
+                    subprocess.run(
+                        ["git", "mv", str(src), str(dst)],
+                        cwd=src.parent,
+                        check=True,
+                        capture_output=True,
+                    )
+                    logs.append(f"[GIT MV] {src.name} -> {dst.name}")
+                    fixed_count += 1
+                except subprocess.CalledProcessError as e:
+                    src.rename(dst)
+                    logs.append(f"[RENAME] {src.name} -> {dst.name} (git mv failed: {e})")
+                    fixed_count += 1
+            else:
+                src.rename(dst)
+                logs.append(f"[RENAME] {src.name} -> {dst.name}")
+                fixed_count += 1
+
+    return fixed_count, logs
+
+
+def sync_to_game(pics_dir: Path, game_dir: Path, clean_pngs: bool = False) -> list[str]:
+    """Đồng bộ các file ảnh sang game và dọn dẹp file cũ."""
+    logs: list[str] = []
+    game_pics = game_dir / "repositories" / "custom_cards_zesty" / "pics"
+    if not game_pics.exists():
+        logs.append(f"[WARN] Không tìm thấy thư mục ảnh trong game: {game_pics}")
+        return logs
+
+    logs.append(f"[SYNC] Đồng bộ ảnh từ {pics_dir} -> {game_pics}")
+    copied = 0
+    removed_stale = 0
+
+    repo_files = {f.name: f for f in pics_dir.iterdir() if f.is_file()}
+
+    for repo_name, repo_path in repo_files.items():
+        dst = game_pics / repo_name
+        if not dst.exists() or dst.stat().st_size != repo_path.stat().st_size:
+            try:
+                import shutil
+                shutil.copy2(repo_path, dst)
+                copied += 1
+            except Exception as e:
+                logs.append(f"[ERROR] Lỗi copy {repo_name}: {e}")
+
+        # Nếu đang ở chế độ toàn bộ là .jpg hoặc repo có .jpg, xóa .png cũ trong game
+        if clean_pngs or repo_path.suffix.lower() == ".jpg":
+            stale_png = game_pics / f"{repo_path.stem}.png"
+            if stale_png.exists():
+                try:
+                    stale_png.unlink()
+                    removed_stale += 1
+                    logs.append(f"[CLEANUP] Đã xóa file .png cũ trong game: {stale_png.name}")
+                except Exception as e:
+                    logs.append(f"[ERROR] Không thể xóa {stale_png.name}: {e}")
+
+        # Ngược lại, nếu repo có .png, xóa .jpg cũ
+        if repo_path.suffix.lower() == ".png":
+            stale_jpg = game_pics / f"{repo_path.stem}.jpg"
+            if stale_jpg.exists():
+                try:
+                    stale_jpg.unlink()
+                    removed_stale += 1
+                    logs.append(f"[CLEANUP] Đã xóa file .jpg cũ trong game: {stale_jpg.name}")
+                except Exception as e:
+                    logs.append(f"[ERROR] Không thể xóa {stale_jpg.name}: {e}")
+
+    logs.append(f"[DONE] Đã copy {copied} file ảnh, dọn dẹp {removed_stale} file cũ trong game.")
+    return logs
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Kiểm tra và chuẩn hóa định dạng ảnh cho card EDOPro.",
+    )
+    parser.add_argument(
+        "--target",
+        type=Path,
+        default=DEFAULT_PICS_DIR,
+        help="Thư mục ảnh cần quét (mặc định: pics/)",
+    )
+    parser.add_argument(
+        "--to-jpg",
+        action="store_true",
+        help="Chuẩn hóa toàn bộ kho ảnh về file JPEG (.jpg) thực thụ",
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Thực hiện đổi tên / convert (mặc định là chỉ kiểm tra/dry-run)",
+    )
+    parser.add_argument(
+        "--sync-game",
+        action="store_true",
+        help="Đồng bộ ảnh đã chuẩn hóa sang thư mục game EDOPro",
+    )
+    parser.add_argument(
+        "--game-dir",
+        type=Path,
+        default=DEFAULT_GAME_DIR,
+        help=f"Đường dẫn game EDOPro (mặc định: {DEFAULT_GAME_DIR})",
+    )
+
+    args = parser.parse_args()
+    target_dir = args.target.resolve()
+
+    print("=" * 60)
+    print("=== TTF Image Normalization Tool ===")
+    print(f"Thư mục quét: {target_dir}")
+    mode_desc = "Chuẩn hóa toàn bộ sang .jpg" if args.to_jpg else "Kiểm tra mismatch định dạng"
+    print(f"Mục tiêu    : {mode_desc}")
+    print(f"Hành động   : {'Áp dụng sửa đổi (--apply)' if args.apply else 'Kiểm tra (--check / dry-run)'}")
+    print("=" * 60)
+
+    if not target_dir.exists():
+        print(f"Lỗi: Thư mục '{target_dir}' không tồn tại!")
+        return 1
+
+    issues = scan_images(target_dir, target_jpg_only=args.to_jpg)
+    mismatches = [i for i in issues if i.issue_type in ["MISMATCH", "NON_JPG"]]
+    corrupts = [i for i in issues if i.issue_type == "CORRUPT"]
+    unsupported = [i for i in issues if i.issue_type == "UNSUPPORTED"]
+    duplicates = [i for i in issues if i.issue_type == "DUPLICATE"]
+
+    errors = [i for i in issues if i.issue_type in ["MISMATCH", "CORRUPT", "NON_JPG"]]
+
+    print(f"\nKết quả quét:")
+    label = "Cần convert sang .jpg (NON_JPG)" if args.to_jpg else "Sai định dạng đuôi (MISMATCH)"
+    print(f"  - {label:<35}: {len(mismatches)}")
+    print(f"  - File lỗi / hỏng (CORRUPT)          : {len(corrupts)}")
+    print(f"  - Định dạng lạ (UNSUPPORTED)         : {len(unsupported)}")
+    print(f"  - Trùng passcode (DUPLICATE)         : {len(duplicates)}")
+
+    if issues:
+        print("\nChi tiết các vấn đề phát hiện:")
+        for issue in issues[:30]:
+            prefix = "LỖI" if issue.issue_type in ["MISMATCH", "CORRUPT", "NON_JPG"] else "CẢNH BÁO"
+            print(f"  [{prefix} - {issue.issue_type}] {issue.file_path.name}: {issue.details}")
+        if len(issues) > 30:
+            print(f"  ... và còn {len(issues) - 30} vấn đề khác.")
+
+    if mismatches:
+        print(f"\n{'Thực hiện xử lý:' if args.apply else 'Kế hoạch xử lý (chạy với --apply để thực hiện):'}")
+        if args.to_jpg:
+            count, logs = fix_issues_to_jpg(issues, dry_run=not args.apply)
+        else:
+            count, logs = fix_mismatch_renames(issues, dry_run=not args.apply)
+
+        for log in logs[:40]:
+            print(f"  {log}")
+        if len(logs) > 40:
+            print(f"  ... và {len(logs) - 40} file khác.")
+        print(f"\nTổng số file được xử lý: {count}/{len(mismatches)}")
+
+    if args.sync_game and args.apply:
+        print("\nĐồng bộ sang game:")
+        sync_logs = sync_to_game(target_dir, args.game_dir, clean_pngs=args.to_jpg)
+        for log in sync_logs:
+            print(f"  {log}")
+
+    if not errors:
+        print("\n[OK] Toàn bộ hình ảnh đều đạt chuẩn!")
+        return 0
+
+    return 0 if args.apply else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

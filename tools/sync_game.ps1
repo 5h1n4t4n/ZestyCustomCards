@@ -60,14 +60,16 @@ $picsDest = Join-Path $repoDest "pics"
 if (-not (Test-Path $picsDest)) { New-Item -ItemType Directory -Path $picsDest -Force | Out-Null }
 
 if ($CardId -ne "") {
-    $picPng = Join-Path $root "pics\$CardId.png"
     $picJpg = Join-Path $root "pics\$CardId.jpg"
-    if (Test-Path $picPng) {
+    $picPng = Join-Path $root "pics\$CardId.png"
+    if (Test-Path $picJpg) {
+        Copy-Item $picJpg $picsDest -Force
+        $oldPng = Join-Path $picsDest "$CardId.png"
+        if (Test-Path $oldPng) { Remove-Item $oldPng -Force }
+        Write-Host "  -> Da copy $CardId.jpg (da don .png cu neu co)" -ForegroundColor Green
+    } elseif (Test-Path $picPng) {
         Copy-Item $picPng $picsDest -Force
         Write-Host "  -> Da copy $CardId.png" -ForegroundColor Green
-    } elseif (Test-Path $picJpg) {
-        Copy-Item $picJpg $picsDest -Force
-        Write-Host "  -> Da copy $CardId.jpg" -ForegroundColor Green
     }
 } else {
     Copy-Item (Join-Path $root "pics\*.*") $picsDest -Force
