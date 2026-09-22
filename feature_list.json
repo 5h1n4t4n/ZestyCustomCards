@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-18",
+  "last_updated": "2026-09-22",
   "note": "Trạng thái: pending(p) | working(w) | review(r) | done(d) | skipped(x). Phản ánh prefix trong docs/queues/<archetype>/",
   "archetypes": {
     "Blue_Eye": {
@@ -1004,6 +1004,30 @@
           "passcode": "36600005",
           "status": "done",
           "script": "script/c36600005.lua"
+        }
+      ]
+    },
+    "IceBarrier": {
+      "setcode": "0x2f",
+      "passcode_range": "4700001-4799999",
+      "cards": [
+        {
+          "name": "Permafrost of the Ice Barrier",
+          "passcode": "4700001",
+          "status": "done",
+          "script": "script/c4700001.lua"
+        },
+        {
+          "name": "Spirit of the Ice Barrier",
+          "passcode": "4700002",
+          "status": "done",
+          "script": "script/c4700002.lua"
+        },
+        {
+          "name": "Vanguard of the Ice Barrier",
+          "passcode": "4700003",
+          "status": "done",
+          "script": "script/c4700003.lua"
         }
       ]
     }

@@ -1,0 +1,21 @@
+{
+  "id": 4700003,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcodes": [
+    47
+  ],
+  "atk": 1600,
+  "def": 1200,
+  "level": 4,
+  "race": 1,
+  "attribute": 2,
+  "category": 1052672,
+  "name": "Vanguard of the Ice Barrier",
+  "desc": "If you control an \"Ice Barrier\" monster: You can Special Summon this card from your hand. You can only Special Summon \"Vanguard of the Ice Barrier\" once per turn this way. While you control another \"Ice Barrier\" monster, your opponent cannot negate the activations, or the effects, of \"Ice Barrier\" monsters you control. If this card is sent to the GY as Synchro Material: You can target 1 face-up monster your opponent controls; change its battle position.",
+  "strings": [
+    "Special Summon from hand",
+    "Change battle position"
+  ]
+}

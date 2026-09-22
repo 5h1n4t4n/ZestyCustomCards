@@ -1,0 +1,23 @@
+{
+  "id": 4700002,
+  "ot": 32,
+  "alias": 0,
+  "type": 67108897,
+  "setcodes": [
+    47
+  ],
+  "atk": 1000,
+  "linkmarkers": [
+    "Bottom"
+  ],
+  "level": 1,
+  "race": 64,
+  "attribute": 2,
+  "category": 1049120,
+  "name": "Spirit of the Ice Barrier",
+  "desc": "1 Level 4 or lower \"Ice Barrier\" monster\nIf this card is Link Summoned: You can add 1 \"Ice Barrier\" Spell/Trap from your Deck to your hand. You can Tribute this card; Special Summon 1 \"Ice Barrier\" Tuner from your hand or GY. You can only use each effect of \"Spirit of the Ice Barrier\" once per turn.",
+  "strings": [
+    "Add 1 \"Ice Barrier\" Spell/Trap from Deck to hand",
+    "Special Summon 1 \"Ice Barrier\" Tuner"
+  ]
+}
