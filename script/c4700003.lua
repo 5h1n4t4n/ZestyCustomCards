@@ -45,18 +45,26 @@ function s.initial_effect(c)
 	local e3=e2:Clone()
 	e3:SetCode(EFFECT_CANNOT_DISEFFECT)
 	c:RegisterEffect(e3)
+	local e4=Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_FIELD)
+	e4:SetCode(EFFECT_CANNOT_DISABLE)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetTargetRange(LOCATION_MZONE,0)
+	e4:SetCondition(s.negcon)
+	e4:SetTarget(s.distarget)
+	c:RegisterEffect(e4)
 
 	-- Effect 3: Change battle position when sent to GY as Synchro Material
-	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,1))
-	e4:SetCategory(CATEGORY_POSITION)
-	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e4:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY)
-	e4:SetCode(EVENT_BE_MATERIAL)
-	e4:SetCondition(s.poscon)
-	e4:SetTarget(s.postg)
-	e4:SetOperation(s.posop)
-	c:RegisterEffect(e4)
+	local e5=Effect.CreateEffect(c)
+	e5:SetDescription(aux.Stringid(id,1))
+	e5:SetCategory(CATEGORY_POSITION)
+	e5:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e5:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY)
+	e5:SetCode(EVENT_BE_MATERIAL)
+	e5:SetCondition(s.poscon)
+	e5:SetTarget(s.postg)
+	e5:SetOperation(s.posop)
+	c:RegisterEffect(e5)
 end
 
 s.listed_series={SET_ICE_BARRIER}
@@ -80,11 +88,16 @@ function s.negcon(e)
 		tp,LOCATION_MZONE,0,1,e:GetHandler())
 end
 
+function s.distarget(e,c)
+	return c:IsSetCard(SET_ICE_BARRIER)
+end
+
 function s.efilter(e,ct)
-	local p,te,loc=Duel.GetChainInfo(ct,CHAININFO_TRIGGERING_PLAYER,
-		CHAININFO_TRIGGERING_EFFECT,CHAININFO_TRIGGERING_LOCATION)
-	return p==e:GetHandlerPlayer() and te:IsMonsterEffect()
-		and te:GetHandler():IsSetCard(SET_ICE_BARRIER) and loc&LOCATION_MZONE~=0
+	local te,tp,loc=Duel.GetChainInfo(ct,CHAININFO_TRIGGERING_EFFECT,
+		CHAININFO_TRIGGERING_PLAYER,CHAININFO_TRIGGERING_LOCATION)
+	local tc=te:GetHandler()
+	return tp==e:GetHandlerPlayer() and te:IsMonsterEffect()
+		and tc:IsSetCard(SET_ICE_BARRIER) and (loc&LOCATION_MZONE)~=0
 end
 
 -- ============================================================
