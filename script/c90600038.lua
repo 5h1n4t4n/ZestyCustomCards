@@ -3,7 +3,6 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-    -- HIỆU ỨNG 1: Gửi 1 lá "Sky Striker" từ Deck xuống Mộ, nếu có từ 3 Spell trở lên trong Mộ thì chọn 1 lá "Sky Striker" từ Mộ xáo vào Deck rồi rút 1 lá
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_TOGRAVE+CATEGORY_TODECK+CATEGORY_DRAW)
@@ -14,7 +13,6 @@ function s.initial_effect(c)
     e1:SetOperation(s.activate)
     c:RegisterEffect(e1)
 
-    -- HIỆU ỨNG 2: Trong Main Phase, trục xuất chính nó từ Mộ -> chọn 1 lá "Sky Striker" khác trong Mộ xáo vào Deck rồi rút 1 lá
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetCategory(CATEGORY_TODECK+CATEGORY_DRAW)
@@ -30,9 +28,6 @@ end
 s.listed_series={0x115}
 s.listed_names={id}
 
---------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 1
---------------------------------------------------------------------------------
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
     return Duel.GetFieldGroupCount(tp,LOCATION_MMZONE,0)==0
 end
@@ -56,11 +51,10 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
     local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil)
     if #g>0 and Duel.SendtoGrave(g,REASON_EFFECT)~=0 then
-        -- Kiểm tra nếu có từ 3 phép thuật (Spell) trở lên trong Mộ
         if Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_GRAVE,0,nil,TYPE_SPELL)>=3 
             and Duel.IsExistingMatchingCard(s.tdfilter1,tp,LOCATION_GRAVE,0,1,nil) 
             and Duel.IsPlayerCanDraw(tp,1)
-            and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+            and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
             Duel.BreakEffect()
             Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
             local sg=Duel.SelectMatchingCard(tp,s.tdfilter1,tp,LOCATION_GRAVE,0,1,1,nil)
@@ -71,11 +65,23 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
             end
         end
     end
+
+    -- Giới hạn Triệu hồi Đặc biệt: chỉ được gọi quái thú "Sky Striker" trong phần còn lại của lượt
+    local e1=Effect.CreateEffect(e:GetHandler())
+    e1:SetType(EFFECT_TYPE_FIELD)
+    e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+    e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+    e1:SetDescription(aux.Stringid(id,4))
+    e1:SetTargetRange(1,0)
+    e1:SetTarget(s.splimit)
+    e1:SetReset(RESET_PHASE+PHASE_END)
+    Duel.RegisterEffect(e1,tp)
 end
 
---------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 2 (TRONG MỘ)
---------------------------------------------------------------------------------
+function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
+    return not c:IsSetCard(0x115)
+end
+
 function s.tdfilter(c)
     return c:IsSetCard(0x115) and not c:IsCode(id) and c:IsAbleToDeck()
 end

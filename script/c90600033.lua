@@ -2,11 +2,9 @@
 -- ID: 90600033
 local s,id=GetID()
 
--- Định nghĩa hằng số Custom Code cho hiệu ứng bỏ qua kiểm tra Main Zone (tránh bị nil)
 CUSTOM_EFFECT_SKIP_MAIN_ZONE = 90600000 
 
 function s.initial_effect(c)
-	-- Kích hoạt: Đào 5 lá từ đỉnh Deck, thêm 1 lá "Sky Striker" lên tay, phần còn lại xáo vào Deck, nếu có từ 3 Phép trở lên trong Mộ -> Đưa tối đa 2 lá "Sky Striker" bị loại bỏ vào Mộ
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_DECKDES+CATEGORY_TOGRAVE)
@@ -20,26 +18,17 @@ function s.initial_effect(c)
 end
 s.listed_series={SET_SKY_STRIKER}
 
---------------------------------------------------------------------------------
--- LOGIC KIỂM TRA ĐIỀU KIỆN KÍCH HOẠT (Main Monster Zone trống)
---------------------------------------------------------------------------------
 function s.cfilter(c)
 	return c:GetSequence()<5
 end
 
 function s.actcon(e,tp,eg,ep,ev,re,r,rp)
-	-- Kiểm tra nếu có lá bài khác trên sân cấp cờ bỏ qua điều kiện Main Zone
 	if Duel.IsPlayerAffectedByEffect(tp, CUSTOM_EFFECT_SKIP_MAIN_ZONE) then 
 		return true 
 	end
-
-	-- Kiểm tra chuẩn: Main Monster Zone (ô 0 đến 4) không có quái thú nào
 	return not Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
 end
 
---------------------------------------------------------------------------------
--- TARGET & OPERATION
---------------------------------------------------------------------------------
 function s.thfilter(c)
 	return c:IsSetCard(SET_SKY_STRIKER) and c:IsAbleToHand()
 end
@@ -69,7 +58,6 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		end
 		Duel.ShuffleDeck(tp)
 		
-		-- Nếu trong Mộ có từ 3 Phép trở lên, có thể đưa tối đa 2 lá "Sky Striker" bị loại bỏ vào Mộ
 		if Duel.GetMatchingGroupCount(Card.IsSpell,tp,LOCATION_GRAVE,0,nil)>=3 
 			and Duel.IsExistingMatchingCard(s.gyfilter,tp,LOCATION_REMOVED,LOCATION_REMOVED,1,nil)
 			and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
@@ -82,4 +70,19 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 			end
 		end
 	end
+
+	-- Giới hạn Triệu hồi Đặc biệt: chỉ được gọi quái thú "Sky Striker" trong phần còn lại của lượt
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+	e1:SetDescription(aux.Stringid(id,3))
+	e1:SetTargetRange(1,0)
+	e1:SetTarget(s.splimit)
+	e1:SetReset(RESET_PHASE+PHASE_END)
+	Duel.RegisterEffect(e1,tp)
+end
+
+function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
+	return not c:IsSetCard(SET_SKY_STRIKER)
 end

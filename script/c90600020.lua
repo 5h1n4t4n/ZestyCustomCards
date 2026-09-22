@@ -65,6 +65,21 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
         end
         Duel.ShuffleDeck(tp)
     end
+
+    -- Giới hạn Triệu hồi Đặc biệt: chỉ được triệu hồi quái thú "Sky Striker" trong phần còn lại của lượt
+    local e1=Effect.CreateEffect(e:GetHandler())
+    e1:SetType(EFFECT_TYPE_FIELD)
+    e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+    e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+    e1:SetDescription(aux.Stringid(id,3))
+    e1:SetTargetRange(1,0)
+    e1:SetTarget(s.splimit)
+    e1:SetReset(RESET_PHASE+PHASE_END)
+    Duel.RegisterEffect(e1,tp)
+end
+
+function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
+    return not c:IsSetCard(0x115) and not c:IsSetCard(0x1115)
 end
 
 --------------------------------------------------------------------------------
