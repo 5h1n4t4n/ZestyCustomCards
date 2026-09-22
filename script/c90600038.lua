@@ -3,10 +3,10 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-    -- HIỆU ỨNG 1: Gửi 1 lá "Sky Striker" từ Deck xuống Mộ, nếu có từ 3 Spell trở lên trong Mộ thì lấy 1 lá "Sky Striker" từ Mộ lên tay
+    -- HIỆU ỨNG 1: Gửi 1 lá "Sky Striker" từ Deck xuống Mộ, nếu có từ 3 Spell trở lên trong Mộ thì chọn 1 lá "Sky Striker" từ Mộ xáo vào Deck rồi rút 1 lá
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
-    e1:SetCategory(CATEGORY_TOGRAVE+CATEGORY_TOHAND)
+    e1:SetCategory(CATEGORY_TOGRAVE+CATEGORY_TODECK+CATEGORY_DRAW)
     e1:SetType(EFFECT_TYPE_ACTIVATE)
     e1:SetCode(EVENT_FREE_CHAIN)
     e1:SetCondition(s.condition)
@@ -41,14 +41,15 @@ function s.tgfilter(c)
     return c:IsSetCard(0x115) and c:IsAbleToGrave()
 end
 
-function s.thfilter(c)
-    return c:IsSetCard(0x115) and not c:IsCode(id) and c:IsAbleToHand()
+function s.tdfilter1(c)
+    return c:IsSetCard(0x115) and c:IsAbleToDeck()
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil) end
     Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
-    Duel.SetPossibleOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_GRAVE)
+    Duel.SetPossibleOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_GRAVE)
+    Duel.SetPossibleOperationInfo(0,CATEGORY_DRAW,nil,0,tp,1)
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
@@ -57,14 +58,16 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
     if #g>0 and Duel.SendtoGrave(g,REASON_EFFECT)~=0 then
         -- Kiểm tra nếu có từ 3 phép thuật (Spell) trở lên trong Mộ
         if Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_GRAVE,0,nil,TYPE_SPELL)>=3 
-            and Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_GRAVE,0,1,nil) 
+            and Duel.IsExistingMatchingCard(s.tdfilter1,tp,LOCATION_GRAVE,0,1,nil) 
+            and Duel.IsPlayerCanDraw(tp,1)
             and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
             Duel.BreakEffect()
-            Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-            local sg=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+            Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
+            local sg=Duel.SelectMatchingCard(tp,s.tdfilter1,tp,LOCATION_GRAVE,0,1,1,nil)
             if #sg>0 then
-                Duel.SendtoHand(sg,nil,REASON_EFFECT)
-                Duel.ConfirmCards(1-tp,sg)
+                if Duel.SendtoDeck(sg,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)~=0 then
+                    Duel.Draw(tp,1,REASON_EFFECT)
+                end
             end
         end
     end
