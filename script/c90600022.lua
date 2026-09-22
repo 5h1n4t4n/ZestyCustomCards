@@ -24,12 +24,10 @@ function s.condition(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetFieldGroupCount(tp,LOCATION_MMZONE,0)==0
 end
 
--- Bộ lọc cho hiệu ứng 1: Thêm 1 lá "Sky Striker" từ Deck, GY, hoặc bị trục xuất lên tay (trừ chính nó)
 function s.thfilter(c)
 	return c:IsSetCard(0x115) and not c:IsCode(id) and c:IsAbleToHand()
 end
 
--- Bộ lọc cho hiệu ứng 2: Mục tiêu là 1 lá bài trong Mộ đối thủ và gắn vào Quái thú Xyz "Sky Striker"
 function s.xyzfilter(c)
 	return c:IsFaceup() and c:IsSetCard(0x115) and c:IsType(TYPE_XYZ)
 end
@@ -74,7 +72,6 @@ end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local op=e:GetLabel()
 	if op==1 then
-		-- Hiệu ứng 1: Thêm bài lên tay
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 		local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil)
 		if #g>0 then
@@ -82,11 +79,25 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 			Duel.ConfirmCards(1-tp,g)
 		end
 	else
-		-- Hiệu ứng 2: Gắn bài vào Xyz Monster
 		local tc=Duel.GetFirstTarget()
 		local xyz=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_MZONE,0,1,1,nil):GetFirst()
 		if tc and tc:IsRelateToEffect(e) and xyz then
 			Duel.Overlay(xyz,tc)
 		end
 	end
+
+	-- Giới hạn Triệu hồi Đặc biệt: chỉ được gọi quái thú "Sky Striker" trong phần còn lại của lượt
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+	e1:SetDescription(aux.Stringid(id,3))
+	e1:SetTargetRange(1,0)
+	e1:SetTarget(s.splimit)
+	e1:SetReset(RESET_PHASE+PHASE_END)
+	Duel.RegisterEffect(e1,tp)
+end
+
+function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
+	return not c:IsSetCard(0x115)
 end
