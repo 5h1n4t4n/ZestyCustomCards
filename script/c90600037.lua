@@ -3,7 +3,7 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-    -- HIỆU ỨNG 1: Xáo các lá từ Mộ/Vùng trục xuất vào Deck, trả bài về tay, và có thể lấy thêm Phép Sky Striker
+    -- HIỆU ỨNG 1: Xáo các lá từ Mộ/Vùng trục xuất vào Deck, trả bài trên sân về tay, và lấy thêm Phép Sky Striker từ Deck lên tay nếu xáo đủ 3 Phép Sky Striker
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_TODECK+CATEGORY_TOHAND+CATEGORY_SEARCH)
@@ -88,16 +88,23 @@ function s.lkcon(e,tp,eg,ep,ev,re,r,rp)
     return eg:IsExists(s.cfilter,1,nil,tp)
 end
 
+function s.lkfilter(c,e,tp)
+    return c:IsSetCard(0x115) and c:IsType(TYPE_LINK) and c:IsCanBeSpecialSummoned(e, SUMMON_TYPE_LINK, tp, false, false) 
+        and Duel.IsExistingMatchingCard(aux.LinkSummonableFilter,tp,LOCATION_EXTRA,0,1,nil,c)
+end
+
 function s.lktg(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(aux.LinkSummonableFilter,tp,LOCATION_EXTRA,0,1,nil,nil) end
+    if chk==0 then 
+        return Duel.IsExistingMatchingCard(s.lkfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp) 
+    end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
 
 function s.lkop(e,tp,eg,ep,ev,re,r,rp)
-    local g=Duel.GetMatchingGroup(aux.LinkSummonableFilter,tp,LOCATION_EXTRA,0,nil,nil)
-    if #g>0 then
-        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-        local sg=g:Select(tp,1,1,nil)
-        Duel.LinkSummon(tp,sg:GetFirst(),nil)
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+    local g=Duel.SelectMatchingCard(tp,s.lkfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp)
+    local tc=g:GetFirst()
+    if tc then
+        Duel.LinkSummon(tp,tc,nil)
     end
 end
