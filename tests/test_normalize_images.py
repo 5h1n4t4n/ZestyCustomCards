@@ -66,6 +66,23 @@ class TestNormalizeImages(unittest.TestCase):
         fmt, err = norm.detect_file_format(jpg_file)
         self.assertEqual(fmt, "JPEG")
 
+    def test_convert_to_jpg_with_duplicate_png(self):
+        # Tạo stem có cả .jpg (nội dung PNG) và .png
+        jpg_file = self.pics_dir / "33334444.jpg"
+        png_file = self.pics_dir / "33334444.png"
+        img = Image.new("RGB", (80, 80), (0, 255, 0))
+        img.save(jpg_file, "PNG")  # Disguised PNG
+        img.save(png_file, "PNG")
+
+        issues = norm.scan_images(self.pics_dir, target_jpg_only=True)
+        count, logs = norm.fix_issues_to_jpg(issues, dry_run=False, quality=100, subsampling=0)
+        self.assertEqual(count, 1)
+
+        self.assertTrue(jpg_file.exists())
+        self.assertFalse(png_file.exists())
+        fmt, err = norm.detect_file_format(jpg_file)
+        self.assertEqual(fmt, "JPEG")
+
 
 if __name__ == "__main__":
     unittest.main()

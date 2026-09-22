@@ -85,22 +85,56 @@ def detect_file_format(file_path: Path) -> tuple[str, str | None]:
     return detected, None
 
 
-def convert_image_to_jpeg(src_path: Path, dst_path: Path, quality: int = 95) -> None:
-    """Chuyển đổi bất kỳ ảnh nào sang chuẩn JPEG (.jpg) thực thụ."""
+def remove_file(path: Path) -> None:
+    """Xóa file khỏi filesystem và git (nếu đang được git theo dõi)."""
+    is_git = False
+    try:
+        res = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", str(path)],
+            cwd=path.parent,
+            capture_output=True,
+            text=True,
+        )
+        is_git = (res.returncode == 0)
+    except Exception:
+        is_git = False
+
+    if is_git:
+        subprocess.run(["git", "rm", "-f", str(path)], cwd=path.parent, capture_output=True)
+    else:
+        path.unlink(missing_ok=True)
+
+
+def convert_image_to_jpeg(
+    src_path: Path,
+    dst_path: Path,
+    quality: int = 100,
+    subsampling: int = 0,
+    optimize: bool = True,
+) -> None:
+    """Chuyển đổi bất kỳ ảnh nào sang chuẩn JPEG (.jpg) thực thụ với chất lượng cao nhất."""
     if not HAS_PIL:
         raise RuntimeError("Cần cài đặt Pillow (PIL) để thực hiện convert ảnh sang JPEG!")
 
     with Image.open(src_path) as img:
+        save_kwargs: dict[str, object] = {
+            "quality": quality,
+            "subsampling": subsampling,
+            "optimize": optimize,
+        }
+        if "dpi" in img.info:
+            save_kwargs["dpi"] = img.info["dpi"]
+
         # Xử lý kênh Alpha (độ trong suốt) nếu có -> chuyển sang nền trắng
         if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
             bg = Image.new("RGB", img.size, (255, 255, 255))
             if img.mode == "P":
                 img = img.convert("RGBA")
             bg.paste(img, mask=img.split()[-1])
-            bg.save(dst_path, "JPEG", quality=quality)
+            bg.save(dst_path, "JPEG", **save_kwargs)
         else:
             rgb_img = img.convert("RGB")
-            rgb_img.save(dst_path, "JPEG", quality=quality)
+            rgb_img.save(dst_path, "JPEG", **save_kwargs)
 
 
 def scan_images(pics_dir: Path, target_jpg_only: bool = False) -> list[ImageIssue]:
@@ -201,64 +235,83 @@ def scan_images(pics_dir: Path, target_jpg_only: bool = False) -> list[ImageIssu
     return issues
 
 
-def fix_issues_to_jpg(issues: list[ImageIssue], dry_run: bool = True) -> tuple[int, list[str]]:
+def fix_issues_to_jpg(
+    issues: list[ImageIssue],
+    dry_run: bool = True,
+    quality: int = 100,
+    subsampling: int = 0,
+) -> tuple[int, list[str]]:
     """Convert toàn bộ ảnh chưa chuẩn về file .jpg thật và dọn dẹp các file cũ."""
     converted_count = 0
     logs: list[str] = []
 
     target_issues = [i for i in issues if i.issue_type in ["NON_JPG", "MISMATCH"]]
-    processed_stems: set[str] = set()
-
+    by_stem: dict[str, list[Path]] = {}
     for issue in target_issues:
-        src = issue.file_path
-        dst = src.with_suffix(".jpg")
+        by_stem.setdefault(issue.file_path.stem, []).append(issue.file_path)
 
-        if src.stem in processed_stems and src == dst:
-            continue
-        processed_stems.add(src.stem)
+    for stem, files in sorted(by_stem.items()):
+        # Xác định file nguồn chính
+        # Nếu có file .jpg (dù format bên trong là PNG), đây là file mới nhất được đặt tên theo card
+        jpg_files = [f for f in files if f.suffix.lower() in [".jpg", ".jpeg"]]
+        primary_src = jpg_files[0] if jpg_files else files[0]
+        dst = primary_src.parent / f"{stem}.jpg"
+
+        # Các file còn lại là file trùng lặp (ví dụ .png cũ) cần xóa
+        stale_files = [f for f in files if f != primary_src]
+
+        # Kiểm tra nếu primary_src != dst nhưng dst đã tồn tại và đã là JPEG chuẩn
+        if primary_src != dst and dst.exists():
+            dst_fmt, _ = detect_file_format(dst)
+            if dst_fmt == "JPEG":
+                if dry_run:
+                    logs.append(f"[DRY-RUN] Dọn dẹp file trùng lặp cũ: {primary_src.name} (đã có {dst.name} chuẩn JPEG)")
+                    for stale in stale_files:
+                        logs.append(f"[DRY-RUN] Dọn dẹp file trùng lặp cũ: {stale.name}")
+                    converted_count += 1
+                    continue
+                remove_file(primary_src)
+                logs.append(f"[CLEANUP] Đã xóa file trùng lặp cũ: {primary_src.name} ({dst.name} đã là JPEG chuẩn)")
+                for stale in stale_files:
+                    remove_file(stale)
+                    logs.append(f"[CLEANUP] Đã xóa file trùng lặp cũ: {stale.name}")
+                converted_count += 1
+                continue
 
         if dry_run:
-            logs.append(f"[DRY-RUN] Convert sang JPEG: {src.name} -> {dst.name}")
+            if primary_src == dst:
+                logs.append(f"[DRY-RUN] Re-encode sang JPEG: {primary_src.name} (quality={quality}, subsampling={subsampling})")
+            else:
+                logs.append(f"[DRY-RUN] Convert sang JPEG: {primary_src.name} -> {dst.name} (quality={quality}, subsampling={subsampling})")
+            for stale in stale_files:
+                logs.append(f"[DRY-RUN] Dọn dẹp file trùng lặp cũ: {stale.name}")
             converted_count += 1
             continue
 
         try:
-            # Nếu file nguồn là file khác tên dst (ví dụ .png -> .jpg)
-            if src != dst:
-                convert_image_to_jpeg(src, dst)
-                # Dùng git rm cho file cũ nếu có quản lý git
-                is_git = False
-                try:
-                    res = subprocess.run(
-                        ["git", "ls-files", "--error-unmatch", str(src)],
-                        cwd=src.parent,
-                        capture_output=True,
-                        text=True,
-                    )
-                    is_git = (res.returncode == 0)
-                except Exception:
-                    is_git = False
-
-                if is_git:
-                    subprocess.run(["git", "rm", "-f", str(src)], cwd=src.parent, capture_output=True)
-                else:
-                    src.unlink(missing_ok=True)
-
-                # git add file mới
-                subprocess.run(["git", "add", str(dst)], cwd=dst.parent, capture_output=True)
-                logs.append(f"[CONVERT] {src.name} -> {dst.name} (đã tạo JPEG và xóa file cũ)")
-                converted_count += 1
-            else:
-                # File đã có tên .jpg nhưng bên trong là PNG/khác
-                tmp_dst = src.with_suffix(".tmp.jpg")
-                convert_image_to_jpeg(src, tmp_dst)
+            if primary_src == dst:
+                # File đã có tên .jpg nhưng bên trong là định dạng khác (PNG, ...)
+                tmp_dst = dst.with_suffix(".tmp.jpg")
+                convert_image_to_jpeg(primary_src, tmp_dst, quality=quality, subsampling=subsampling)
                 tmp_dst.replace(dst)
                 subprocess.run(["git", "add", str(dst)], cwd=dst.parent, capture_output=True)
-                logs.append(f"[RE-ENCODE] {src.name} -> chuyển đổi nội dung sang JPEG chuẩn")
-                converted_count += 1
+                logs.append(f"[RE-ENCODE] {primary_src.name} -> chuyển đổi sang JPEG chuẩn (quality={quality}, subsampling={subsampling})")
+            else:
+                # File nguồn là đuôi khác (ví dụ .png -> .jpg)
+                convert_image_to_jpeg(primary_src, dst, quality=quality, subsampling=subsampling)
+                remove_file(primary_src)
+                subprocess.run(["git", "add", str(dst)], cwd=dst.parent, capture_output=True)
+                logs.append(f"[CONVERT] {primary_src.name} -> {dst.name} (đã tạo JPEG chất lượng cao và xóa file cũ)")
+
+            # Xóa các file duplicate cũ nếu có
+            for stale in stale_files:
+                remove_file(stale)
+                logs.append(f"[CLEANUP] Đã xóa file trùng lặp cũ: {stale.name}")
+
+            converted_count += 1
 
         except Exception as e:
-            logs.append(f"[ERROR] Thất bại khi convert {src.name}: {e}")
+            logs.append(f"[ERROR] Thất bại khi xử lý card {stem}: {e}")
 
     return converted_count, logs
 
@@ -381,6 +434,19 @@ def main() -> int:
         help="Chuẩn hóa toàn bộ kho ảnh về file JPEG (.jpg) thực thụ",
     )
     parser.add_argument(
+        "--quality",
+        type=int,
+        default=100,
+        help="Chất lượng nén JPEG từ 1-100 (mặc định: 100 cho chất lượng cao nhất)",
+    )
+    parser.add_argument(
+        "--subsampling",
+        type=int,
+        default=0,
+        choices=[0, 1, 2],
+        help="Chroma subsampling (0=4:4:4 không nén màu, sắc nét nhất; 1=4:2:2; 2=4:2:0; mặc định: 0)",
+    )
+    parser.add_argument(
         "--apply",
         action="store_true",
         help="Thực hiện đổi tên / convert (mặc định là chỉ kiểm tra/dry-run)",
@@ -403,7 +469,11 @@ def main() -> int:
     print("=" * 60)
     print("=== TTF Image Normalization Tool ===")
     print(f"Thư mục quét: {target_dir}")
-    mode_desc = "Chuẩn hóa toàn bộ sang .jpg" if args.to_jpg else "Kiểm tra mismatch định dạng"
+    mode_desc = (
+        f"Chuẩn hóa toàn bộ sang .jpg (quality={args.quality}, subsampling={args.subsampling})"
+        if args.to_jpg
+        else "Kiểm tra mismatch định dạng"
+    )
     print(f"Mục tiêu    : {mode_desc}")
     print(f"Hành động   : {'Áp dụng sửa đổi (--apply)' if args.apply else 'Kiểm tra (--check / dry-run)'}")
     print("=" * 60)
@@ -438,7 +508,12 @@ def main() -> int:
     if mismatches:
         print(f"\n{'Thực hiện xử lý:' if args.apply else 'Kế hoạch xử lý (chạy với --apply để thực hiện):'}")
         if args.to_jpg:
-            count, logs = fix_issues_to_jpg(issues, dry_run=not args.apply)
+            count, logs = fix_issues_to_jpg(
+                issues,
+                dry_run=not args.apply,
+                quality=args.quality,
+                subsampling=args.subsampling,
+            )
         else:
             count, logs = fix_mismatch_renames(issues, dry_run=not args.apply)
 
