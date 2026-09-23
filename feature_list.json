@@ -1192,6 +1192,102 @@
           "script": "script/c11223325.lua"
         }
       ]
+    },
+    "Ashened": {
+      "setcode": "0x1a5",
+      "passcode_range": "42100001-42199999",
+      "cards": [
+        {
+          "name": "Fire Keeper of the Ashened City",
+          "passcode": "42100001",
+          "status": "done",
+          "script": "script/c42100001.lua"
+        },
+        {
+          "name": "Knight of the Ashened City",
+          "passcode": "42100002",
+          "status": "done",
+          "script": "script/c42100002.lua"
+        },
+        {
+          "name": "Prophecy of the Ashened City",
+          "passcode": "42100003",
+          "status": "done",
+          "script": "script/c42100003.lua"
+        },
+        {
+          "name": "Ruined of the Ashened City",
+          "passcode": "42100004",
+          "status": "done",
+          "script": "script/c42100004.lua"
+        },
+        {
+          "name": "Unity of the Ashened City",
+          "passcode": "42100005",
+          "status": "done",
+          "script": "script/c42100005.lua"
+        }
+      ]
+    },
+    "Veidos": {
+      "setcode": "0x784",
+      "passcode_range": "192400001-192499999",
+      "cards": [
+        {
+          "name": "Veidos's Erupting Egg of Extinction",
+          "passcode": "192400001",
+          "status": "done",
+          "script": "script/c192400001.lua"
+        }
+      ]
+    },
+    "Cyberdark": {
+      "setcode": "0x4093",
+      "passcode_range": "16530001-16539999",
+      "cards": [
+        {
+          "name": "Advance Cyberdark Edge",
+          "passcode": "16530001",
+          "status": "done",
+          "script": "script/c16530001.lua"
+        },
+        {
+          "name": "Advance Cyberdark Horn",
+          "passcode": "16530002",
+          "status": "done",
+          "script": "script/c16530002.lua"
+        },
+        {
+          "name": "Advance Cyberdark Keel",
+          "passcode": "16530003",
+          "status": "done",
+          "script": "script/c16530003.lua"
+        },
+        {
+          "name": "Cyberdarkness Nova",
+          "passcode": "16530004",
+          "status": "done",
+          "script": "script/c16530004.lua"
+        },
+        {
+          "name": "Cyberdark Assembling",
+          "passcode": "16530005",
+          "status": "done",
+          "script": "script/c16530005.lua"
+        },
+        {
+          "name": "Cyberdark Cybernizing",
+          "passcode": "16530006",
+          "status": "done",
+          "script": "script/c16530006.lua"
+        },
+        {
+          "name": "Cyberdark Serpent",
+          "passcode": "16530007",
+          "status": "done",
+          "script": "script/c16530007.lua"
+        }
+      ]
     }
   }
 }

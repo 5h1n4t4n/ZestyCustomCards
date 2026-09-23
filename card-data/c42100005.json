@@ -1,0 +1,24 @@
+{
+  "id": 42100005,
+  "ot": 32,
+  "alias": 0,
+  "type": 97,
+  "setcodes": [
+    421
+  ],
+  "atk": 3000,
+  "def": 2500,
+  "level": 8,
+  "race": 128,
+  "attribute": 32,
+  "category": 1636,
+  "name": "Unity of the Ashened City",
+  "desc": "\"Veidos the Eruption Dragon of Extinction\" + 1 monster\nYou can Special Summon this card from your Extra Deck by sending the above cards from either side of the field to the Graveyard (This is treated as Fusion Summoned). If this card is Special Summoned: You can add to your hand or Special Summon 1 \"Ashened\" monster from your Deck or GY. For the rest of this turn after this effect resolves, you cannot Special Summon from the Deck or Extra Deck, except Pyro monsters. If this card is in the GY: You can shuffle this card and 2 other \"Ashened\" or \"Veidos\" cards in your GY into the Deck and/or Extra Deck; Draw 2 cards. You can only use each effect of \"Unity of the Ashened City\" once per turn.",
+  "strings": [
+    "Special Summon from Extra Deck (Contact Fusion)",
+    "Add or Special Summon 1 \"Ashened\" monster",
+    "Shuffle this card and 2 cards into Deck; Draw 2",
+    "Add 1 \"Ashened\" monster to hand",
+    "Special Summon 1 \"Ashened\" monster"
+  ]
+}

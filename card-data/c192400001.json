@@ -1,0 +1,21 @@
+{
+  "id": 192400001,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcodes": [
+    1924
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 1,
+  "race": 128,
+  "attribute": 32,
+  "category": 1544,
+  "name": "Veidos's Erupting Egg of Extinction",
+  "desc": "If there is a card in the Field Zone, you can discard this card (Quick Effect): Add 1 \"Veidos the Eruption Dragon of Extinction\" from your Deck to your hand and send 1 \"Ashened\" card from your Deck to the GY. If \"Veidos the Eruption Dragon of Extinction\" leaves the field while this card is in the GY: You can add this card to your hand. You can only use each effect of \"Veidos's Erupting Egg of Extinction\" once per turn.",
+  "strings": [
+    "Add \"Veidos\" and send 1 \"Ashened\" card to GY",
+    "Add this card from GY to hand"
+  ]
+}

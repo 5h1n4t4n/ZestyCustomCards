@@ -1,0 +1,21 @@
+{
+  "id": 16530003,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcodes": [
+    16531
+  ],
+  "atk": 800,
+  "def": 800,
+  "level": 4,
+  "race": 32,
+  "attribute": 32,
+  "category": 604030468,
+  "name": "Advance Cyberdark Keel",
+  "desc": "You can target 1 Dragon or Machine monster in either GY; Special Summon this card from your hand or GY, and if you do, equip that monster to this card. This card gains ATK equal to the equipped Monster Card's ATK. If this card is sent to the GY: You can add 2 \"Cyberdark\" cards from your Deck to the hand then discard 2 cards. You can only use each effect of \"Advance Cyberdark Keel\" once per turn.",
+  "strings": [
+    "Special Summon this card and equip",
+    "Add 2 \"Cyberdark\" cards then discard 2"
+  ]
+}

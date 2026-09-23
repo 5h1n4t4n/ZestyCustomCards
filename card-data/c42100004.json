@@ -1,0 +1,20 @@
+{
+  "id": 42100004,
+  "ot": 32,
+  "alias": 0,
+  "type": 131076,
+  "setcodes": [
+    421
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 98308,
+  "name": "Ruined of the Ashened City",
+  "desc": "You can activate this card the turn it was set by \"Veidos the Eruption Dragon of Extinction\" effect. This card is treated as \"Obsidim, the Ashened City\" while it is face-up on the field or in the GY. You can Special Summon 1 \"Ashened\" monster from your hand during either player's turn. \"Ashened\" monsters you control gain 200 ATK and DEF for each Pyro monster on the field and in the GY, also they cannot be targeted, destroyed by card effect, or Tributed. If there is no \"Ashened\" or \"Veidos\" monster on the field: Send this card to the GY.",
+  "strings": [
+    "Special Summon 1 \"Ashened\" monster from hand"
+  ]
+}

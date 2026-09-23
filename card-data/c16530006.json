@@ -1,0 +1,21 @@
+{
+  "id": 16530006,
+  "ot": 32,
+  "alias": 0,
+  "type": 1048580,
+  "setcodes": [
+    16531
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 16,
+  "name": "Cyberdark Cybernizing",
+  "desc": "You can activate this card from your hand if you control a \"Cyberdark\" monster that was Special Summoned from the Extra Deck. \"Cyberdark\" monsters that were Special Summoned from the Extra Deck cannot be Tributed or used as Fusion, Synchro, Xyz, or Link Material for the rest of this turn. You can banish this card from the GY: For the rest of this turn, you can activate the effects of \"Cyberdark\" monsters in your GY that Special Summon themselves as Quick Effects. You can only use each effect of \"Cyberdark Cybernizing\" once per turn.",
+  "strings": [
+    "Protect Extra Deck \"Cyberdark\" monsters from being Tributed or used as material",
+    "Activate GY self-summon effects of \"Cyberdark\" monsters as Quick Effects"
+  ]
+}

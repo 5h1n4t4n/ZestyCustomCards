@@ -1,0 +1,21 @@
+{
+  "id": 16530005,
+  "ot": 32,
+  "alias": 0,
+  "type": 65538,
+  "setcodes": [
+    16531
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 262230,
+  "name": "Cyberdark Assembling",
+  "desc": "Special Summon 1 \"Cyberdark\" monster from your Deck, then if your opponent controls more cards than you do, you can destroy cards your opponent controls up to the number of \"Cyberdark\" cards you control. You can banish this card from the GY: Fusion Summon 1 \"Cyberdark\" Fusion Monster from your Extra Deck by shuffling the monsters listed on it from your hand, field, GY and/or banishment into the Deck as the Fusion Material. You can only use each effect of \"Cyberdark Assembling\" once per turn.",
+  "strings": [
+    "Special Summon 1 \"Cyberdark\" monster and destroy opponent's cards",
+    "Fusion Summon 1 \"Cyberdark\" Fusion Monster from Extra Deck"
+  ]
+}
