@@ -330,7 +330,7 @@ def print_next_steps(passcode, template_type):
             print("   - lscale / rscale: Pendulum Scale")
     print("   - category: bitmask theo docs/agent-rules.md; strings: hint cho aux.Stringid")
     print(f"2. script/c{passcode}.lua — thay hết placeholder <<...>>, viết logic effect")
-    print("   (tham khảo official qua .\\tools\\fetch_official.ps1 <passcode>)")
+    print("   (tham khảo official qua python tools/read_official.py <passcode>)")
     print(f"3. Artwork pics/{passcode}.jpg|.png — verify tự copy từ queue image nếu còn;")
     print("   tự thêm thì KHÔNG dùng .jpeg (EDOPro không nạp)")
     print(f"4. Chạy: python .\\tools\\manage_harness.py verify {passcode}")

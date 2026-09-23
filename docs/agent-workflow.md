@@ -6,7 +6,7 @@ Chạy từ gốc repo; cần Python 3, PowerShell và Lua trong PATH. Thiếu p
 
 Với từng effect, ghi ngắn trong mô tả công việc/PR: vị trí kích hoạt, event/timing, optional hay mandatory, cost, target, operation, count limit và reset. Xác định rõ "and", "then", "if you do"; nếu text mơ hồ thì hỏi, không tự thêm điều kiện.
 
-Tìm official card cùng cơ chế, tải bằng `./tools/fetch_official.ps1 <official-ID>` và đọc `docs/official-reference/c<ID>.lua`. Ghi ID và hàm/effect dùng làm mẫu, phần nào khác yêu cầu. Đọc constants/helper mà script đó gọi nếu cần. Không coi template hay custom cũ là bằng chứng engine hỗ trợ.
+Tìm official card cùng cơ chế, đọc trực tiếp từ bản cài game bằng `python tools/read_official.py <official-ID>` (hoặc tra cứu theo tên: `python tools/read_official.py "<Card Name>"`). Tool sẽ hiển thị effect/stats và tự động lưu script mẫu vào `docs/official-reference/c<ID>.lua` (có thể dùng `--view` để xem nhanh nội dung script hoặc dùng `./tools/fetch_official.ps1 <official-ID>` làm fallback tải online khi cần). Ghi ID và hàm/effect dùng làm mẫu, phần nào khác yêu cầu. Đọc constants/helper mà script đó gọi nếu cần. Không coi template hay custom cũ là bằng chứng engine hỗ trợ.
 
 ## 2. Khởi tạo và triển khai
 

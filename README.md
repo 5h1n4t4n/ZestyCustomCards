@@ -38,7 +38,8 @@ docs/            — Tài liệu nội bộ
 tools/           — Công cụ CLI, linter và templates:
   ├── templates/        — Templates để tạo script mới
   ├── manage_harness.py — Quản lý quy trình (Harness CLI)
-  └── manage_db.py      — Quản lý CDB (CDB Compiler)
+  ├── manage_db.py      — Quản lý CDB (CDB Compiler)
+  └── read_official.py  — Tra cứu card và script official từ game
 card-data/       — Card specs định dạng JSON
 card-data.cdb    — Database sinh từ card-data/
 *.cdb            — Dữ liệu CDB khác (legacy & cộng đồng)
