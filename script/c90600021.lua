@@ -1,8 +1,9 @@
 -- Sky Striker Maneuver - Sabotage
--- ID: 02772337
+-- ID: 90600021
 local s,id=GetID()
+
 function s.initial_effect(c)
-	-- Kích hoạt: Bỏ ngẫu nhiên 1 quái thú từ Extra Deck của đối thủ úp xuống, nếu có từ 3 Phép trở lên trong Mộ -> Chọn làm thêm 1 lần nữa
+	-- Kích hoạt: Bỏ ngẫu nhiên 1 quái thú từ Extra Deck của đối thủ úp xuống
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_REMOVE)
@@ -14,14 +15,16 @@ function s.initial_effect(c)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 end
-s.listed_series={SET_SKY_STRIKER}
 
---------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG
---------------------------------------------------------------------------------
+s.listed_series={0x115} -- SET_SKY_STRIKER
+
+-- Kiểm tra không có quái thú nào trong Main Monster Zone của bạn
+function s.zone_filter(c)
+	return c:IsSequence() and c:GetSequence()<5
+end
+
 function s.actcon(e,tp,eg,ep,ev,re,r,rp)
-	-- Nếu bạn không điều khiển quái thú nào ở Main Monster Zone
-	return Duel.GetFieldGroupCount(tp,LOCATION_MZONE,0)==0 or not Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsLocation,LOCATION_MZONE),tp,LOCATION_MZONE,0,1,nil)
+	return not Duel.IsExistingMatchingCard(s.zone_filter,tp,LOCATION_MZONE,0,1,nil)
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -47,4 +50,19 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 			end
 		end
 	end
+
+	-- Giới hạn Triệu hồi Đặc biệt: chỉ được gọi quái thú "Sky Striker" trong phần còn lại của lượt
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+	e1:SetDescription(aux.Stringid(id,2))
+	e1:SetTargetRange(1,0)
+	e1:SetTarget(s.splimit)
+	e1:SetReset(RESET_PHASE+PHASE_END)
+	Duel.RegisterEffect(e1,tp)
+end
+
+function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
+	return not c:IsSetCard(0x115)
 end

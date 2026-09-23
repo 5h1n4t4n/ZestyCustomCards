@@ -1,10 +1,10 @@
 -- Sky Striker Special Maneuver - Maintenance
--- ID: 2772337
+-- ID: 90600023
 local s,id=GetID()
 function s.initial_effect(c)
 	-- Hiệu ứng 1: Trục xuất các lá bài để xáo trộn vào Deck và trả bài về tay
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0)) -- "Shuffle banished cards into the Deck"
+	e1:SetDescription(aux.Stringid(id,0)) 
 	e1:SetCategory(CATEGORY_TODECK+CATEGORY_TOHAND)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
@@ -16,7 +16,7 @@ function s.initial_effect(c)
 
 	-- Hiệu ứng 2: Tự trục xuất từ Mộ khi có "Sky Striker" Monster được Special Summon để rút 2 lá
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1)) -- "Banish this card from your GY to draw 2 cards"
+	e2:SetDescription(aux.Stringid(id,1)) 
 	e2:SetCategory(CATEGORY_DRAW)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
@@ -33,13 +33,18 @@ end
 s.listed_series={0x115}
 
 -- ==================================================
--- LOGIC HIỆU ỨNG 1
+-- LOGIC HIỆU ỨNG 1 (Hỗ trợ cả bài Banish Face-down)
 -- ==================================================
 function s.mfilter(c)
-	return c:IsSetCard(0x115) and c:IsMonster() and c:IsAbleToDeck()
+	return (c:IsSetCard(0x115) or c:IsOriginalSetCard(0x115)) 
+		and (c:IsMonster() or c:IsOriginalType(TYPE_MONSTER)) 
+		and c:IsAbleToDeck()
 end
+
 function s.sfilter(c)
-	return c:IsSetCard(0x115) and c:IsSpell() and c:IsAbleToDeck()
+	return (c:IsSetCard(0x115) or c:IsOriginalSetCard(0x115)) 
+		and (c:IsSpell() or c:IsOriginalType(TYPE_SPELL)) 
+		and c:IsAbleToDeck()
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
@@ -52,7 +57,7 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
 	local g1=Duel.SelectTarget(tp,s.mfilter,tp,LOCATION_REMOVED,0,1,1,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-	local g2=Duel.SelectTarget(tp,s.sfilter,tp,LOCATION_REMOVED,0,1,2,nil) -- Cho phép chọn linh hoạt số lượng cân bằng
+	local g2=Duel.SelectTarget(tp,s.sfilter,tp,LOCATION_REMOVED,0,1,2,nil) 
 	g1:Merge(g2)
 	
 	Duel.SetOperationInfo(0,CATEGORY_TODECK,g1,#g1,tp,LOCATION_REMOVED)
@@ -67,12 +72,11 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		if ct>0 then
 			local og=Duel.GetOperatedGroup()
 			if og:IsExists(Card.IsLocation,1,nil,LOCATION_DECK+LOCATION_EXTRA) then
-				-- Tính số lượng lá được xáo trộn thực tế để xác định số lá có thể trả về tay
 				local shuffled_count = og:GetCount()
 				local max_return = math.floor(shuffled_count / 3)
 				
 				if max_return > 0 and Duel.IsExistingMatchingCard(Card.IsAbleToHand,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) 
-					and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then -- "Do you want to return card(s) on the field to the hand?"
+					and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
 					
 					Duel.BreakEffect()
 					Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
@@ -109,3 +113,4 @@ function s.drop(e,tp,eg,ep,ev,re,r,rp)
 	local p,d=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER,CHAININFO_TARGET_PARM)
 	Duel.Draw(p,d,REASON_EFFECT)
 end
+```[cite: 29]
