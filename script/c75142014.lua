@@ -54,8 +54,8 @@ function s.matfilter(c,lc,sumtype,tp)
 	return c:IsRace(RACE_DRAGON|RACE_WARRIOR,lc,sumtype,tp)
 end
 function s.lcheck(g,lc,sumtype,tp)
-	return g:FilterCount(Card.IsRace,nil,RACE_DRAGON,lc,sumtype,tp)==2
-		or g:FilterCount(Card.IsRace,nil,RACE_WARRIOR,lc,sumtype,tp)==2
+	return g:FilterCount(function(tc) return tc:IsRace(RACE_DRAGON,lc,sumtype,tp) end,nil)==#g
+		or g:FilterCount(function(tc) return tc:IsRace(RACE_WARRIOR,lc,sumtype,tp) end,nil)==#g
 end
 
 -- ==========================================================
@@ -111,7 +111,8 @@ end
 
 -- ================== LOGIC LƯỢT CỦA BẠN (FUSION) ==================
 function s.fmat_filter(c,e)
-	return c:IsAbleToRemove() and not c:IsImmuneToEffect(e)
+	-- Thêm c:IsType(TYPE_MONSTER) để chỉ lọc Quái thú làm nguyên liệu Fusion
+	return c:IsType(TYPE_MONSTER) and c:IsAbleToRemove() and not c:IsImmuneToEffect(e)
 end
 function s.spfilter_fusion(c,e,tp,m,f,chkf)
 	return c:IsType(TYPE_FUSION) and (c:IsSetCard(0x3b) or c:IsSetCard(0x2a9)) and (not f or f(c))
@@ -119,7 +120,7 @@ function s.spfilter_fusion(c,e,tp,m,f,chkf)
 end
 function s.fusion_chk(e,tp)
 	local chkf=tp
-	local mg1=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,LOCATION_GRAVE,0,nil)
+	local mg1=Duel.GetMatchingGroup(s.fmat_filter,tp,LOCATION_GRAVE,0,nil,e)
 	local res=Duel.IsExistingMatchingCard(s.spfilter_fusion,tp,LOCATION_EXTRA,0,1,nil,e,tp,mg1,nil,chkf)
 	if not res then
 		local ce=Duel.GetChainMaterial(tp)
