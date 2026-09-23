@@ -14,6 +14,8 @@ SET_MAVERICK_BOOST                = 0x304
 SET_MAVERICK_ANALYZER             = 0x305
 SET_MAVERICK_HUNTER               = 0x303
 SET_ZERO                          = 0x306
+SET_X                             = 0x307
+SET_AXL                           = 0x308
 SET_CHRYSOS_HEIRS                 = 0xffa
 -- Custom counter
 COUNTER_MANA                      = 0x177

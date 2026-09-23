@@ -1,0 +1,22 @@
+{
+  "id": 11223322,
+  "ot": 32,
+  "alias": 0,
+  "type": 8388641,
+  "setcodes": [
+    771,
+    775
+  ],
+  "atk": 1800,
+  "def": 1400,
+  "level": 4,
+  "race": 32,
+  "attribute": 16,
+  "category": 258,
+  "name": "Maverick Hunter - Ultimate Armor X",
+  "desc": "2 Level 4 Machine monsters\nIf this card is Xyz Summoned: You can draw 1 card.\nIf this card is Xyz Summoned using at least 1 \"X\" monster as material, it gains these effects:\n● Gains 1000 ATK.\n● Negate the effects of cards this card destroys (either by battle or card effect).\n(Quick Effect): You can detach 1 material; target 1 card you control and 1 card your opponent controls; destroy those targets. You can only use this effect of \"Maverick Hunter - Ultimate Armor X\" once per turn.",
+  "strings": [
+    "Draw 1 card",
+    "Destroy target cards"
+  ]
+}

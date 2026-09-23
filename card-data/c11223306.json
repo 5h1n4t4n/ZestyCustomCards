@@ -1,0 +1,22 @@
+{
+  "id": 11223306,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcodes": [
+    773
+  ],
+  "atk": 1000,
+  "def": 1800,
+  "level": 4,
+  "race": 32,
+  "attribute": 16,
+  "category": 262178,
+  "name": "Maverick Analyzer - Pallette",
+  "desc": "(Quick Effect): You can discard this card and 1 other card; Special Summon 1 \"Maverick Hunter\" monster from your GY, and if it is an \"Axl\" monster, you can add from your Deck 1 \"Maverick Boost\" Equip Spell Card. If this card is in the GY: You can target 1 of your banished \"Maverick Hunter\" or \"Maverick Boost\" cards; shuffle both this card and the targeted card into the Deck. You can only use each effect of \"Maverick Analyzer - Pallette\" once per turn.",
+  "strings": [
+    "Special Summon 1 \"Maverick Hunter\" monster",
+    "Search 1 \"Maverick Boost\" Equip Spell",
+    "Shuffle banished card and this card into Deck"
+  ]
+}

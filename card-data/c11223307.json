@@ -1,0 +1,21 @@
+{
+  "id": 11223307,
+  "ot": 32,
+  "alias": 0,
+  "type": 4129,
+  "setcodes": [
+    773
+  ],
+  "atk": 1000,
+  "def": 1800,
+  "level": 4,
+  "race": 32,
+  "attribute": 16,
+  "category": 262146,
+  "name": "Maverick Analyzer - Rico",
+  "desc": "If this card is Normal Summon: You can Special Summon 1 \"Maverick Hunter\" monster from your Deck but negate it's effect. If this card is in your GY: You can banish both this card and 1 \"Maverick Hunter\" monster you control or in your GY; Special Summon 1 \"Maverick Hunter\" Synchro monster from your Extra Deck whose level's is equal to the combine of the banished monster's level (This is treated as Synchro Summon). You can only use 1 effect of \"Maverick Analyzer - RICO\" once per turn.",
+  "strings": [
+    "Special Summon 1 \"Maverick Hunter\" from Deck",
+    "Special Summon Synchro monster from Extra Deck"
+  ]
+}

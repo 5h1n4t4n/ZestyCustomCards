@@ -1,0 +1,19 @@
+{
+  "id": 11223314,
+  "ot": 32,
+  "alias": 0,
+  "setcode": 772,
+  "type": 262146,
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 513,
+  "name": "Maverick Boost - Empowered Chip",
+  "desc": "Target 1 \"Maverick Hunter\" monster in your GY; Special Summon it, and if you do, equip this card to it. While you control the equipped monster, you take no battle or card effect damage. While this card is in your GY: You can banish 1 other \"Maverick\" card from your GY; add this card to your hand. You can only use each effect of \"Maverick Boost - Empowered Chip\" once per turn.",
+  "strings": [
+    "Special Summon and equip",
+    "Add this card to hand"
+  ]
+}

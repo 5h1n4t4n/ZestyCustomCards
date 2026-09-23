@@ -1,0 +1,21 @@
+{
+  "id": 11223301,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcodes": [
+    773
+  ],
+  "atk": 1000,
+  "def": 1800,
+  "level": 4,
+  "race": 32,
+  "attribute": 16,
+  "category": 262146,
+  "name": "Maverick Analyzer - Layer",
+  "desc": "If you control a \"Maverick Hunter\" monster (Quick Effect): You can Special Summon this card from your hand, then if you control a \"Zero\" monster when this card is Summoned; You can target 1 face-up card your opponent controls or in their GY, until the end of this turn, its effects are negated. You can only use this effect of \"Maverick Analyzer - Layer\" once per turn.",
+  "strings": [
+    "Special Summon this card",
+    "Negate effect"
+  ]
+}

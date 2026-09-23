@@ -1,0 +1,22 @@
+{
+  "id": 11223302,
+  "ot": 32,
+  "alias": 0,
+  "type": 8225,
+  "setcodes": [
+    771,
+    774
+  ],
+  "atk": 3000,
+  "def": 2800,
+  "level": 8,
+  "race": 32,
+  "attribute": 16,
+  "category": 262144,
+  "name": "Maverick Hunter - Dive Armor Zero",
+  "desc": "1 Tuner + 1+ \"Zero\" monster\nIf this card is Synchro Summon: You can target card your opponent's control up to number of \"Maverick Hunter\" monster you control, negate their effect for the rest of this turn. At the start of the Battle Phase: You can discard 1 card, your opponent cannot activate card or effect when \"Maverick Hunter\" monster you control battle for the rest of that Battle Phase. This card can make up to 2 attack each Battle Phase.",
+  "strings": [
+    "Negate effect",
+    "Battle Phase lock"
+  ]
+}

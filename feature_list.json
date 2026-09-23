@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-22",
+  "last_updated": "2026-09-23",
   "note": "Trạng thái: pending(p) | working(w) | review(r) | done(d) | skipped(x). Phản ánh prefix trong docs/queues/<archetype>/",
   "archetypes": {
     "Blue_Eye": {
@@ -1028,6 +1028,168 @@
           "passcode": "4700003",
           "status": "done",
           "script": "script/c4700003.lua"
+        }
+      ]
+    },
+    "Megaman": {
+      "setcode": "0x303",
+      "passcode_range": "11223300-11223399",
+      "cards": [
+        {
+          "name": "Maverick Boost - Supply",
+          "passcode": "11223300",
+          "status": "done",
+          "script": "script/c11223300.lua"
+        },
+        {
+          "name": "Maverick Analyzer - Layer",
+          "passcode": "11223301",
+          "status": "done",
+          "script": "script/c11223301.lua"
+        },
+        {
+          "name": "Maverick Hunter - Dive Armor Zero",
+          "passcode": "11223302",
+          "status": "done",
+          "script": "script/c11223302.lua"
+        },
+        {
+          "name": "Maverick Boost - Z Saber",
+          "passcode": "11223303",
+          "status": "done",
+          "script": "script/c11223303.lua"
+        },
+        {
+          "name": "Maverick Hunter - Black Zero",
+          "passcode": "11223304",
+          "status": "done",
+          "script": "script/c11223304.lua"
+        },
+        {
+          "name": "Maverick Hunter - Zero",
+          "passcode": "11223312",
+          "status": "done",
+          "script": "script/c11223312.lua"
+        },
+        {
+          "name": "Maverick Analyzer - Alia",
+          "passcode": "11223305",
+          "status": "done",
+          "script": "script/c11223305.lua"
+        },
+        {
+          "name": "Maverick Analyzer - Pallette",
+          "passcode": "11223306",
+          "status": "done",
+          "script": "script/c11223306.lua"
+        },
+        {
+          "name": "Maverick Analyzer - Rico",
+          "passcode": "11223307",
+          "status": "done",
+          "script": "script/c11223307.lua"
+        },
+        {
+          "name": "Reploid Angel - Cinnamon",
+          "passcode": "11223308",
+          "status": "done",
+          "script": "script/c11223308.lua"
+        },
+        {
+          "name": "Reploid Headquarter",
+          "passcode": "11223309",
+          "status": "done",
+          "script": "script/c11223309.lua"
+        },
+        {
+          "name": "Maverick Boost - Black Armor",
+          "passcode": "11223310",
+          "status": "done",
+          "script": "script/c11223310.lua"
+        },
+        {
+          "name": "Maverick Boost - Charge Buster",
+          "passcode": "11223311",
+          "status": "done",
+          "script": "script/c11223311.lua"
+        },
+        {
+          "name": "Maverick Boost - Counter Smash",
+          "passcode": "11223313",
+          "status": "done",
+          "script": "script/c11223313.lua"
+        },
+        {
+          "name": "Maverick Boost - Empowered Chip",
+          "passcode": "11223314",
+          "status": "done",
+          "script": "script/c11223314.lua"
+        },
+        {
+          "name": "Maverick Boost - Heart Tank",
+          "passcode": "11223315",
+          "status": "done",
+          "script": "script/c11223315.lua"
+        },
+        {
+          "name": "Maverick Boost - Raijingeki",
+          "passcode": "11223316",
+          "status": "done",
+          "script": "script/c11223316.lua"
+        },
+        {
+          "name": "Maverick Boost - Rescue",
+          "passcode": "11223317",
+          "status": "done",
+          "script": "script/c11223317.lua"
+        },
+        {
+          "name": "Maverick Boost - Virus Affect",
+          "passcode": "11223318",
+          "status": "done",
+          "script": "script/c11223318.lua"
+        },
+        {
+          "name": "Maverick Hunter - Axl",
+          "passcode": "11223319",
+          "status": "done",
+          "script": "script/c11223319.lua"
+        },
+        {
+          "name": "Maverick Hunter - Dive Armor Axl",
+          "passcode": "11223320",
+          "status": "done",
+          "script": "script/c11223320.lua"
+        },
+        {
+          "name": "Maverick Hunter - Dive Armor X",
+          "passcode": "11223321",
+          "status": "done",
+          "script": "script/c11223321.lua"
+        },
+        {
+          "name": "Maverick Hunter - Ultimate Armor X",
+          "passcode": "11223322",
+          "status": "done",
+          "script": "script/c11223322.lua"
+        },
+        {
+          "name": "Maverick Hunter - White Axl",
+          "passcode": "11223323",
+          "status": "done",
+          "script": "script/c11223323.lua"
+        },
+        {
+          "name": "Maverick Hunter - X",
+          "passcode": "11223324",
+          "status": "done",
+          "script": "script/c11223324.lua"
+        },
+        {
+          "name": "Dark Maverick Hunter - Zero Virus",
+          "passcode": "11223325",
+          "status": "done",
+          "script": "script/c11223325.lua"
         }
       ]
     }

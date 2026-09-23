@@ -1,0 +1,24 @@
+{
+  "id": 11223308,
+  "ot": 32,
+  "alias": 0,
+  "type": 67108897,
+  "setcodes": [
+    773
+  ],
+  "atk": 1800,
+  "level": 2,
+  "race": 32,
+  "attribute": 16,
+  "linkmarkers": [
+    "Bottom-Left",
+    "Bottom-Right"
+  ],
+  "category": 262144,
+  "name": "Reploid Angel - Cinnamon",
+  "desc": "2 \"Maverick\" monsters\nIf this card is Link Summoned: You can send from your Deck 1 \"Maverick Analyzer\" or \"Maverick Boost\" card to the GY. During opponent's Main Phase: You can return this card to the Extra Deck; negate 1 face-up card your opponent control. You can only use each effect of \"Maverick Angel - Cinnamon\" once per turn.",
+  "strings": [
+    "Send 1 \"Maverick Analyzer\" or \"Maverick Boost\" card to GY",
+    "Negate 1 face-up card your opponent controls"
+  ]
+}

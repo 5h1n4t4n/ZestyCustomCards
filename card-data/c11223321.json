@@ -1,0 +1,21 @@
+{
+  "id": 11223321,
+  "ot": 32,
+  "alias": 0,
+  "type": 8225,
+  "setcodes": [
+    771,
+    775
+  ],
+  "atk": 2800,
+  "def": 2400,
+  "level": 8,
+  "race": 32,
+  "attribute": 16,
+  "category": 0,
+  "name": "Maverick Hunter - Dive Armor X",
+  "desc": "1 Tuner + 1+ \"X\" monsters\nUnaffected by your opponent's monster effects.\n(Quick Effect): Send 1 \"Maverick Boost\" card (except Equip Spell Card) that meets its activation conditions from your Deck to the GY; this effect becomes that card's effect when it is activated. You can only use this effect of \"Maverick Hunter - Dive Armor X\" once per turn.",
+  "strings": [
+    "Copy the effect of 1 Maverick Boost card"
+  ]
+}

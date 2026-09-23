@@ -1,0 +1,19 @@
+{
+  "id": 11223318,
+  "ot": 32,
+  "alias": 0,
+  "setcode": 772,
+  "type": 2,
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 513,
+  "name": "Maverick Boost - Virus Affect",
+  "desc": "Send 1 \"Zero\" monster from your hand or face-up field to the GY; Special Summon 1 \"Dark Maverick Hunter - Zero Virus\" from your Extra Deck. You can banish this card from the GY; add 1 \"Maverick Hunter - Zero\" from your GY to your hand. You can only use each effect of \"Maverick Boost - Virus Affect\" once per turn.",
+  "strings": [
+    "Special Summon Zero Virus from Extra Deck",
+    "Add Maverick Hunter - Zero to hand"
+  ]
+}

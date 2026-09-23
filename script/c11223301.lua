@@ -1,7 +1,28 @@
--- Maverick Analyzer - Layer
+-- ============================================================
+-- Card Name: Maverick Analyzer - Layer
+-- Passcode : 11223301
+-- Type     : Monster / Effect
+-- Attribute: LIGHT
+-- Level    : 4
+-- ATK/DEF  : 1000 / 1800
+-- Race     : Machine
+-- Archetype: Maverick Analyzer (0x305)
+-- ============================================================
+-- Effect 1: If you control a "Maverick Hunter" monster (Quick Effect):
+--           You can Special Summon this card from your hand, then if
+--           you control a "Zero" monster when this card is Summoned;
+--           You can target 1 face-up card your opponent controls or
+--           in their GY, until the end of this turn, its effects are negated.
+-- You can only use this effect of "Maverick Analyzer - Layer" once per turn.
+-- ============================================================
+
+Duel.LoadScript("constants.lua")
 local s,id=GetID()
+
 function s.initial_effect(c)
-	-- Quick Effect: Special Summon from hand
+	-- ============================================================
+	-- Effect 1 — Quick Effect: Special Summon from hand + optional negate
+	-- ============================================================
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DISABLE)
@@ -15,12 +36,19 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 end
 
+s.listed_series={SET_MAVERICK_HUNTER,SET_MAVERICK_ANALYZER,SET_ZERO}
+
+-- ============================================================
+-- Effect 1 Logic
+-- ============================================================
 function s.mhfilter(c)
-	return c:IsFaceup() and c:IsSetCard(0x303)
+	return c:IsFaceup() and c:IsSetCard(SET_MAVERICK_HUNTER)
 end
+
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsExistingMatchingCard(s.mhfilter,tp,LOCATION_MZONE,0,1,nil)
 end
+
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
@@ -29,8 +57,9 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.zerofilter(c)
-	return c:IsFaceup() and c:IsSetCard(0x306)
+	return c:IsFaceup() and c:IsSetCard(SET_ZERO)
 end
+
 function s.negfilter(c)
 	if c:IsLocation(LOCATION_ONFIELD) then
 		return c:IsFaceup() and not c:IsDisabled()
@@ -38,6 +67,7 @@ function s.negfilter(c)
 		return aux.NecroValleyFilter()(c)
 	end
 end
+
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) or Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)<=0 then return end
@@ -79,6 +109,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		end
 	end
 end
+
 function s.disop(e,tp,eg,ep,ev,re,r,rp)
 	if re:GetHandler()==e:GetHandler() then
 		Duel.NegateEffect(ev)

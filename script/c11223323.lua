@@ -1,24 +1,24 @@
 -- ============================================================
--- Card Name: Maverick Hunter - Black Zero
--- Passcode : 11223304
+-- Card Name: Maverick Hunter - White Axl
+-- Passcode : 11223323
 -- Type     : Monster / Xyz / Effect
--- Attribute: DARK
+-- Attribute: LIGHT
 -- Rank     : 4
--- ATK/DEF  : 2000 / 1600
+-- ATK/DEF  : 1500 / 1500
 -- Race     : Machine
--- Archetype: Maverick Hunter (0x303), Zero (0x306)
+-- Archetype: Maverick Hunter (0x303), Axl (0x308)
 -- Materials: 2 Level 4 Machine monsters
 -- ============================================================
 -- Effect 1: If this card is Xyz Summoned: You can add 1 "Maverick
---           Boost" Quick-Play Spell Card from your Deck to your hand.
--- Effect 2: If this card is Xyz Summoned using at least 1 "Zero"
+--           Boost" Equip Spell Card from your Deck to your hand.
+-- Effect 2: If this card is Xyz Summoned using at least 1 "Axl"
 --           monster as material, it gains these effects:
 --           ● Gains 1000 ATK.
---           ● Neither player can activate cards or effects in response
---             to this card's effect activations.
+--           ● Cannot be destroyed by card effects.
 -- Effect 3: (Quick Effect): You can detach 1 material from this card;
---           this card is unaffected by your opponent's card effects
---           until the end of the next turn.
+--           equip 1 "Maverick Boost" Equip Spell Card from your Deck
+--           to an appropriate monster on the field.
+-- You can only use this effect of "Maverick Hunter - White Axl" once per turn.
 -- ============================================================
 
 Duel.LoadScript("constants.lua")
@@ -33,7 +33,7 @@ function s.initial_effect(c)
 	Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsRace,RACE_MACHINE),4,2)
 
 	-- ============================================================
-	-- Effect 1 — Trigger on Xyz Summon: Search Quick-Play Spell
+	-- Effect 1 — Trigger on Xyz Summon: Search "Maverick Boost" Equip Spell
 	-- ============================================================
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
@@ -48,7 +48,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 
 	-- ============================================================
-	-- Effect 2 — Continuous: Material check (at least 1 "Zero" monster)
+	-- Effect 2 — Continuous: Material check (at least 1 "Axl" monster)
 	-- ============================================================
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
@@ -58,20 +58,23 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 
 	-- ============================================================
-	-- Effect 3 — Quick Effect: Detach 1 material; unaffected
+	-- Effect 3 — Quick Effect: Detach 1; equip 1 Boost Equip from Deck
 	-- ============================================================
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetCategory(CATEGORY_EQUIP)
 	e3:SetType(EFFECT_TYPE_QUICK_O)
 	e3:SetCode(EVENT_FREE_CHAIN)
 	e3:SetRange(LOCATION_MZONE)
+	e3:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E+TIMING_MAIN_END)
 	e3:SetCountLimit(1,{id,1})
-	e3:SetCost(s.immcost)
-	e3:SetOperation(s.immop)
+	e3:SetCost(s.eqcost)
+	e3:SetTarget(s.eqtg)
+	e3:SetOperation(s.eqop)
 	c:RegisterEffect(e3)
 end
 
-s.listed_series={SET_MAVERICK_HUNTER,SET_ZERO,SET_MAVERICK_BOOST}
+s.listed_series={SET_MAVERICK_HUNTER,SET_AXL,SET_MAVERICK_BOOST}
 
 -- ============================================================
 -- Effect 1 Logic
@@ -81,7 +84,7 @@ function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.thfilter(c)
-	return c:IsSetCard(SET_MAVERICK_BOOST) and c:IsType(TYPE_QUICKPLAY) and c:IsAbleToHand()
+	return c:IsSetCard(SET_MAVERICK_BOOST) and c:IsType(TYPE_EQUIP) and c:IsAbleToHand()
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -101,14 +104,14 @@ end
 -- ============================================================
 -- Effect 2 Logic
 -- ============================================================
-function s.zerofilter(c)
-	return c:IsSetCard(SET_ZERO)
+function s.axlfilter(c)
+	return c:IsSetCard(SET_AXL)
 end
 
 function s.matcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local mg=c:GetMaterial()
-	return c:IsSummonType(SUMMON_TYPE_XYZ) and mg:IsExists(s.zerofilter,1,nil)
+	return c:IsSummonType(SUMMON_TYPE_XYZ) and mg:IsExists(s.axlfilter,1,nil)
 end
 
 function s.matop(e,tp,eg,ep,ev,re,r,rp)
@@ -120,48 +123,48 @@ function s.matop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetValue(1000)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 	c:RegisterEffect(e1)
-	-- Neither player can activate card or effect in response to its effects
+	-- Cannot be destroyed by card effects
 	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e2:SetCode(EVENT_CHAINING)
+	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetOperation(s.chainop)
+	e2:SetValue(1)
 	e2:SetReset(RESET_EVENT+RESETS_STANDARD)
 	c:RegisterEffect(e2)
-end
-
-function s.chainop(e,tp,eg,ep,ev,re,r,rp)
-	if re:GetHandler()==e:GetHandler() then
-		Duel.SetChainLimit(s.chainlimit)
-	end
-end
-
-function s.chainlimit(e,rp,tp)
-	return false
 end
 
 -- ============================================================
 -- Effect 3 Logic
 -- ============================================================
-function s.immcost(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.eqcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
 	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
 
-function s.immop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if c:IsRelateToEffect(e) and c:IsFaceup() then
-		local e1=Effect.CreateEffect(c)
-		e1:SetDescription(3110)
-		e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetCode(EFFECT_IMMUNE_EFFECT)
-		e1:SetValue(s.efilter)
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,2)
-		c:RegisterEffect(e1)
-	end
+function s.eqdeckfilter(c,tp)
+	return c:IsSetCard(SET_MAVERICK_BOOST) and c:IsType(TYPE_EQUIP)
+		and Duel.IsExistingMatchingCard(s.eqtargetfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil,c)
 end
 
-function s.efilter(e,re)
-	return e:GetOwnerPlayer()~=re:GetOwnerPlayer()
+function s.eqtargetfilter(c,ec)
+	return c:IsFaceup() and ec:CheckEquipTarget(c)
+end
+
+function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
+		and Duel.IsExistingMatchingCard(s.eqdeckfilter,tp,LOCATION_DECK,0,1,nil,tp) end
+	Duel.SetOperationInfo(0,CATEGORY_EQUIP,nil,1,tp,LOCATION_DECK)
+end
+
+function s.eqop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EQUIP)
+	local ec=Duel.SelectMatchingCard(tp,s.eqdeckfilter,tp,LOCATION_DECK,0,1,1,nil,tp):GetFirst()
+	if not ec then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
+	local tc=Duel.SelectMatchingCard(tp,s.eqtargetfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil,ec):GetFirst()
+	if tc then
+		Duel.Equip(tp,ec,tc)
+	end
 end

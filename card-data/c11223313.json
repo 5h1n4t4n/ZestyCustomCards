@@ -1,0 +1,18 @@
+{
+  "id": 11223313,
+  "ot": 32,
+  "alias": 0,
+  "setcode": 772,
+  "type": 1048580,
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 16777220,
+  "name": "Maverick Boost - Counter Smash",
+  "desc": "When a Spell/Trap Card, or monster effect, is activated while you control a \"Maverick Hunter\" monster Special Summoned from the Extra Deck: Negate the activation, and if you control a \"Zero\" monster, banish that card. You can only activate 1 \"Maverick Boost - Counter Smash\" once per turn.",
+  "strings": [
+    "Negate activation and banish"
+  ]
+}

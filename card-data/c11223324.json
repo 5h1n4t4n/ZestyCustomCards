@@ -1,0 +1,22 @@
+{
+  "id": 11223324,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcodes": [
+    771,
+    775
+  ],
+  "atk": 1800,
+  "def": 1400,
+  "level": 4,
+  "race": 32,
+  "attribute": 16,
+  "category": 517,
+  "name": "Maverick Hunter - X",
+  "desc": "If this card is Summoned: You can add 1 \"Maverick Boost\" card from your Deck to your hand. If a \"Maverick Boost\" card is activated while you control this face-up card (Quick Effect): You can target 1 face-up card your opponent controls; negate its effects. You can only use each effect of \"Maverick Hunter - X\" once per turn.",
+  "strings": [
+    "Add 1 Maverick Boost card from Deck",
+    "Negate 1 face-up card opponent controls"
+  ]
+}

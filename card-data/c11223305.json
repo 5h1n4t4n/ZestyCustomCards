@@ -1,0 +1,21 @@
+{
+  "id": 11223305,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcodes": [
+    773
+  ],
+  "atk": 1000,
+  "def": 1800,
+  "level": 4,
+  "race": 32,
+  "attribute": 16,
+  "category": 262146,
+  "name": "Maverick Analyzer - Alia",
+  "desc": "If you control a \"Maverick Hunter\" monster, you can Special Summon this card from your hand. You can only Special Summon \"Maverick Analyzer - Alia\" once per turn this way. You can discard 1 card; Special Summon 1 \"Maverick Hunter\" monster from your Deck, and if it is an \"X\" monster, your \"Maverick\" monsters' Special Summon cannot be negated for the rest of this turn. You can only use this effect of \"Maverick Analyzer - Alia\" once per turn.",
+  "strings": [
+    "Special Summon this card",
+    "Special Summon 1 \"Maverick Hunter\" monster"
+  ]
+}

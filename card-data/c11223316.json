@@ -1,0 +1,19 @@
+{
+  "id": 11223316,
+  "ot": 32,
+  "alias": 0,
+  "setcode": 772,
+  "type": 2,
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 8193,
+  "name": "Maverick Boost - Raijingeki",
+  "desc": "Target 1 \"Maverick Hunter\" monster you control; it gains 1000 ATK. If you control a \"Zero\" monster, the targeted monster gains these effects until the end of this turn:\n● At the start of the Damage Step, if this card battles an opponent's monster: You can return the opponent's monster to the hand.\n● Its attacks cannot be negated.\nYou can only activate 1 \"Maverick Boost - Raijingeki\" per turn.",
+  "strings": [
+    "Target gains ATK and bonus effects",
+    "Return opponent's monster to hand"
+  ]
+}

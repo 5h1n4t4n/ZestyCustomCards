@@ -1,0 +1,19 @@
+{
+  "id": 11223317,
+  "ot": 32,
+  "alias": 0,
+  "setcode": 772,
+  "type": 4,
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 513,
+  "name": "Maverick Boost - Rescue",
+  "desc": "Special Summon 1 \"Maverick Hunter\" monster from your Deck. If this card is destroyed or banished by card effect: You can add 1 \"Maverick Analyzer\" or \"Maverick Boost\" card from your Deck to your hand. You can only use 1 effect of \"Maverick Boost - Rescue\" once per turn.",
+  "strings": [
+    "Special Summon 1 Maverick Hunter from Deck",
+    "Add 1 Maverick Analyzer or Boost card to hand"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": 11223304,
+  "ot": 32,
+  "alias": 0,
+  "type": 8388641,
+  "setcodes": [
+    771,
+    774
+  ],
+  "atk": 2000,
+  "def": 1600,
+  "level": 4,
+  "race": 32,
+  "attribute": 32,
+  "category": 8704,
+  "name": "Maverick Hunter - Black Zero",
+  "desc": "2 Level 4 Machine monsters\nIf this card is Xyz Summoned: You can add 1 \"Maverick Boost\" Quick-Play Spell Card from your Deck to your hand. If this card Xyz Summoned using at least 1 \"Zero\" monster as material, it gains these effects:\n● Gain 1000 ATK\n● Neither player can activate card or effect in response to it's effect.\n(Quick Effect): You can detach 1 material from this card, this card is unaffected by your opponent's card effect until the end of the next turn.",
+  "strings": [
+    "Search 1 \"Maverick Boost\" Quick-Play Spell",
+    "Unaffected by card effect"
+  ]
+}
