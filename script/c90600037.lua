@@ -26,6 +26,7 @@ function s.initial_effect(c)
     c:RegisterEffect(e2)
 end
 
+-- Cho phép nhận diện cả bài trong Mộ và bài bị loại bỏ (hỗ trợ cả bài Face-down banished)
 function s.tdfilter(c)
     return (c:IsLocation(LOCATION_GRAVE) or c:IsLocation(LOCATION_REMOVED)) and c:IsAbleToDeck()
 end
@@ -55,7 +56,8 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
                 end
             end
             
-            local sk_count = g:FilterCount(function(c) return c:IsSetCard(0x115) and c:IsType(TYPE_SPELL) end, nil)
+            -- Đếm số lượng Spell "Sky Striker" (hỗ trợ cả bài face-down dựa vào thông tin gốc)
+            local sk_count = g:FilterCount(function(c) return (c:IsSetCard(0x115) or c:IsOriginalSetCard(0x115)) and (c:IsType(TYPE_SPELL) or c:IsOriginalType(TYPE_SPELL)) end, nil)
             if sk_count>=3 and Duel.IsExistingMatchingCard(s.thfilter1,tp,LOCATION_DECK,0,1,nil) then
                 if Duel.SelectYesNo(tp, aux.Stringid(id, 3)) then
                     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
@@ -113,3 +115,4 @@ function s.lkop(e,tp,eg,ep,ev,re,r,rp)
         Duel.LinkSummon(tp,tc,nil)
     end
 end
+```[cite: 30]
