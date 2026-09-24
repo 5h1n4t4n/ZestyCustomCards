@@ -45,13 +45,20 @@ if ($CardId -ne "") {
 
 # 2. Sync CDBs
 Write-Host "`n[2/4] Dong bo database CDB..." -ForegroundColor Yellow
-$cdbFiles = @("card-data.cdb", "mycard.cdb", "custom_cards_zesty.cdb", "Chrysos Heirs.cdb", "FlowerSpirit.cdb", "Madoka.cdb", "Mecha Three Kingdom.cdb")
+$cdbFiles = @("card-data.cdb", "mycard.cdb", "custom_cards_zesty.cdb", "Chrysos Heirs.cdb", "FlowerSpirit.cdb", "Madoka.cdb", "Mecha Three Kingdom.cdb", "Nightbloom.cdb", "Rising Heroes.cdb")
 foreach ($cdb in $cdbFiles) {
     $srcCdb = Join-Path $root $cdb
     if (Test-Path $srcCdb) {
         Copy-Item $srcCdb $repoDest -Force
         Write-Host "  -> Da copy $cdb" -ForegroundColor Green
     }
+}
+
+# Dong bo strings.conf neu co
+$srcStrings = Join-Path $root "strings.conf"
+if (Test-Path $srcStrings) {
+    Copy-Item $srcStrings $repoDest -Force
+    Write-Host "  -> Da copy strings.conf" -ForegroundColor Green
 }
 
 # 3. Sync Pics
