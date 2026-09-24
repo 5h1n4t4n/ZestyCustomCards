@@ -47,7 +47,7 @@ function s.initial_effect(c)
 	-- ============================================================
 	-- Xyz Summon Procedure: 2 Xyz monsters with the same rank
 	-- Alternative Summon: 1 Xyz Monster you control if opponent activated 2+ monster effects
-	Xyz.AddProcedure(c,s.xyzfilter,nil,2,s.altfilter,aux.Stringid(id,0),1,s.altop,false,s.xyzcheck)
+	Xyz.AddProcedure(c,s.xyzfilter,nil,2,s.altfilter,aux.Stringid(id,0),2,s.altop,false,s.xyzcheck)
 
 	-- ============================================================
 	-- Continuous & Inherent Effects
@@ -196,7 +196,7 @@ function s.xyzcheck(g,tp,xyz)
 	return mg:GetClassCount(Card.GetRank)==1
 end
 function s.altfilter(c,tp,xyzc)
-	return c:IsFaceup() and c:IsType(TYPE_XYZ,xyzc,SUMMON_TYPE_XYZ,tp)
+	return c:IsFaceup() and c:IsType(TYPE_XYZ,xyzc,SUMMON_TYPE_XYZ,tp) and c:IsControler(tp)
 end
 function s.altop(e,tp,chk)
 	if chk==0 then return Duel.GetFlagEffect(1-tp,id)>=2 end
@@ -207,9 +207,11 @@ end
 -- Genericus Special Summon Enhancements
 -- ============================================================
 function s.gen_spcon(e,tp,eg,ep,ev,re,r,rp)
-	if not re then return false end
-	local rc=re:GetHandler()
-	return rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM) and rc:IsMonster()
+	local c=e:GetHandler()
+	local rc=re and re:GetHandler()
+	return (r&REASON_EFFECT)~=0 and re and re:IsMonsterEffect()
+		and rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM) and rc~=c
+		and not c:IsXyzSummoned()
 end
 function s.gen_spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()

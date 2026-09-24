@@ -162,9 +162,10 @@ end
 -- ============================================================
 function s.gen_spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if not re then return end
-	local rc=re:GetHandler()
-	if not (rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM) and rc:IsMonster()) then return end
+	local rc=re and re:GetHandler()
+	if (r&REASON_EFFECT)==0 or not re or not re:IsMonsterEffect()
+		or not (rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM))
+		or c:IsRitualSummoned() then return end
 	if rc:IsType(TYPE_LINK) then
 		c:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1)
 	end

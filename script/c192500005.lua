@@ -199,9 +199,11 @@ s.listed_series={SET_GENERICUS_MONSTRUM}
 -- Genericus Special Summon Enhancements
 -- ============================================================
 function s.gen_spcon(e,tp,eg,ep,ev,re,r,rp)
-	if not re then return false end
-	local rc=re:GetHandler()
-	return rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM) and rc:IsMonster()
+	local c=e:GetHandler()
+	local rc=re and re:GetHandler()
+	return (r&REASON_EFFECT)~=0 and re and re:IsMonsterEffect()
+		and rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM) and rc~=c
+		and not c:IsSynchroSummoned()
 end
 function s.gen_spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()

@@ -293,16 +293,19 @@ function s.pop2(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.pcost3(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckLPCost(tp,math.floor(Duel.GetLP(tp)/2)) end
+	if chk==0 then return true end
 	Duel.PayLPCost(tp,math.floor(Duel.GetLP(tp)/2))
 end
 function s.pop3(e,tp,eg,ep,ev,re,r,rp)
 	-- Grant 1 additional Pendulum Summon
-	Pendulum.GrantAdditionalPendulumSummon(tp,id)
+	Pendulum.GrantAdditionalPendulumSummon(e:GetHandler(),nil,tp,LOCATION_HAND|LOCATION_EXTRA,
+		aux.Stringid(id,2),aux.Stringid(id,2),id)
 end
 
 function s.pcost4(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsAbleToRemoveAsCost,tp,LOCATION_HAND|LOCATION_ONFIELD,0,1,nil,POS_FACEDOWN) end
+	if chk==0 then
+		return Duel.IsExistingMatchingCard(Card.IsAbleToRemoveAsCost,tp,LOCATION_HAND|LOCATION_ONFIELD,0,1,nil,POS_FACEDOWN)
+	end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
 	local g=Duel.SelectMatchingCard(tp,Card.IsAbleToRemoveAsCost,tp,LOCATION_HAND|LOCATION_ONFIELD,0,1,1,nil,POS_FACEDOWN)
 	Duel.Remove(g,POS_FACEDOWN,REASON_COST)
@@ -323,9 +326,10 @@ end
 -- ============================================================
 function s.gen_spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if not re then return end
-	local rc=re:GetHandler()
-	if not (rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM) and rc:IsMonster()) then return end
+	local rc=re and re:GetHandler()
+	if (r&REASON_EFFECT)==0 or not re or not re:IsMonsterEffect()
+		or not (rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM))
+		or c:IsSummonType(SUMMON_TYPE_PENDULUM) then return end
 	if rc:IsType(TYPE_LINK) then
 		c:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1)
 	end

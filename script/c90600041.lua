@@ -31,6 +31,7 @@ function s.initial_effect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetHintTiming(TIMING_STANDBY_PHASE,TIMING_STANDBY_PHASE)
 	e1:SetCountLimit(1,id)
 	e1:SetCondition(s.actcon)
 	e1:SetTarget(s.acttg)
@@ -44,7 +45,7 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_GRAVE)
 	e2:SetCountLimit(1,{id,1})
-	e2:SetCost(aux.bfgcost)
+	e2:SetCost(Cost.SelfBanish)
 	e2:SetTarget(s.thtg)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
@@ -71,7 +72,7 @@ s.listed_names={id}
 -- Effect 1: Standby Phase activation & Duel lock
 -- ============================================================
 function s.actcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsStandbyPhase()
+	return Duel.IsPhase(PHASE_STANDBY)
 end
 
 function s.acttg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -94,7 +95,7 @@ function s.actop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetTargetRange(1,1)
 	e1:SetValue(s.aclimit)
 	e1:SetLabel(rc)
-	e1:SetReset(RESET_PHASE+PHASE_END)
+	e1:SetReset(RESET_PHASE|PHASE_END)
 	Duel.RegisterEffect(e1,tp)
 
 	-- If this card is activated: You can only activate the effects of "Sky Striker" monsters for the rest of this duel
@@ -110,11 +111,13 @@ end
 
 function s.aclimit(e,re,tp)
 	local rc=e:GetLabel()
-	return re:IsActiveType(TYPE_MONSTER) and re:GetHandler():IsRace(rc)
+	local tc=re:GetHandler()
+	return re:IsActiveType(TYPE_MONSTER) and tc and tc:IsRace(rc)
 end
 
 function s.duellimit(e,re,tp)
-	return re:IsActiveType(TYPE_MONSTER) and not re:GetHandler():IsSetCard(SET_SKY_STRIKER)
+	local tc=re:GetHandler()
+	return re:IsActiveType(TYPE_MONSTER) and not (tc and tc:IsSetCard(SET_SKY_STRIKER))
 end
 
 -- ============================================================
