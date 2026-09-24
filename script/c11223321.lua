@@ -68,8 +68,9 @@ end
 -- Effect 2 Logic (Rafflesia-style copy activation from Deck)
 -- ============================================================
 function s.copyfilter(c)
-	return c:IsSetCard(SET_MAVERICK_BOOST) and not c:IsType(TYPE_EQUIP) and c:IsAbleToGraveAsCost()
-		and c:CheckActivateEffect(false,true,true)~=nil
+	if not (c:IsSetCard(SET_MAVERICK_BOOST) and not c:IsType(TYPE_EQUIP) and c:IsAbleToGraveAsCost()) then return false end
+	local te=c:CheckActivateEffect(false,true,true)
+	return te and te:GetOperation()~=nil
 end
 
 function s.effcost(e,tp,eg,ep,ev,re,r,rp,chk)

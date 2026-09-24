@@ -50,23 +50,38 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	local ct=e:GetLabel()
-	local g=Duel.GetMatchingGroup(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,e:GetHandler())
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
-	if e:IsHasType(EFFECT_TYPE_ACTIVATE)
+	local c=e:GetHandler()
+	local dg=Duel.GetMatchingGroup(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,c)
+	if chk==0 then
+		if e:GetLabel()~=0 then return true end
+		local hg=Duel.GetMatchingGroup(Card.IsDiscardable,tp,LOCATION_HAND,0,c)
+		return #dg>0 and #hg>0
+	end
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,dg,1,0,0)
+	if (e:IsHasType(EFFECT_TYPE_ACTIVATE) or e:GetHandler():IsSetCard(SET_X))
 		and Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsSetCard,SET_X),tp,LOCATION_MZONE,0,1,nil) then
 		Duel.SetChainLimit(aux.FALSE)
 	end
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
 	local ct=e:GetLabel()
-	local g=Duel.GetMatchingGroup(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,e:GetHandler())
-	if #g>0 and ct>0 then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-		local sg=g:Select(tp,1,ct,nil)
-		Duel.HintSelection(sg,true)
-		Duel.Destroy(sg,REASON_EFFECT)
+	local dg=Duel.GetMatchingGroup(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,c)
+	if #dg==0 then return end
+	if ct==0 then
+		local hg=Duel.GetMatchingGroup(Card.IsDiscardable,tp,LOCATION_HAND,0,c)
+		if #hg==0 then return end
+		local max_ct=math.min(#hg,#dg)
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISCARD)
+		local g=hg:Select(tp,1,max_ct,nil)
+		if #g==0 or Duel.SendtoGrave(g,REASON_EFFECT+REASON_DISCARD)==0 then return end
+		ct=#g
+		dg=Duel.GetMatchingGroup(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,c)
+		if #dg==0 then return end
 	end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+	local sg=dg:Select(tp,1,ct,nil)
+	Duel.HintSelection(sg,true)
+	Duel.Destroy(sg,REASON_EFFECT)
 end

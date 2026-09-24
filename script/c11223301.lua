@@ -64,7 +64,7 @@ function s.negfilter(c)
 	if c:IsLocation(LOCATION_ONFIELD) then
 		return c:IsFaceup() and not c:IsDisabled()
 	else
-		return aux.NecroValleyFilter()(c)
+		return not c:IsDisabled() and (not c:IsMonster() or c:IsType(TYPE_EFFECT))
 	end
 end
 
@@ -99,19 +99,24 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 				e1:SetReset(RESET_EVENT+RESETS_STANDARD_EXC_GRAVE+RESET_PHASE+PHASE_END)
 				tc:RegisterEffect(e1)
 				local e2=Effect.CreateEffect(c)
-				e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-				e2:SetCode(EVENT_CHAIN_SOLVING)
-				e2:SetRange(LOCATION_GRAVE)
-				e2:SetOperation(s.disop)
+				e2:SetType(EFFECT_TYPE_SINGLE)
+				e2:SetCode(EFFECT_DISABLE_EFFECT)
 				e2:SetReset(RESET_EVENT+RESETS_STANDARD_EXC_GRAVE+RESET_PHASE+PHASE_END)
 				tc:RegisterEffect(e2)
+				local e3=Effect.CreateEffect(c)
+				e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+				e3:SetCode(EVENT_CHAIN_SOLVING)
+				e3:SetOperation(s.disop)
+				e3:SetLabelObject(tc)
+				e3:SetReset(RESET_PHASE+PHASE_END)
+				Duel.RegisterEffect(e3,tp)
 			end
 		end
 	end
 end
 
 function s.disop(e,tp,eg,ep,ev,re,r,rp)
-	if re:GetHandler()==e:GetHandler() then
+	if re:GetHandler()==e:GetLabelObject() then
 		Duel.NegateEffect(ev)
 	end
 end
