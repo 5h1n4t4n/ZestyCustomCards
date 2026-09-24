@@ -1,0 +1,22 @@
+{
+  "id": 42100003,
+  "ot": 32,
+  "alias": 0,
+  "type": 65538,
+  "setcodes": [
+    421
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 1562,
+  "name": "Prophecy of the Ashened City",
+  "desc": "Add 1 \"Veidos\" card from your Deck to your hand then if there is a card in the Field Zone, you can add 1 \"Ashened\" card from your Deck or GY to your hand and if you do, destroy a Field Spell on the field. If there is a Field Spell on the field, you can banish this card from your GY; Send 1 Pyro monster from your Deck to the GY then destroy 1 card on the field. You can only use each effect of \"Prophecy of the Ashened City\" once per turn.",
+  "strings": [
+    "Add 1 \"Veidos\" card and apply Field Zone effect",
+    "Send 1 Pyro monster to GY and destroy 1 card",
+    "Add 1 \"Ashened\" card and destroy 1 Field Spell?"
+  ]
+}

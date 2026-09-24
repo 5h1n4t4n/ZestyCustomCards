@@ -1,0 +1,22 @@
+{
+  "id": 4700001,
+  "ot": 32,
+  "alias": 0,
+  "type": 524290,
+  "setcodes": [
+    47
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 1048736,
+  "name": "Permafrost of the Ice Barrier",
+  "desc": "You can only activate 1 \"Permafrost of the Ice Barrier\" per turn. When this card is activated: You can add 1 \"Ice Barrier\" monster from your GY to your hand. \"Ice Barrier\" Synchro Monsters you control cannot be destroyed by your opponent's card effects. If a face-up \"Ice Barrier\" monster(s) you control is Tributed by an opponent's card or effect, or is sent to the GY by an opponent's card effect: You can Special Summon 1 \"Ice Barrier\" monster from your Deck or GY, then, if that monster was a Synchro Monster, you can banish 1 random card from your opponent's hand.",
+  "strings": [
+    "Add 1 \"Ice Barrier\" monster from GY to hand",
+    "Special Summon 1 \"Ice Barrier\" monster",
+    "Banish 1 random card from opponent's hand"
+  ]
+}

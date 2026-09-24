@@ -1,0 +1,24 @@
+{
+  "id": 11223309,
+  "ot": 32,
+  "alias": 0,
+  "type": 524290,
+  "setcodes": [
+    773,
+    772
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 262660,
+  "name": "Reploid Headquarter",
+  "desc": "\"Maverick Hunter\" monster you control cannot be banished by your opponent's card effect. You can discard 1 card; Special Summon 1 \"Maverick Hunter\" monster from your hand or GY. If your opponent activate a card or effect: You can shuffle 1 \"Maverick Hunter\" monster you control to the Deck or Extra Deck, add to your hand or Special Summon 1 \"Maverick Analyzer\" monster from your Deck. You can only use each effect of \"Reploid Headquarter\" once per turn.",
+  "strings": [
+    "Special Summon 1 \"Maverick Hunter\" monster",
+    "Shuffle 1 \"Maverick Hunter\" into Deck/Extra Deck",
+    "Add 1 \"Maverick Analyzer\" to hand",
+    "Special Summon 1 \"Maverick Analyzer\""
+  ]
+}

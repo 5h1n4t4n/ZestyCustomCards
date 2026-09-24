@@ -1,0 +1,22 @@
+{
+  "id": 11223323,
+  "ot": 32,
+  "alias": 0,
+  "type": 8388641,
+  "setcodes": [
+    771,
+    776
+  ],
+  "atk": 1500,
+  "def": 1500,
+  "level": 4,
+  "race": 32,
+  "attribute": 16,
+  "category": 262145,
+  "name": "Maverick Hunter - White Axl",
+  "desc": "2 Level 4 Machine monsters\nIf this card is Xyz Summoned: You can add 1 \"Maverick Boost\" Equip Spell Card from your Deck to your hand.\nIf this card is Xyz Summoned using at least 1 \"Axl\" monster as material, it gains these effects:\n● Gains 1000 ATK.\n● Cannot be destroyed by card effects.\n(Quick Effect): You can detach 1 material from this card; equip 1 \"Maverick Boost\" Equip Spell Card from your Deck to an appropriate monster on the field. You can only use this effect of \"Maverick Hunter - White Axl\" once per turn.",
+  "strings": [
+    "Add 1 Maverick Boost Equip Spell from Deck",
+    "Equip 1 Maverick Boost Equip Spell from Deck"
+  ]
+}

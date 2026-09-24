@@ -81,7 +81,7 @@ function s.qeop(e,tp,eg,ep,ev,re,r,rp)
 		local dg=Duel.GetMatchingGroup(Card.IsFaceup,tp,0,LOCATION_ONFIELD,nil)
 		if #dg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 			Duel.BreakEffect()
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISABLE)
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_NEGATE)
 			local sg=dg:Select(tp,1,1,nil)
 			Duel.HintSelection(sg)
 			local tc=sg:GetFirst()

@@ -1,0 +1,22 @@
+{
+  "id": 11223325,
+  "ot": 32,
+  "alias": 0,
+  "type": 97,
+  "setcodes": [
+    771,
+    774
+  ],
+  "atk": 2000,
+  "def": 1600,
+  "level": 4,
+  "race": 32,
+  "attribute": 32,
+  "category": 257,
+  "name": "Dark Maverick Hunter - Zero Virus",
+  "desc": "Must be Special Summoned by the effect of \"Maverick Boost - Virus Affect\".\nIf this card is Special Summoned and your opponent controls more cards than you do: You can draw cards equal to the number of monsters your opponent controls, and if they control 5 monsters, this effect cannot be negated.\nIf this card is sent to the GY: You can add 1 \"Maverick Hunter\" or \"Maverick Boost\" card from your Deck or GY to your hand. You can only use each effect of \"Dark Maverick Hunter - Zero Virus\" once per turn.",
+  "strings": [
+    "Draw cards equal to opponent's monsters",
+    "Add 1 Maverick Hunter or Boost card to hand"
+  ]
+}

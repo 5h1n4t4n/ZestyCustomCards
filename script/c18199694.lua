@@ -82,14 +82,14 @@ function s.tkcost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.tktg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0
-		and Duel.IsPlayerCanSpecialSummonMonster(tp,id+100,0x369,TYPES_TOKEN_MONSTER,1800,2400,6,RACE_SPELLCASTER,ATTRIBUTE_WIND,POS_FACEUP_DEFENSE,tp)
-		and Duel.IsPlayerCanSpecialSummonMonster(tp,id+100,0x369,TYPES_TOKEN_MONSTER,1800,2400,6,RACE_SPELLCASTER,ATTRIBUTE_WIND,POS_FACEUP_DEFENSE,1-tp) end
+		and Duel.IsPlayerCanSpecialSummonMonster(tp,id+100,0x369,TYPES_TOKEN,1800,2400,6,RACE_SPELLCASTER,ATTRIBUTE_WIND,POS_FACEUP_DEFENSE,tp)
+		and Duel.IsPlayerCanSpecialSummonMonster(tp,id+100,0x369,TYPES_TOKEN,1800,2400,6,RACE_SPELLCASTER,ATTRIBUTE_WIND,POS_FACEUP_DEFENSE,1-tp) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,2,0,0)
 end
 function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 or Duel.GetLocationCount(1-tp,LOCATION_MZONE)<=0 then return end
-	if not Duel.IsPlayerCanSpecialSummonMonster(tp,id+100,0x369,TYPES_TOKEN_MONSTER,1800,2400,6,RACE_SPELLCASTER,ATTRIBUTE_WIND,POS_FACEUP_DEFENSE,tp) then return end
+	if not Duel.IsPlayerCanSpecialSummonMonster(tp,id+100,0x369,TYPES_TOKEN,1800,2400,6,RACE_SPELLCASTER,ATTRIBUTE_WIND,POS_FACEUP_DEFENSE,tp) then return end
 	
 	local token1=Duel.CreateToken(tp,id+100)
 	Duel.SpecialSummonStep(token1,0,tp,tp,false,false,POS_FACEUP_DEFENSE)

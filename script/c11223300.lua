@@ -1,7 +1,25 @@
--- Maverick Boost - Supply
+-- ============================================================
+-- Card Name: Maverick Boost - Supply
+-- Passcode : 11223300
+-- Type     : Spell / Continuous
+-- Archetype: Maverick Boost (0x304)
+-- ============================================================
+-- Effect 1: When this card is activated: You can add to your hand
+--           1 "Maverick Hunter" or "Maverick Boost" card from
+--           your Deck to your hand.
+-- Effect 2: You can return 1 card you control except "Maverick
+--           Boost - Supply" to your hand; add to your hand 1
+--           "Maverick Analyzer" monster from your Deck to your hand.
+-- You can only use each effect of "Maverick Boost - Supply" once per turn.
+-- ============================================================
+
+Duel.LoadScript("constants.lua")
 local s,id=GetID()
+
 function s.initial_effect(c)
-	-- When activated: Search 1 "Maverick Hunter" or "Maverick Boost" card
+	-- ============================================================
+	-- Effect 1 — Activation: Optional search 1 Hunter or Boost card
+	-- ============================================================
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
@@ -11,27 +29,36 @@ function s.initial_effect(c)
 	e1:SetTarget(s.thtg)
 	e1:SetOperation(s.thop)
 	c:RegisterEffect(e1)
-	
-	-- Return 1 card you control to hand; search 1 "Maverick Analyzer" monster
+
+	-- ============================================================
+	-- Effect 2 — Ignition: Bounce 1 card you control; search 1 Analyzer
+	-- ============================================================
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_SZONE)
-	e2:SetCountLimit(1,id+100)
+	e2:SetCountLimit(1,{id,1})
 	e2:SetCost(s.thcost2)
 	e2:SetTarget(s.thtg2)
 	e2:SetOperation(s.thop2)
 	c:RegisterEffect(e2)
 end
 
+s.listed_series={SET_MAVERICK_HUNTER,SET_MAVERICK_BOOST,SET_MAVERICK_ANALYZER}
+
+-- ============================================================
+-- Effect 1 Logic
+-- ============================================================
 function s.thfilter(c)
-	return (c:IsSetCard(0x303) or c:IsSetCard(0x304)) and c:IsAbleToHand() and not c:IsCode(id)
+	return (c:IsSetCard(SET_MAVERICK_HUNTER) or c:IsSetCard(SET_MAVERICK_BOOST)) and c:IsAbleToHand() and not c:IsCode(id)
 end
+
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
 	Duel.SetPossibleOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
+
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	if not e:GetHandler():IsRelateToEffect(e) then return end
 	local g=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_DECK,0,nil)
@@ -45,12 +72,17 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
+-- ============================================================
+-- Effect 2 Logic
+-- ============================================================
 function s.costfilter(c)
 	return c:IsAbleToHandAsCost() and not c:IsCode(id)
 end
+
 function s.anfilter(c)
-	return c:IsSetCard(0x305) and c:IsType(TYPE_MONSTER) and c:IsAbleToHand()
+	return c:IsSetCard(SET_MAVERICK_ANALYZER) and c:IsType(TYPE_MONSTER) and c:IsAbleToHand()
 end
+
 function s.thcost2(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_ONFIELD,0,1,c) end
@@ -58,10 +90,12 @@ function s.thcost2(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.SelectMatchingCard(tp,s.costfilter,tp,LOCATION_ONFIELD,0,1,1,c)
 	Duel.SendtoHand(g,nil,REASON_COST)
 end
+
 function s.thtg2(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.anfilter,tp,LOCATION_DECK,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
+
 function s.thop2(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 	local g=Duel.SelectMatchingCard(tp,s.anfilter,tp,LOCATION_DECK,0,1,1,nil)

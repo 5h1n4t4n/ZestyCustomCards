@@ -1,15 +1,39 @@
--- Maverick Hunter - Dive Armor Zero
+-- ============================================================
+-- Card Name: Maverick Hunter - Dive Armor Zero
+-- Passcode : 11223302
+-- Type     : Monster / Synchro / Effect
+-- Attribute: LIGHT
+-- Level    : 8
+-- ATK/DEF  : 3000 / 2800
+-- Race     : Machine
+-- Archetype: Maverick Hunter (0x303), Zero (0x306)
+-- Materials: 1 Tuner + 1+ "Zero" monsters
+-- ============================================================
+-- Effect 1: If this card is Synchro Summoned: You can target cards
+--           your opponent controls up to the number of "Maverick
+--           Hunter" monsters you control; negate their effects for
+--           the rest of this turn.
+-- Effect 2: At the start of the Battle Phase: You can discard 1 card;
+--           your opponent cannot activate cards or effects when a
+--           "Maverick Hunter" monster you control battles for the
+--           rest of that Battle Phase.
+-- Effect 3: This card can make up to 2 attacks each Battle Phase.
+-- ============================================================
+
+Duel.LoadScript("constants.lua")
 local s,id=GetID()
+
 function s.initial_effect(c)
-	-- Synchro Summon Procedure: 1 Tuner + 1+ "Zero" monster
 	c:EnableReviveLimit()
-	if Synchro and Synchro.AddProcedure then
-		Synchro.AddProcedure(c,nil,1,1,s.matfilter,1,99)
-	else
-		aux.AddSynchroProcedure(c,nil,s.matfilter,1,99)
-	end
-	
-	-- Synchro Summoned: Negate opponent's cards up to number of "Maverick Hunter" monsters you control
+
+	-- ============================================================
+	-- Summon Procedure — Synchro: 1 Tuner + 1+ "Zero" monsters
+	-- ============================================================
+	Synchro.AddProcedure(c,nil,1,1,s.matfilter,1,99)
+
+	-- ============================================================
+	-- Effect 1 — Trigger on Synchro Summon: Negate opponent's cards
+	-- ============================================================
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_DISABLE)
@@ -21,19 +45,23 @@ function s.initial_effect(c)
 	e1:SetTarget(s.negtg)
 	e1:SetOperation(s.negop)
 	c:RegisterEffect(e1)
-	
-	-- Start of Battle Phase: Discard 1 card, prevent opponent from activating cards/effects during battles
+
+	-- ============================================================
+	-- Effect 2 — Trigger at Battle Phase Start: Armades protection
+	-- ============================================================
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetCountLimit(1,id+100)
+	e2:SetCountLimit(1,{id,1})
 	e2:SetCost(s.actcost)
 	e2:SetOperation(s.actop)
 	c:RegisterEffect(e2)
-	
-	-- Can make up to 2 attacks each Battle Phase
+
+	-- ============================================================
+	-- Effect 3 — Continuous: Up to 2 attacks each Battle Phase
+	-- ============================================================
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE)
 	e3:SetCode(EFFECT_EXTRA_ATTACK)
@@ -41,16 +69,26 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 
+s.listed_series={SET_MAVERICK_HUNTER,SET_ZERO}
+
+-- ============================================================
+-- Summon Procedure / Material Filters
+-- ============================================================
 function s.matfilter(c)
-	return c:IsSetCard(0x306)
+	return c:IsSetCard(SET_ZERO)
 end
 
+-- ============================================================
+-- Effect 1 Logic
+-- ============================================================
 function s.mhfilter(c)
-	return c:IsFaceup() and c:IsSetCard(0x303)
+	return c:IsFaceup() and c:IsSetCard(SET_MAVERICK_HUNTER)
 end
+
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsSummonType(SUMMON_TYPE_SYNCHRO)
 end
+
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsControler(1-tp) and chkc:IsOnField() and chkc:IsFaceup() end
 	local ct=Duel.GetMatchingGroupCount(s.mhfilter,tp,LOCATION_MZONE,0,nil)
@@ -59,6 +97,7 @@ function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local g=Duel.SelectTarget(tp,Card.IsFaceup,tp,0,LOCATION_ONFIELD,1,ct,nil)
 	Duel.SetOperationInfo(0,CATEGORY_DISABLE,g,#g,0,0)
 end
+
 function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local g=Duel.GetTargetCards(e)
@@ -79,10 +118,14 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
+-- ============================================================
+-- Effect 2 Logic
+-- ============================================================
 function s.actcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,nil) end
 	Duel.DiscardHand(tp,Card.IsDiscardable,1,1,REASON_COST+REASON_DISCARD)
 end
+
 function s.actop(e,tp,eg,ep,ev,re,r,rp)
 	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetType(EFFECT_TYPE_FIELD)
@@ -94,10 +137,11 @@ function s.actop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetReset(RESET_PHASE+PHASE_BATTLE)
 	Duel.RegisterEffect(e1,tp)
 end
+
 function s.actcon(e)
 	local tp=e:GetHandlerPlayer()
 	local a=Duel.GetAttacker()
 	local d=Duel.GetAttackTarget()
-	return (a and a:IsControler(tp) and a:IsSetCard(0x303))
-		or (d and d:IsControler(tp) and d:IsSetCard(0x303))
+	return (a and a:IsControler(tp) and a:IsSetCard(SET_MAVERICK_HUNTER))
+		or (d and d:IsControler(tp) and d:IsSetCard(SET_MAVERICK_HUNTER))
 end

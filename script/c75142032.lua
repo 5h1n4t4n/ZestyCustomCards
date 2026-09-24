@@ -23,7 +23,8 @@ function s.initial_effect(c)
 	-- Destroy 1 card on the field
 	local e2=Effect.CreateEffect(c)
 	e2:SetCategory(CATEGORY_DESTROY)
-	e2:SetType(EFFECT_TYPE_QUICK_O)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCode(EVENT_CHAINING)
 	e2:SetRange(LOCATION_GRAVE)
 	e2:SetCountLimit(1,id+100)
@@ -33,9 +34,10 @@ function s.initial_effect(c)
 	e2:SetOperation(s.desop)
 	c:RegisterEffect(e2)
 end
+s.listed_names={76812113,12206212,90219263}
 
 function s.cfilter1(c)
-	return c:IsFaceup() and (c:IsCode(12206212) or c:IsCode(76812113))
+	return c:IsFaceup() and c:IsCode(12206212,76812113)
 end
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsExistingMatchingCard(s.cfilter1,tp,LOCATION_MZONE,0,1,nil)
@@ -65,8 +67,9 @@ function s.descon(e,tp,eg,ep,ev,re,r,rp)
 	return rp==1-tp and Duel.IsExistingMatchingCard(s.cfilter2,tp,LOCATION_MZONE,0,1,nil)
 end
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,0,LOCATION_ONFIELD)
+	local g=Duel.GetMatchingGroup(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
+	if chk==0 then return #g>0 end
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
 end
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)

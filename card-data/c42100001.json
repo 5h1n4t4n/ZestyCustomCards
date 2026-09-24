@@ -1,0 +1,26 @@
+{
+  "id": 42100001,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcodes": [
+    421
+  ],
+  "atk": 1300,
+  "def": 1700,
+  "level": 4,
+  "race": 128,
+  "attribute": 32,
+  "category": 536872452,
+  "name": "Fire Keeper of the Ashened City",
+  "desc": "If \"Obsidim, the Ashened City\" is in the Field Zone, you can Special Summon this card (from your hand). You can only Special Summon \"Fire Keeper of the Ashened City\" once per turn this way. You can discard this card (Quick Effect): Place 1 \"Obsidim, the Ashened City\" from your Deck or GY, face-up in either Field Zone, or if there is \"Obsidim, the Ashened City\" on the field, you can add 1 \"Ashened\" or \"Veidos\" card from your Deck, GY or banishment to your hand. If a card is destroyed while this card is in the GY: You can add this card to your hand. You can only use each effect of \"Fire Keeper of the Ashened City\" once per turn.",
+  "strings": [
+    "Special Summon this card",
+    "Place Obsidim or add 1 \"Ashened\"/\"Veidos\" card",
+    "Add this card from GY to hand",
+    "Place \"Obsidim, the Ashened City\" in a Field Zone",
+    "Add 1 \"Ashened\" or \"Veidos\" card to hand",
+    "Place it in your Field Zone",
+    "Place it in your opponent's Field Zone"
+  ]
+}

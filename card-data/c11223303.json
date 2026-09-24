@@ -1,0 +1,20 @@
+{
+  "id": 11223303,
+  "ot": 32,
+  "alias": 0,
+  "type": 262146,
+  "setcodes": [
+    772
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 8194,
+  "name": "Maverick Boost - Z Saber",
+  "desc": "Equip only to \"Maverick Hunter\" monster. The equipped monster can make a second attack during each Battle Phase. If the equipped monster is \"Zero\" monster: It gain 500 ATK. If this card is discarded: You can Special Summon 1 \"Maverick Hunter - Zero\" from your hand or GY. You can only use each effect of \"Maverick Boost - Z Saber\" once per turn.",
+  "strings": [
+    "Special Summon \"Maverick Hunter - Zero\""
+  ]
+}

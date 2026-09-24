@@ -1,0 +1,18 @@
+{
+  "id": 11223311,
+  "ot": 32,
+  "alias": 0,
+  "setcode": 772,
+  "type": 65538,
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 2,
+  "name": "Maverick Boost - Charge Buster",
+  "desc": "Discard any number of cards from your hand; destroy cards on the field up to the number of cards discarded. If you control an \"X\" monster when this card is activated, neither player can activate card effects in response to this card's activation. You can only activate 1 \"Maverick Boost - Charge Buster\" per turn.",
+  "strings": [
+    "Destroy cards on the field"
+  ]
+}

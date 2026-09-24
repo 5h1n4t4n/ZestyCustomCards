@@ -1,0 +1,23 @@
+{
+  "id": 16530001,
+  "ot": 32,
+  "alias": 0,
+  "type": 33,
+  "setcodes": [
+    16531
+  ],
+  "atk": 800,
+  "def": 800,
+  "level": 4,
+  "race": 32,
+  "attribute": 32,
+  "category": 536921604,
+  "name": "Advance Cyberdark Edge",
+  "desc": "You can target 1 Dragon or Machine monster in either GY; Special Summon this card from your hand or GY, and if you do, equip that monster to this card. This card gains ATK equal to the equipped Monster Card's ATK. (Quick Effect): You can send 1 Monster Card in your Spell & Trap Zone to the GY; add to your hand or Special Summon 1 \"Cyberdark\" monster from your Deck. You can only use each effect of \"Advance Cyberdark Edge\" once per turn.",
+  "strings": [
+    "Special Summon this card and equip",
+    "Send equipped monster; add or Special Summon 1 \"Cyberdark\"",
+    "Add 1 \"Cyberdark\" monster to hand",
+    "Special Summon 1 \"Cyberdark\" monster"
+  ]
+}

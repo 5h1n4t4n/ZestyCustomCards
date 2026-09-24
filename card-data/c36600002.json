@@ -1,0 +1,22 @@
+{
+  "id": 36600002,
+  "ot": 32,
+  "alias": 0,
+  "type": 8225,
+  "setcodes": [
+    366
+  ],
+  "atk": 3000,
+  "def": 3000,
+  "level": 10,
+  "race": 64,
+  "attribute": 2,
+  "category": 1048704,
+  "name": "Icejade Creation Pillar",
+  "desc": "1 WATER Tuner + 1+ non-Tuner monsters\nIf this card is Special Summoned: You can place 1 \"Icejade\" Continuous Spell/Trap from your Deck or GY face-up on your field. When your opponent activates a monster effect (Quick Effect): You can activate this effect; the activated effect becomes \"Banish 1 card you control or in the GY\". If a face-up WATER monster(s) you control leave the field by your opponent's card while this card is in your GY: You can Special Summon this card. You can only use each effect of \"Icejade Creation Pillar\" once per turn.",
+  "strings": [
+    "Place 1 \"Icejade\" Continuous Spell/Trap face-up on your field",
+    "Change the activated effect to \"Banish 1 card you control or in the GY\"",
+    "Special Summon this card from your GY"
+  ]
+}

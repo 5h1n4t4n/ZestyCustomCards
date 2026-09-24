@@ -1,0 +1,22 @@
+{
+  "id": 11223320,
+  "ot": 32,
+  "alias": 0,
+  "type": 8225,
+  "setcodes": [
+    771,
+    776
+  ],
+  "atk": 2500,
+  "def": 2500,
+  "level": 8,
+  "race": 32,
+  "attribute": 16,
+  "category": 262146,
+  "name": "Maverick Hunter - Dive Armor Axl",
+  "desc": "1 Tuner + 1+ \"Axl\" monsters\nIf this card is Synchro Summoned: You can equip appropriate different \"Maverick Boost\" Equip Spell Cards from your GY to this card. You can only use this effect of \"Maverick Hunter - Dive Armor Axl\" once per turn.\nOnce while face-up on the field (Quick Effect): You can destroy cards on the field up to the number of Equip Spell Cards you control.",
+  "strings": [
+    "Equip Maverick Boost cards from GY",
+    "Destroy cards on the field"
+  ]
+}

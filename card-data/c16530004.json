@@ -1,0 +1,21 @@
+{
+  "id": 16530004,
+  "ot": 32,
+  "alias": 0,
+  "type": 8388641,
+  "setcodes": [
+    16531
+  ],
+  "atk": 1000,
+  "def": 1000,
+  "level": 4,
+  "race": 32,
+  "attribute": 32,
+  "category": 98304,
+  "name": "Cyberdarkness Nova",
+  "desc": "2+ Level 4 \"Cyberdark\" monsters\nIf this card is Xyz Summoned: You can target monsters in either player's GY up to the number of materials this card has; attach them to this card as material. This card gains ATK and DEF equal to the total ATK and DEF of all monsters attached to it as materials. When your opponent activates a card or effect (Quick Effect): You can detach 1 material from this card; attach that card to this card as material. You can only use each effect of \"Cyberdarkness Nova\" once per turn.",
+  "strings": [
+    "Attach monsters from GY as material",
+    "Detach 1 material to attach opponent's activated card"
+  ]
+}

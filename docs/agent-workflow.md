@@ -1,128 +1,99 @@
-# Hướng Dẫn Quy Trình Vận Hành & Kiểm QA (Card Operations)
+# Quy trình tạo và sửa card
 
-Tài liệu này bao gồm toàn bộ quy trình từ lúc khởi tạo card mới, gỡ lỗi, kiểm QA và test trực tiếp trong game EDOPro.
+Chạy từ gốc repo; cần Python 3, PowerShell và Lua trong PATH. Thiếu parser thật thì không báo kiểm tra cú pháp thành công.
 
----
+## 1. Chốt yêu cầu trước khi viết
 
-## 1. Quy Trình Tạo Card Mới (Harness CLI)
+Với từng effect, ghi ngắn trong mô tả công việc/PR: vị trí kích hoạt, event/timing, optional hay mandatory, cost, target, operation, count limit và reset. Xác định rõ "and", "then", "if you do"; nếu text mơ hồ thì hỏi, không tự thêm điều kiện.
 
-Mọi card mới bắt buộc phải được quản lý thông qua **Harness CLI** để tự động hóa việc rename artwork, đăng ký feature list và kiểm tra cú pháp.
+Tìm official card cùng cơ chế, đọc trực tiếp từ bản cài game bằng `python tools/read_official.py <official-ID>` (hoặc tra cứu theo tên: `python tools/read_official.py "<Card Name>"`). Tool sẽ hiển thị effect/stats và tự động lưu script mẫu vào `docs/official-reference/c<ID>.lua` (có thể dùng `--view` để xem nhanh nội dung script hoặc dùng `./tools/fetch_official.ps1 <official-ID>` làm fallback tải online khi cần). Ghi ID và hàm/effect dùng làm mẫu, phần nào khác yêu cầu. Đọc constants/helper mà script đó gọi nếu cần. Không coi template hay custom cũ là bằng chứng engine hỗ trợ.
 
-### Bước 0: Quét hàng đợi và Đăng ký (Định kỳ hoặc Khi có ảnh mới)
-Nếu trong hàng đợi (thư mục `docs/queues/`) xuất hiện các file ảnh có tiền tố `p_` (ví dụ: `p_Kanzashi_The_Rikka_Flower.jpg`), hãy chạy lệnh quét tự động để hệ thống phân tích, gán passcode và đăng ký chúng vào `feature_list.json` ở trạng thái `"pending"`:
+## 2. Khởi tạo và triển khai
+
 ```powershell
-python .\script-test\manage_harness.py scan
+python tools/manage_harness.py scan
+python tools/manage_harness.py start <ID> "<name>" <template>
 ```
-Sau đó, các card này đã sẵn sàng trong `feature_list.json` để bạn khởi tạo phát triển ở các bước tiếp theo.
 
-### Bước 1: Nhận yêu cầu và Chọn Template
-Đọc effect text của card để chọn loại template tương ứng cho việc sinh mã nguồn:
+Chỉ scan khi cần đăng ký queue mới. Các template: effect_monster, normal_spell, quick_play_spell, continuous_spell, normal_trap, fusion_monster, synchro_monster, xyz_monster, link_monster, pendulum_monster, field_spell, hand_trap.
 
-| Mô tả effect | Loại card / Effect đặc trưng | Tên template |
-|-------------|-----------------------------|--------------|
-| "If/When ... is Summoned..." | Trigger Monster | `effect_monster` |
-| "Once per turn: You can..." (Main Phase) | Ignition Monster | `effect_monster` |
-| "(Quick Effect): You can..." | Hand Trap / Quick Effect | `hand_trap` |
-| Spell Card kích hoạt thông thường | Normal Spell | `normal_spell` |
-| Trap Card kích hoạt thông thường | Normal Trap | `normal_trap` |
-| Field Spell (activation + continuous) | Field Spell | `field_spell` |
-| Fusion Monster + effect | Fusion | `fusion_monster` |
-| Synchro Monster + effect | Synchro | `synchro_monster` |
-| Xyz Monster + detach effect | Xyz | `xyz_monster` |
-| Link Monster + effect | Link | `link_monster` |
-| Pendulum (scale + monster effect) | Pendulum | `pendulum_monster` |
+Archetype chưa có trong `feature_list.json` thì đăng ký trước, đừng sửa tay file đó:
 
-*Xác định Passcode:* Passcode gồm **9 chữ số** (Xem hướng dẫn tại [docs/agent-rules.md](agent-rules.md)).
-
-### Bước 1.5: Tìm và tham khảo card official tương tự
-Trước khi sinh (gen) card hoặc viết code, bắt buộc phải:
-1. Tìm kiếm và liệt kê 1-2 card official có hiệu ứng tương đồng (cùng cơ chế triệu hồi, cùng điều kiện kích hoạt, hoặc cùng loại trigger/ignition/quick effect).
-2. Chạy công cụ tải script mẫu về thư mục tham chiếu:
-   ```powershell
-   .\script-test\fetch_official.ps1 <passcode_official>
-   ```
-3. Đọc kỹ và tham khảo cấu trúc code của card official tại `docs/official-reference/c<passcode_official>.lua` để áp dụng/sao chép sang card custom của bạn. Điều này đảm bảo tính chính xác về mặt timing và logic của game.
-
-### Bước 2: Khởi tạo bằng Harness CLI
-Chạy lệnh sau để CLI tự động thiết lập khung dự án cho card mới:
 ```powershell
-python .\script-test\manage_harness.py start <passcode> "<tên_card>" <tên_template>
+python tools/manage_harness.py archetype add <Name> <setcode>
+python tools/manage_harness.py archetype add <Name> <setcode> --range <start>-<end>
 ```
-*Tác vụ tự động:* Tạo `script/c<passcode>.lua`, tạo `card-data/c<passcode>.json` (skeleton dùng field thân thiện `setcodes`/`linkmarkers`/`lscale`/`rscale` theo template), đổi tên ảnh queue sang làm việc `w_`, đăng ký `"working"` trong `feature_list.json`, và **in checklist các field bắt buộc phải điền**.
 
-*An toàn:* `start` từ chối ghi đè file đã tồn tại và kiểm tra template hợp lệ trước khi tạo bất kỳ file nào. Lệnh trả về exit code 1 khi fail.
+Range mặc định suy từ setcode theo quy ước sẵn có (`setcode * 100000 + 1` đến `+ 99999`, vd `0x16e` -> `36600001-36699999`); lệnh từ chối khi trùng tên, trùng setcode hoặc chồng range. `--range` dùng khi setcode lớn làm passcode vượt 9 chữ số.
 
-### Bước 3: Hoàn thiện logic & điền Specs JSON
-1. **Specs JSON (`card-data/c<passcode>.json`):** Mở file specs JSON vừa tạo và điền các thuộc tính thực tế (ATK, DEF, Level, Race, Attribute, Type, Category). *Tra cứu bitmask thập phân tại [docs/agent-rules.md](agent-rules.md).*
-2. **Logic Lua (`script/c<passcode>.lua`):** Viết logic hiệu ứng trong tệp Lua.
+`start` tạo JSON/Lua và cập nhật queue; không ghi đè file cũ. Điền hết placeholder, stats và effect text; xem `docs/agent-rules.md`. Đối chiếu type của Extra Deck có bit Effect nếu là effect monster. `aux.Stringid(id,N)` phải có phần tử strings[N] (Lua index logic bắt đầu 0).
 
-### Bước 4: Xác thực và Hoàn thành bằng Harness CLI
-Khi viết xong code, chạy lệnh verify để chạy đường ống kiểm tra tự động:
+## 3. Kiểm tra tĩnh
+
 ```powershell
-python .\script-test\manage_harness.py verify <passcode>
+python tools/manage_db.py validate
+python tools/manage_harness.py verify <ID>
 ```
-*Các bước tự động của pipeline:*
-- **Step 0 — Pre-flight:** chặn ngay nếu thiếu file JSON/Lua, `desc` còn placeholder `"Mô tả hiệu ứng..."`, Lua còn `<<PLACEHOLDER>>`/`XXXXXXXXX`, hoặc artwork mang đuôi `.jpeg` (EDOPro không load); cảnh báo nếu chưa có `pics/<passcode>.jpg|.png`.
-- **Step 1:** Validate toàn bộ specs theo chuẩn Datacorn rồi biên dịch CDB (atomic).
-- **Step 2:** Validate cú pháp/cấu trúc Lua của riêng card này.
-- **Step 3:** Kiểm tra linter style.
-- **Step 4:** Check-sync toàn project (bao gồm so sánh nội dung CDB với specs để phát hiện CDB stale).
-- **Step 5-6:** Đổi trạng thái `done`, đổi ảnh queue sang `d_`, archive nhật ký phiên.
 
-Nếu verify đạt `SUCCESS` thì exit code = 0; mọi bước fail đều trả exit code 1 — bắt buộc sửa cho đến khi `SUCCESS`.
+`verify` chạy preflight, compile card-data.cdb, Lua validation, lint và sync rồi cập nhật queue. Kiểm tra exit code; thông báo lint/fallback không phải bằng chứng runtime. CDB có thể đã compile dù bước Lua sau đó thất bại: không commit cho đến khi sửa xong.
 
----
+### Trùng passcode giữa các CDB
 
-## 2. Quy Trình Sửa Lỗi Nhanh (Bug Fix Workflow)
+`validate` và `compile` đối chiếu mọi ID trong `card-data/` với toàn bộ CDB trong repo (`custom_cards_zesty.cdb`, `mycard.cdb`, `Chrysos Heirs.cdb`, `FlowerSpirit.cdb`, `Madoka.cdb`, `Mecha Three Kingdom.cdb`) và toàn bộ `*.cdb` của bản cài EDOPro; trùng là ERROR và chặn biên dịch (quy tắc tại `docs/agent-rules.md` §2.1). `scan` dùng cùng nguồn đó để không cấp passcode đã có người dùng.
 
-Khi nhận báo cáo lỗi hiệu ứng, hãy thực hiện theo quy trình cơ học sau:
+CDB trong game trùng tên file với CDB của repo bị bỏ qua — đó là bản phân phối của chính repo này. Thư mục game đọc từ `$EDOPRO_DIR`, mặc định `F:/Game/ProjectIgnis`; không thấy thì chỉ còn đối chiếu CDB trong repo và tool báo warning, lúc đó phải tự kiểm tra trước khi phát hành.
 
-1. **Xác định card lỗi và card tham khảo:** Tìm 1-2 lá bài **official** có hiệu ứng tương đồng nhất với hiệu ứng đang bị lỗi.
-2. **Tải script official:** Sử dụng công cụ tải script mẫu về tham khảo:
-   ```powershell
-   .\script-test\fetch_official.ps1 <passcode_official>
-   ```
-   *Vị trí file tải về:* `docs/official-reference/c<passcode_official>.lua`
-3. **So sánh logic (Mechanical Diff):** Đối chiếu cấu trúc:
-   - **Condition (`con`):** Cách lọc điều kiện, kiểm tra vị trí.
-   - **Target (`tg`):** Cách check legality (`chk==0`), gán Category.
-   - **Operation (`op`):** Cách gọi các hàm API của EDOPro.
-4. **Sửa đổi và Chạy CLI Verify:** Sau khi sửa xong script, chạy lệnh xác thực:
-   ```powershell
-   python .\script-test\manage_harness.py verify <passcode>
-   ```
-   Bắt buộc sửa cho đến khi verify báo `SUCCESS` mới được báo hoàn thành.
+### Danh sách tham chiếu EDOPro
 
----
+Lua trả về `nil` cho tên không tồn tại thay vì báo lỗi, nên hằng số gõ sai (`CATEGORY_SET`) hay hàm bịa (`Card.IsAbleToHandOrExtra`) vẫn qua được bước kiểm tra cú pháp rồi mới crash trong duel. `validate_scripts.ps1` chặn bằng hai danh sách trắng sinh từ bản cài game:
 
-## 3. Checklist QA của Agent (Bắt buộc trước khi báo DONE)
+| File | Nội dung |
+| :--- | :--- |
+| `tools/edopro_constants.txt` | hằng số ALL_CAPS do thư viện script EDOPro định nghĩa |
+| `tools/edopro_apis.txt` | cặp `Namespace.Function` có thật, gồm cả hàm chỉ gọi dạng `c:Method()` |
 
-CLI verify tự động kiểm tra cú pháp và cấu trúc, nhưng bạn bắt buộc phải tự review bằng mắt các điểm logic sau:
-* [ ] **ATK/DEF, Level/Rank/Link/Pendulum Scale** trong Specs JSON đã khớp chính xác với effect text gốc.
-* [ ] **HOPT vs SOPT:** Đã sử dụng đúng `EFFECT_COUNT_CODE_OATH` kèm ID của card (`{id, N}`) cho Hard Once Per Turn (HOPT)?
-* [ ] **Legality check:** Target function bắt buộc phải có `if chk==0 then return ... end`.
-* [ ] **Operation Info:** Đã khai báo đúng `Duel.SetOperationInfo` trong target.
-* [ ] **Handler Safety:** Trong operation của trigger/continuous effect đã dùng mẫu chuẩn `local c=e:GetHandler()` + kiểm tra `c:IsRelateToEffect(e)` (kèm `c:IsFaceup()` nếu cần) trước khi áp dụng hiệu ứng.
-* [ ] **constants.lua Dependency:** Nếu script dùng định danh từ `script/constants.lua` (`SET_*`, `COUNTER_*`, helper tự chế), đã có `Duel.LoadScript("constants.lua")` ở đầu file (EDOPro **không** tự load file này).
-* [ ] **API thật:** Mọi hàm API được gọi đều xuất hiện trong script official tham khảo (`docs/official-reference/`) — không gọi hàm "bịa" (xem danh sách đen `script-test/phantom_apis.txt`).
-* [ ] **Zone Safety:** Đã kiểm tra `Duel.GetLocationCount` (hoặc `GetMZoneCount`) > 0 trước khi Special Summon.
-* [ ] **Effect Description:** Đã gán đúng `aux.Stringid(id, N)` tương ứng trong `strings` của Specs JSON.
+Lỗi `CONST:` và `API:` là FAIL, không phải warning. Sai tên thì sửa theo tên thật; hằng số riêng của card thì khai báo `local` ngay trong file, hằng số dùng chung thì thêm vào `script/constants.lua` kèm `Duel.LoadScript("constants.lua")`.
 
----
+Sinh lại khi cập nhật EDOPro (chỉ chạy được trên máy có cài game):
 
-## 4. Kiểm Thử Trong Game (EDOPro Test Setup)
-
-### 4.1 Setup Deck Test
-1. Mở EDOPro client → Chọn **Deck Edit**.
-2. Tạo deck mới, thêm card custom cần test (Tích chọn ô **"Alternate format"** ở bộ lọc tìm kiếm để game hiển thị các custom card).
-3. Vào **AI mode** hoặc mở phòng **LAN mode** (Local) để bắt đầu duel thử nghiệm.
-
-### 4.2 Sử dụng Debug Console trong game
-Nhấn phím backtick `` ` `` (nằm dưới phím ESC) trong trận đấu để mở debug console của EDOPro và gõ các lệnh Lua trực tiếp để kiểm tra trạng thái:
-```lua
--- In ra danh sách card đang có trên Monster Zone của bạn (tp)
-=Duel.GetFieldGroup(tp,LOCATION_MZONE,0)
-
--- Kiểm tra xem trong Deck của bạn có tồn tại card có ID cụ thể hay không
-=Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_DECK,0,1,nil,12345678)
+```powershell
+python tools/sync_edopro_refs.py
+python tools/sync_edopro_refs.py --check
+python tools/sync_edopro_refs.py --game-dir "D:/EDOPro"
 ```
+
+Mặc định đọc `$env:EDOPRO_DIR`, không có thì `F:/Game/ProjectIgnis`. `--check` chỉ so sánh và trả exit 1 khi lệch. Hai file sinh ra được commit để máy không cài game vẫn kiểm tra được; đừng sửa tay.
+
+Chỉ hằng số khai báo trong file thư viện của game mới vào danh sách. Biến `local CARD_X = 12345` trong script từng card không tính, vì gộp vào sẽ khiến một tên gõ sai lọt qua chỉ nhờ trùng biến cục bộ của card khác.
+
+Lưu ý phiên bản: EDOPro chạy Lua 5.4.7 (chuỗi trong `ocgcore.dll`), còn `validate_scripts.ps1` gọi `lua` trong PATH. Nếu script qua được parser máy mình mà EDOPro từ chối, kiểm tra lệch phiên bản trước tiên.
+
+### Artwork và dọn queue
+
+Sau khi các bước tĩnh đạt, `verify` copy ảnh queue thành `pics/<ID>.jpg|.png` nếu chưa có artwork, đọc lại bản copy để xác nhận rồi mới xóa ảnh trong `docs/queues/`. Không xác nhận được (đuôi `.gif`, copy lỗi) thì ảnh queue được giữ lại và chỉ đổi tên `w_` -> `d_` như trước, kèm warning. Tự đặt artwork vào `pics/` trước cũng được: lúc đó `verify` giữ bản của bạn và chỉ xóa ảnh queue.
+
+Ảnh `d_` tồn đọng từ các card làm trước đó dọn bằng:
+
+```powershell
+python tools/manage_harness.py cleanup
+python tools/manage_harness.py cleanup --apply
+```
+
+Mặc định là dry-run. Chỉ ảnh của card `done` và đã có artwork trong `pics/` mới bị xóa; file chưa đăng ký, chưa done hoặc thiếu artwork được giữ lại kèm lý do vì khi đó ảnh queue có thể là bản duy nhất. `--apply` xóa file và gỡ `queue_file` khỏi `feature_list.json`. Chỉ ảnh đã commit mới khôi phục được từ Git history; ảnh chưa được Git theo dõi thì xóa là mất hẳn, nên cleanup đánh dấu `[CHƯA COMMIT — xóa là mất hẳn]` cho các file đó — commit trước nếu còn cần bản gốc.
+
+`done`/ảnh `d_` là trạng thái pipeline cũ, không chứng minh duel đã được test. Không viết "fully tested" khi chỉ chạy verify. Không cần ghi nhật ký phiên; dùng Git và feature_list.
+
+## 4. Review logic và test duel
+
+- Cost chỉ trả ở cost; target kiểm tra `chk==0`, lựa chọn và operation info đúng.
+- Đối tượng target rời sân/đổi trạng thái trước resolution; handler rời sân có thực sự phải chặn effect hay không?
+- Thiếu tài nguyên, không đủ zone, không có mục tiêu hợp lệ; zone được giải phóng bởi cost/material.
+- Optional effect có thể từ chối; HOPT/SOPT, nhiều bản sao, negate activation so với negate effect.
+- Hiệu ứng bị vô hiệu hóa, reset cuối lượt/rời sân; special summon restriction và summon procedure.
+- JSON khớp text/stats, strings và Lua; constants custom đã load.
+
+Test trong client/core đúng phiên bản với deck và trạng thái tái hiện được; lưu expected/actual cho các tình huống áp dụng. Không giả định EDOPro có console Lua bằng phím backtick. Nếu chưa chạy game, báo rõ "kiểm tra tĩnh đạt, runtime chưa kiểm thử".
+
+## 5. Bàn giao
+
+Nêu ID sửa, official reference, hành vi thay đổi, lệnh đã chạy/kết quả và test duel còn thiếu. Review `git diff --check` và `git diff --stat`. Đọc `docs/database-workflow.md` trước khi commit/migrate CDB. Chỉ commit/push khi được yêu cầu. Nhánh chính là `master`; tạo feature branch từ `master` khi mở Pull Request sang `upstream/master`.

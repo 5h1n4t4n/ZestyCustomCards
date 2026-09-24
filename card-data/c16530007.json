@@ -1,0 +1,22 @@
+{
+  "id": 16530007,
+  "ot": 32,
+  "alias": 0,
+  "type": 97,
+  "setcodes": [
+    16531
+  ],
+  "atk": 2000,
+  "def": 2000,
+  "level": 4,
+  "race": 8192,
+  "attribute": 32,
+  "category": 16388,
+  "name": "Cyberdark Serpent",
+  "desc": "1 \"Cyberdark\" monster + 1 Dragon or Machine monster\nMust first be either Fusion Summoned, or Special Summoned (from your Extra Deck) by Tributing 1 Dragon or Machine monster equipped with a Monster Card you control as material. If this card is Special Summoned: You can Special Summon 1 \"Cyberdark\" monster from your Deck then equip this card to it as an Equip Card. While this card is equipped to a monster, it gains this effect.\n● When your opponent activates a card or effect (Quick Effect): You can: Immediately after this effect resolves, Xyz Summon 1 Xyz Monster using materials you control, including this card and the equipped monster, treat this card as a monster with the same Level as the equipped monster. You can only use each effect of \"Cyberdark Serpent\" once per turn.",
+  "strings": [
+    "Special Summon from Extra Deck by Tributing equipped monster",
+    "Special Summon 1 \"Cyberdark\" monster from Deck and equip this card",
+    "Quick Xyz Summon 1 Xyz Monster"
+  ]
+}

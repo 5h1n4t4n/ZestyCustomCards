@@ -1,0 +1,21 @@
+{
+  "id": 11223300,
+  "ot": 32,
+  "alias": 0,
+  "type": 131074,
+  "setcodes": [
+    772
+  ],
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 512,
+  "name": "Maverick Boost - Supply",
+  "desc": "When this card is activated: You can add to your hand 1 \"Maverick Hunter\" or \"Maverick Boost\" card from your Deck to your hand. You can return 1 card you control except \"Maverick Boost - Supply\" to your hand, add to your hand 1 \"Maverick Analyzer\" monster from your Deck to your hand. You can only use each effect of \"Maverick Boost - Supply\" once per turn.",
+  "strings": [
+    "Search 1 \"Maverick Hunter\" or \"Maverick Boost\" card",
+    "Search 1 \"Maverick Analyzer\" monster"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": 11223310,
+  "ot": 32,
+  "alias": 0,
+  "setcode": 772,
+  "type": 262146,
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 513,
+  "name": "Maverick Boost - Black Armor",
+  "desc": "Equip only to a \"Zero\" monster.\nIf the equipped monster battles a Special Summoned monster, it gains 1000 ATK during damage calculation.\nWhen your opponent activates a card or effect: You can activate this effect; immediately after this effect resolves, Xyz Summon 1 Xyz Monster using this card as a Level 4 Machine monster and the equipped monster you control as Materials.\nIf this card is banished: You can add this card to your hand. You can only use this effect of \"Maverick Boost - Black Armor\" once per turn.",
+  "strings": [
+    "Xyz Summon 1 Xyz Monster",
+    "Add this card to your hand"
+  ]
+}

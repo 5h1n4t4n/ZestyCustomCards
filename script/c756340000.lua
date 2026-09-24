@@ -42,11 +42,15 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- ========== Effect 2 ==========
+function s.revealfilter(c)
+	return c:IsAbleToHand() or c:IsAbleToExtra()
+end
+
 function s.revealop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetFlagEffect(tp,id)~=0 then return end
 	Duel.RegisterFlagEffect(tp,id,0,0,1)
 
-	local g=Duel.SelectMatchingCard(tp,Card.IsAbleToHandOrExtra,tp,
+	local g=Duel.SelectMatchingCard(tp,s.revealfilter,tp,
 		LOCATION_DECK+LOCATION_EXTRA,0,1,1,nil)
 	if #g==0 then return end
 	local tc=g:GetFirst()

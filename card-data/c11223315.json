@@ -1,0 +1,19 @@
+{
+  "id": 11223315,
+  "ot": 32,
+  "alias": 0,
+  "setcode": 772,
+  "type": 65538,
+  "atk": 0,
+  "def": 0,
+  "level": 0,
+  "race": 0,
+  "attribute": 0,
+  "category": 64,
+  "name": "Maverick Boost - Heart Tank",
+  "desc": "Gain 1000 LP for each \"Maverick Hunter\" monster you control, also for the rest of this turn, all \"Maverick Hunter\" monsters you currently control cannot be destroyed by battle or card effects once. If a \"Maverick Hunter\" monster(s) you control would leave the field by your opponent's card, you can banish this card from the GY; apply the same effect as if this card was activated. You can only use 1 effect of \"Maverick Boost - Heart Tank\" once per turn.",
+  "strings": [
+    "Gain LP and protect monsters",
+    "Apply effect from GY"
+  ]
+}
