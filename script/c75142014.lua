@@ -111,7 +111,6 @@ end
 
 -- ================== LOGIC LƯỢT CỦA BẠN (FUSION) ==================
 function s.fmat_filter(c,e)
-	-- Thêm c:IsType(TYPE_MONSTER) để chỉ lọc Quái thú làm nguyên liệu Fusion
 	return c:IsType(TYPE_MONSTER) and c:IsAbleToRemove() and not c:IsImmuneToEffect(e)
 end
 function s.spfilter_fusion(c,e,tp,m,f,chkf)
@@ -169,7 +168,8 @@ end
 
 -- ================= LOGIC LƯỢT ĐỐI THỦ (RITUAL) ==================
 function s.ritual_mat_filter(c)
-	return c:IsType(TYPE_MONSTER) and c:IsAbleToDeck() and (c:IsLocation(LOCATION_GRAVE) or c:IsFaceup())
+	-- FIX: Đã thêm c:HasLevel() để chặn game đọc nhầm Level của quái Link/Xyz
+	return c:IsType(TYPE_MONSTER) and c:HasLevel() and c:IsAbleToDeck() and (c:IsLocation(LOCATION_GRAVE) or c:IsFaceup())
 end
 function s.rit_filter(c,e,tp,mg)
 	if not c:IsType(TYPE_RITUAL) or not c:IsAttribute(ATTRIBUTE_FIRE|ATTRIBUTE_DARK) then return false end
