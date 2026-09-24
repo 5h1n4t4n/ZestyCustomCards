@@ -12,13 +12,6 @@ Desktop.ini
 .vscode/
 .idea/
 
-# LuaRocks / Lua packages
-luarocks/
-lua_modules/
-
-# Test outputs
-loop-results.tsv
-
 # Python cache
 __pycache__/
 *.pyc
@@ -39,5 +32,5 @@ docs/official-reference/
 
 # Resource
 docs/Resources
-# One-time CDB migration backups and reports
+# Local CDB backups
 backups/

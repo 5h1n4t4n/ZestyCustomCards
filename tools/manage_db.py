@@ -146,16 +146,16 @@ def get_db_path() -> Path:
 # Passcode uniqueness across every CDB the client loads
 # ============================================================
 
-# CDB trong repo thuộc luồng dữ liệu khác (docs/database-workflow.md).
-SIBLING_CDB_NAMES = (
-    "custom_cards_zesty.cdb",
-    "mycard.cdb",
-    "Chrysos Heirs.cdb",
-    "FlowerSpirit.cdb",
-    "Madoka.cdb",
-    "Mecha Three Kingdom.cdb",
-)
 DEFAULT_EDOPRO_DIR = "F:/Game/ProjectIgnis"
+
+
+def sibling_cdb_paths(root: Path):
+    """CDB ở gốc repo thuộc luồng dữ liệu khác (docs/database-workflow.md).
+
+    Là mọi *.cdb trừ CDB do compiler sinh, để CDB cộng đồng mới thêm vào repo
+    tự được đối chiếu passcode mà không phải sửa danh sách.
+    """
+    return sorted(p for p in root.glob("*.cdb") if p.name != get_db_path().name)
 
 
 def read_ids(path: Path):
@@ -178,8 +178,8 @@ def external_cdb_paths(root: Path):
     CDB trong game trùng tên file với CDB của repo bị bỏ qua: đó là bản phân
     phối của chính repo này, trùng ID với nó là chuyện đương nhiên.
     """
-    own_names = {get_db_path().name, *SIBLING_CDB_NAMES}
-    paths = [root / name for name in SIBLING_CDB_NAMES if (root / name).exists()]
+    paths = sibling_cdb_paths(root)
+    own_names = {get_db_path().name, *(p.name for p in paths)}
     game_dir = Path(os.environ.get("EDOPRO_DIR") or DEFAULT_EDOPRO_DIR)
     if not game_dir.is_dir():
         return paths, game_dir
@@ -571,73 +571,6 @@ def query_card(db_path: Path, search: str):
         print()
 
 
-def dump_db(db_path: Path):
-    project_root = db_path.parent
-    json_dir = project_root / "card-data"
-    json_dir.mkdir(parents=True, exist_ok=True)
-
-    if not db_path.exists():
-        print(f"Error: Database not found at {db_path}", file=sys.stderr)
-        return
-
-    conn = sqlite3.connect(str(db_path))
-    if not verify_schema(conn):
-        print("Warning: CDB schema không khớp format YGOPro chuẩn (datas/texts).", file=sys.stderr)
-    cursor = conn.cursor()
-
-    # Get list of columns for datas
-    cursor.execute("PRAGMA table_info(datas)")
-    datas_cols = [row[1] for row in cursor.fetchall()]
-
-    # Get all datas
-    cursor.execute("SELECT * FROM datas")
-    datas_rows = cursor.fetchall()
-    datas_map = {row[0]: dict(zip(datas_cols, row)) for row in datas_rows}
-
-    # Get all texts
-    cursor.execute("SELECT * FROM texts")
-    texts_rows = cursor.fetchall()
-    conn.close()
-
-    print(f"Dumping {len(texts_rows)} cards from database to JSON specs...")
-
-    for row in texts_rows:
-        cid = row[0]
-        name = row[1]
-        desc = row[2]
-
-        # Get strings (str1 to str16)
-        strings = []
-        for val in row[3:]:
-            strings.append(val or "")
-
-        # Trim trailing empty strings
-        while strings and strings[-1] == "":
-            strings.pop()
-
-        card_data = {}
-        # Merge datas statistics if exists
-        if cid in datas_map:
-            card_data.update(datas_map[cid])
-        else:
-            # Fallback default values
-            card_data.update({
-                "id": cid, "ot": 32, "alias": 0, "setcode": 0, "type": 0,
-                "atk": 0, "def": 0, "level": 0, "race": 0, "attribute": 0, "category": 0
-            })
-
-        card_data["name"] = name or ""
-        card_data["desc"] = desc or ""
-        card_data["strings"] = strings
-
-        # Write to JSON
-        json_file = json_dir / f"c{cid}.json"
-        with open(json_file, "w", encoding="utf-8") as f:
-            json.dump(card_data, f, ensure_ascii=False, indent=2)
-
-    print(f"Successfully dumped card specs to {json_dir}/")
-
-
 def collect_specs(json_dir: Path):
     """Đọc + validate toàn bộ spec, trả về (cards, total_errors, total_warnings).
 
@@ -839,32 +772,6 @@ def check_sync(db_path: Path) -> bool:
     return not issues
 
 
-def update_text(db_path: Path, passcode: int, name: str = None, desc: str = None):
-    # Update JSON file first as it is the Single Source of Truth
-    project_root = db_path.parent
-    json_file = project_root / "card-data" / f"c{passcode}.json"
-
-    if not json_file.exists():
-        print(f"Error: Card spec JSON not found at {json_file}", file=sys.stderr)
-        return
-
-    with open(json_file, "r", encoding="utf-8") as f:
-        card_data = json.load(f)
-
-    if name:
-        card_data["name"] = name
-        print(f"Updated Name for card {passcode} to: '{name}'")
-    if desc:
-        clean_desc = desc.replace("\\n", "\n")
-        card_data["desc"] = clean_desc
-        print(f"Updated Description for card {passcode}.")
-
-    with open(json_file, "w", encoding="utf-8") as f:
-        json.dump(card_data, f, ensure_ascii=False, indent=2)
-
-    print("Plaintext JSON spec updated. Compilation required to update CDB.")
-
-
 def main():
     parser = argparse.ArgumentParser(description="TTF Card Database CLI Manager Utility")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -879,17 +786,8 @@ def main():
     # Subcommand: validate
     subparsers.add_parser("validate", help="Validate all card-data/*.json specs (Datacorn rules) without writing the CDB")
 
-    # Subcommand: dump
-    subparsers.add_parser("dump", help="Dump card data from CDB SQLite to card-data/*.json specs")
-
     # Subcommand: compile
     subparsers.add_parser("compile", help="Validate then compile card-data/*.json specs into CDB SQLite database (atomic)")
-
-    # Subcommand: update-text
-    update_parser = subparsers.add_parser("update-text", help="Update card name or description")
-    update_parser.add_argument("passcode", type=int, help="Passcode of the card to update")
-    update_parser.add_argument("--name", type=str, help="New name for the card")
-    update_parser.add_argument("--desc", type=str, help="New description/effect text for the card (use \\n for newline)")
 
     args = parser.parse_args()
     db_path = get_db_path()
@@ -900,12 +798,8 @@ def main():
         sys.exit(0 if check_sync(db_path) else 1)
     elif args.command == "validate":
         sys.exit(0 if validate_specs(db_path) else 1)
-    elif args.command == "dump":
-        dump_db(db_path)
     elif args.command == "compile":
         sys.exit(0 if compile_db(db_path) else 1)
-    elif args.command == "update-text":
-        update_text(db_path, args.passcode, args.name, args.desc)
 
 if __name__ == "__main__":
     main()

@@ -16,7 +16,6 @@ hai file sinh ra được commit để máy khác vẫn kiểm tra được.
     python tools/sync_edopro_refs.py --check
 """
 import argparse
-import json
 import os
 import re
 import sys
@@ -27,10 +26,10 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
-DEFAULT_GAME_DIR = "F:/Game/ProjectIgnis"
-# Repo script chuẩn của game. Repo custom (script của chính người chơi) không
-# phải nguồn API đúng — nhận vào là tự hợp thức hóa lỗi của mình.
-OFFICIAL_REPO_PREFIX = "https://github.com/ProjectIgnis/"
+# Thư mục script chỉ lấy từ repo ProjectIgnis (read_official.OFFICIAL_REPO_PREFIX):
+# repo custom không phải nguồn API đúng — nhận vào là tự hợp thức hóa lỗi của mình.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from read_official import DEFAULT_GAME_DIR, collect_script_roots  # noqa: E402
 
 # NAME = ..., local NAME = ..., NAME <const> = ...
 CONST_RE = re.compile(r"(?m)^[ \t]*(?:local[ \t]+)?([A-Z][A-Z0-9_]{2,})[ \t]*(?:<const>[ \t]*)?=")
@@ -44,40 +43,6 @@ METHOD_RE = re.compile(r":([A-Za-z_]\w*)[ \t]*\(")
 AUX_ALIASES = {"aux", "Auxiliary"}
 # Bảng core do ocgcore.dll đăng ký, Lua source không khai báo
 CORE_NAMESPACES = ("Duel", "Card", "Effect", "Group")
-
-
-def collect_script_roots(game_dir):
-    """Thư mục script theo thứ tự ưu tiên: repo update trước, bản cài gốc sau.
-
-    EDOPro ship một snapshot trong <game>/script rồi vá đè bằng repo update
-    (DeltaBagooska). Khi trùng đường dẫn thì bản trong repo là bản đang chạy;
-    đọc mỗi snapshot sẽ vừa thiếu hằng số mới vừa nhận nhầm API đã bị xóa.
-    """
-    roots = []
-    for repo in read_repo_config(game_dir):
-        url = repo.get("url", "")
-        script_path = repo.get("script_path")
-        repo_path = repo.get("repo_path")
-        if not (script_path and repo_path and url.startswith(OFFICIAL_REPO_PREFIX)):
-            continue
-        root = (game_dir / repo_path / script_path).resolve()
-        if root.is_dir():
-            roots.append(root)
-    base = game_dir / "script"
-    if base.is_dir():
-        roots.append(base.resolve())
-    return roots
-
-
-def read_repo_config(game_dir):
-    """Danh sách repo trong config/configs.json; rỗng nếu không đọc được."""
-    config_path = game_dir / "config" / "configs.json"
-    try:
-        data = json.loads(config_path.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as e:
-        print(f"  [WARN ] không đọc được {config_path}: {e}", file=sys.stderr)
-        return []
-    return [repo for repo in data.get("repos", []) if isinstance(repo, dict)]
 
 
 def collect_lua_paths(script_roots):

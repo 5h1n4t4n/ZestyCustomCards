@@ -165,7 +165,7 @@ function Test-LuaApis {
     $clean = Remove-LuaNoise $Content
 
     $localFns = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
-    foreach ($m in [regex]::Matches($clean, 'function\s+\w+\.([A-Za-z_]\w*)')) {
+    foreach ($m in [regex]::Matches($clean, 'function\s+\w+[.:]([A-Za-z_]\w*)')) {
         [void]$localFns.Add($m.Groups[1].Value)
     }
     # Bang cuc bo khai bao trong chinh file: local MyTable = {}
@@ -191,6 +191,19 @@ function Test-LuaApis {
         if ($Global:ValidApis.Contains("$ns.$fn") -or $localFns.Contains($fn)) { continue }
         $errors += "'$ns.$fn' khong ton tai trong EDOPro - runtime 'attempt to call a nil value'"
     }
+
+    # Method goi qua dau hai cham (c:GetAtk()) khong lo ra bang chu, nen doi chieu
+    # ten ham voi moi API da biet. Loi goi co kiem tra truoc (if c.GetName then) duoc bo qua.
+    $guarded = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($m in [regex]::Matches($clean, '\.([A-Za-z_]\w*)\s+(?:then|and)\b')) {
+        [void]$guarded.Add($m.Groups[1].Value)
+    }
+    foreach ($m in [regex]::Matches($clean, ':([A-Za-z_]\w*)\s*\(')) {
+        $fn = $m.Groups[1].Value
+        if ($Global:ValidMethods.Contains($fn) -or $Global:LuaStringMethods.Contains($fn) -or
+            $localFns.Contains($fn) -or $guarded.Contains($fn)) { continue }
+        $errors += "Method ':$fn()' khong ton tai trong EDOPro - runtime 'attempt to call a nil value'"
+    }
     return $errors | Select-Object -Unique
 }
 
@@ -208,13 +221,6 @@ function Test-ConstantsDependency {
     foreach ($ident in $Global:CustomIdentifiers) {
         if (-not $hasLoad -and $clean -match "\b$([regex]::Escape($ident))\b") {
             $errors += "Uses '$ident' (defined in script/constants.lua) without Duel.LoadScript(`"constants.lua`") - crashes at runtime with 'attempt to call a nil value'"
-        }
-    }
-
-    # Cac "API ma" (ham khong ton tai trong EDOPro) tung gay crash truoc day
-    foreach ($api in $Global:PhantomApis) {
-        if ($clean -match [regex]::Escape($api)) {
-            $errors += "Phantom API '$api' does not exist in EDOPro - crashes at runtime (see tools/phantom_apis.txt)"
         }
     }
     return $errors
@@ -267,9 +273,16 @@ function Read-ReferenceList {
 $Global:ValidConstants = Read-ReferenceList (Join-Path $PSScriptRoot "edopro_constants.txt")
 $Global:ValidApis = Read-ReferenceList (Join-Path $PSScriptRoot "edopro_apis.txt")
 $Global:ValidNamespaces = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+$Global:ValidMethods = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
 foreach ($api in $Global:ValidApis) {
-    [void]$Global:ValidNamespaces.Add($api.Split('.')[0])
+    $parts = $api.Split('.', 2)
+    [void]$Global:ValidNamespaces.Add($parts[0])
+    if ($parts.Count -eq 2) { [void]$Global:ValidMethods.Add($parts[1]) }
 }
+# Method cua chuoi Lua ((""):format(...)) khong nam trong danh sach API cua EDOPro
+$Global:LuaStringMethods = [System.Collections.Generic.HashSet[string]]::new(
+    [string[]]@("byte", "char", "find", "format", "gmatch", "gsub", "len", "lower", "match", "rep", "reverse", "sub", "upper"),
+    [System.StringComparer]::Ordinal)
 
 # Add custom constants from constants.lua if exists
 $RootPath = Split-Path $PSScriptRoot
@@ -289,13 +302,6 @@ if (Test-Path $CustomPath) {
     foreach ($m in [regex]::Matches($constContent, 'function\s+\w+\.(\w+)\s*\(')) {
         [void]$Global:CustomIdentifiers.Add($m.Groups[1].Value)
     }
-}
-
-# Load known phantom APIs blacklist (cac ham khong ton tai tung gay crash)
-$PhantomFile = Join-Path $PSScriptRoot "phantom_apis.txt"
-$Global:PhantomApis = @()
-if (Test-Path $PhantomFile) {
-    $Global:PhantomApis = @(Get-Content $PhantomFile | Where-Object { $_.Trim() -and $_ -notmatch '^\s*#' } | ForEach-Object { $_.Trim() })
 }
 
 Write-Host ""
@@ -372,7 +378,7 @@ foreach ($file in $files) {
             foreach ($e in $apiErrors) { $allMessages += "API: $e"; $hasError = $true }
         }
 
-        # 6. constants.lua dependency + phantom API check (FAIL — gay crash runtime)
+        # 6. constants.lua dependency (FAIL — gay crash runtime)
         $depErrors = Test-ConstantsDependency -Content $content -FileName $fileName
         foreach ($e in $depErrors) { $allMessages += "DEPEND: $e"; $hasError = $true }
     }

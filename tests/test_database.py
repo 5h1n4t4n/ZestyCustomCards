@@ -2,7 +2,6 @@ import contextlib
 import io
 import json
 from pathlib import Path
-import shutil
 import sqlite3
 import subprocess
 import sys
@@ -14,7 +13,6 @@ ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
 sys.path.insert(0, str(TOOLS))
 import manage_db as db
-import migrate_card_data as migration
 
 
 class DatabaseTests(unittest.TestCase):
@@ -39,46 +37,6 @@ class DatabaseTests(unittest.TestCase):
     def write_spec(self):
         (self.root / "card-data/c123.json").write_text(json.dumps(self.spec))
 
-    def sources(self):
-        """CDB legacy trước migration, mỗi file đều chứa ID đã có spec."""
-        paths = [self.source(name) for name in migration.SOURCES]
-        # card-data.cdb ở đây chỉ là khuôn để dựng CDB legacy; migration phải tự tạo nó.
-        self.luna.unlink(missing_ok=True)
-        return paths
-
-    def source(self, name):
-        # Compile vào card-data.cdb rồi copy sang tên legacy: compiler chặn ID
-        # đã tồn tại ở CDB anh em, còn test thì cần đúng trạng thái trùng ID đó.
-        if not self.luna.exists():
-            self.assertTrue(db.compile_db(self.luna))
-        path = self.root / name
-        shutil.copy2(self.luna, path)
-        with contextlib.closing(sqlite3.connect(path)) as conn, conn:
-            conn.execute("INSERT INTO datas SELECT 999,ot,alias,setcode,type,atk,def,level,race,attribute,category FROM datas WHERE id=123")
-            conn.execute("INSERT INTO texts SELECT 999,name,desc," + ",".join(f"str{i}" for i in range(1, 17)) + " FROM texts WHERE id=123")
-            conn.execute("UPDATE texts SET name='Other developer' WHERE id=999")
-            conn.execute("UPDATE texts SET name='Old owned text' WHERE id=123")
-        return path
-
-    def test_migration_preserves_other_devs_and_is_idempotent(self):
-        sources = self.sources()
-        before = {p: db.read_rows(p) for p in sources}
-        original_bytes = {p: p.read_bytes() for p in sources}
-        migration.migrate(self.root)
-        self.assertFalse(self.luna.exists())
-        self.assertEqual(original_bytes, {p: p.read_bytes() for p in sources})
-        report = migration.migrate(self.root, apply=True)
-        self.assertEqual(len(report["source_spec_differences"]), 2)
-        for p in sources:
-            for table in ("datas", "texts"):
-                self.assertEqual(db.read_rows(p)[table], {999: before[p][table][999]})
-        self.assertEqual(set(db.read_rows(self.luna)["texts"]), {123})
-        backups = list((self.root / "backups").glob("*/*.cdb.bak"))
-        self.assertEqual(len(backups), 2)
-        after = {p: p.read_bytes() for p in sources + [self.luna]}
-        migration.migrate(self.root, apply=True)
-        self.assertEqual(after, {p: p.read_bytes() for p in after})
-
     def test_invalid_spec_and_unknown_ids_do_not_overwrite(self):
         self.assertTrue(db.compile_db(self.luna))
         before = self.luna.read_bytes()
@@ -93,16 +51,6 @@ class DatabaseTests(unittest.TestCase):
         before = self.luna.read_bytes()
         self.assertFalse(db.compile_db(self.luna))
         self.assertEqual(before, self.luna.read_bytes())
-
-    def test_invalid_migration_leaves_sources_unchanged(self):
-        sources = self.sources()
-        before = {p: p.read_bytes() for p in sources}
-        self.spec["type"] = 0
-        self.write_spec()
-        with self.assertRaises(ValueError):
-            migration.migrate(self.root, apply=True)
-        self.assertEqual(before, {p: p.read_bytes() for p in sources})
-        self.assertFalse(self.luna.exists())
 
     def test_sync_stale_exit_and_pending_legacy(self):
         self.assertTrue(db.compile_db(self.luna))
@@ -120,8 +68,9 @@ class DatabaseTests(unittest.TestCase):
         self.assertFalse(db.check_sync(self.luna))
 
     def test_passcode_collision_blocks_validate_and_compile(self):
-        # ID trùng ở CDB khác làm EDOPro nạp nhầm card mà không báo gì.
-        sibling = self.root / db.SIBLING_CDB_NAMES[0]
+        # ID trùng ở CDB khác làm EDOPro nạp nhầm card mà không báo gì. Tên CDB
+        # tùy ý: mọi *.cdb ở gốc repo đều phải được đối chiếu.
+        sibling = self.root / "New Community.cdb"
         with contextlib.closing(sqlite3.connect(sibling)) as conn, conn:
             conn.execute("CREATE TABLE datas (id INTEGER PRIMARY KEY)")
             conn.execute("INSERT INTO datas VALUES (123)")
@@ -132,20 +81,6 @@ class DatabaseTests(unittest.TestCase):
             with contextlib.closing(sqlite3.connect(sibling)) as conn, conn:
                 conn.execute("DELETE FROM datas WHERE id=123")
             self.assertTrue(db.compile_db(self.luna))
-
-    def test_partial_publish_restores_databases(self):
-        sources = self.sources()
-        before = {p: p.read_bytes() for p in sources}
-        original_replace = migration.os.replace
-        def fail_second_source(src, dest):
-            if Path(dest) == sources[1]:
-                raise OSError("Simulated publish failure")
-            return original_replace(src, dest)
-        with patch.object(migration.os, "replace", side_effect=fail_second_source):
-            with self.assertRaises(OSError):
-                migration.migrate(self.root, apply=True)
-        self.assertEqual(before, {p: p.read_bytes() for p in sources})
-        self.assertFalse(self.luna.exists())
 
 
 if __name__ == "__main__":

@@ -25,18 +25,37 @@ if (-not (Test-Path $repoDest)) {
     New-Item -ItemType Directory -Path $repoDest -Force | Out-Null
 }
 
+# Card can dong bo khi co CardId: chinh no + cac card cung archetype trong feature_list.json
+# (tru nhom "Common" gom card roi rac) de deck test co san card de search/tuong tac.
+$deckCodes = @()
+if ($CardId -ne "") {
+    $deckCodes = @($CardId)
+    $featureList = Join-Path $root "feature_list.json"
+    if (Test-Path $featureList) {
+        $fl = Get-Content $featureList -Raw -Encoding UTF8 | ConvertFrom-Json
+        foreach ($arch in $fl.archetypes.PSObject.Properties) {
+            $codes = @($arch.Value.cards | ForEach-Object { [string]$_.passcode })
+            if ($arch.Name -ne "Common" -and $codes -contains $CardId) {
+                $deckCodes += @($codes | Where-Object { $_ -ne $CardId -and (Test-Path (Join-Path $root "script\c$_.lua")) })
+            }
+        }
+    }
+}
+
 # 1. Sync Scripts
 Write-Host "`n[1/4] Dong bo scripts..." -ForegroundColor Yellow
 $scriptDest = Join-Path $repoDest "script"
 if (-not (Test-Path $scriptDest)) { New-Item -ItemType Directory -Path $scriptDest -Force | Out-Null }
 
 if ($CardId -ne "") {
-    $srcFile = Join-Path $root "script\c$CardId.lua"
-    if (Test-Path $srcFile) {
-        Copy-Item $srcFile $scriptDest -Force
-        Write-Host "  -> Da copy c$CardId.lua" -ForegroundColor Green
-    } else {
-        Write-Warning "Khong tim thay script/c$CardId.lua!"
+    foreach ($code in $deckCodes) {
+        $srcFile = Join-Path $root "script\c$code.lua"
+        if (Test-Path $srcFile) {
+            Copy-Item $srcFile $scriptDest -Force
+            Write-Host "  -> Da copy c$code.lua" -ForegroundColor Green
+        } else {
+            Write-Warning "Khong tim thay script/c$code.lua!"
+        }
     }
 } else {
     Copy-Item (Join-Path $root "script\*.lua") $scriptDest -Force
@@ -45,13 +64,10 @@ if ($CardId -ne "") {
 
 # 2. Sync CDBs
 Write-Host "`n[2/4] Dong bo database CDB..." -ForegroundColor Yellow
-$cdbFiles = @("card-data.cdb", "mycard.cdb", "custom_cards_zesty.cdb", "Chrysos Heirs.cdb", "FlowerSpirit.cdb", "Madoka.cdb", "Mecha Three Kingdom.cdb", "Nightbloom.cdb", "Rising Heroes.cdb")
-foreach ($cdb in $cdbFiles) {
-    $srcCdb = Join-Path $root $cdb
-    if (Test-Path $srcCdb) {
-        Copy-Item $srcCdb $repoDest -Force
-        Write-Host "  -> Da copy $cdb" -ForegroundColor Green
-    }
+# Moi *.cdb o goc repo deu duoc game nap, ke ca CDB cong dong moi them
+foreach ($cdb in Get-ChildItem -Path $root -Filter "*.cdb" -File) {
+    Copy-Item $cdb.FullName $repoDest -Force
+    Write-Host "  -> Da copy $($cdb.Name)" -ForegroundColor Green
 }
 
 # Dong bo strings.conf neu co
@@ -67,16 +83,18 @@ $picsDest = Join-Path $repoDest "pics"
 if (-not (Test-Path $picsDest)) { New-Item -ItemType Directory -Path $picsDest -Force | Out-Null }
 
 if ($CardId -ne "") {
-    $picJpg = Join-Path $root "pics\$CardId.jpg"
-    $picPng = Join-Path $root "pics\$CardId.png"
-    if (Test-Path $picJpg) {
-        Copy-Item $picJpg $picsDest -Force
-        $oldPng = Join-Path $picsDest "$CardId.png"
-        if (Test-Path $oldPng) { Remove-Item $oldPng -Force }
-        Write-Host "  -> Da copy $CardId.jpg (da don .png cu neu co)" -ForegroundColor Green
-    } elseif (Test-Path $picPng) {
-        Copy-Item $picPng $picsDest -Force
-        Write-Host "  -> Da copy $CardId.png" -ForegroundColor Green
+    foreach ($code in $deckCodes) {
+        $picJpg = Join-Path $root "pics\$code.jpg"
+        $picPng = Join-Path $root "pics\$code.png"
+        if (Test-Path $picJpg) {
+            Copy-Item $picJpg $picsDest -Force
+            $oldPng = Join-Path $picsDest "$code.png"
+            if (Test-Path $oldPng) { Remove-Item $oldPng -Force }
+            Write-Host "  -> Da copy $code.jpg (da don .png cu neu co)" -ForegroundColor Green
+        } elseif (Test-Path $picPng) {
+            Copy-Item $picPng $picsDest -Force
+            Write-Host "  -> Da copy $code.png" -ForegroundColor Green
+        }
     }
 } else {
     Copy-Item (Join-Path $root "pics\*.*") $picsDest -Force
@@ -89,29 +107,16 @@ if ($CardId -ne "") {
     $deckDir = Join-Path $GameDir "deck"
     if (Test-Path $deckDir) {
         $deckPath = Join-Path $deckDir "test_$CardId.ydk"
-        $deckLines = @(
-            "#created by TTF Test Tool",
-            "#main",
-            $CardId,
-            $CardId,
-            $CardId,
-            "76812113",
-            "76812113",
-            "76812113",
-            "12206212",
-            "39392286",
-            "39392286",
-            "90953320",
-            "19337371",
-            "19337371",
-            "52040212",
-            "81136679",
-            "14558127",
-            "#extra",
-            "63261835",
-            "90238142",
-            "!side"
-        )
+        # 3 ban card can test + 1 ban moi card cung archetype; Fusion/Synchro/Xyz/Link vao Extra
+        # theo "type" trong card-data (card khong co spec thi xep vao Main).
+        $extraMask = 0x40 -bor 0x2000 -bor 0x800000 -bor 0x4000000
+        $main = @(); $extra = @()
+        foreach ($code in @($CardId, $CardId) + $deckCodes) {
+            $spec = Join-Path $root "card-data\c$code.json"
+            $isExtra = (Test-Path $spec) -and ((([int64](Get-Content $spec -Raw -Encoding UTF8 | ConvertFrom-Json).type) -band $extraMask) -ne 0)
+            if ($isExtra) { $extra += $code } else { $main += $code }
+        }
+        $deckLines = @("#created by TTF Test Tool", "#main") + $main + @("#extra") + $extra + @("!side")
         [System.IO.File]::WriteAllLines($deckPath, $deckLines)
         Write-Host "  -> Da tao deck test: test_$CardId.ydk" -ForegroundColor Green
     }
