@@ -1330,6 +1330,18 @@
           "script": "script/c192500006.lua"
         }
       ]
+    },
+    "Sky_Striker": {
+      "setcode": "0x115",
+      "passcode_range": "90600001-90699999",
+      "cards": [
+        {
+          "name": "Sky Striker Special Maneuver - The Chosen One",
+          "passcode": "90600041",
+          "status": "done",
+          "script": "script/c90600041.lua"
+        }
+      ]
     }
   }
 }
