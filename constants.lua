@@ -17,6 +17,7 @@ SET_ZERO                          = 0x306
 SET_X                             = 0x307
 SET_AXL                           = 0x308
 SET_CHRYSOS_HEIRS                 = 0xffa
+SET_NIGHTBLOOM                    = 0xb24
 -- Custom counter
 COUNTER_MANA                      = 0x177
 COUNTER_CHRYSOS                   = 0x1ffa
