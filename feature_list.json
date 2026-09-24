@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-23",
+  "last_updated": "2026-09-24",
   "note": "Trạng thái: pending(p) | working(w) | review(r) | done(d) | skipped(x). Phản ánh prefix trong docs/queues/<archetype>/",
   "archetypes": {
     "Blue_Eye": {
@@ -1286,6 +1286,48 @@
           "passcode": "16530007",
           "status": "done",
           "script": "script/c16530007.lua"
+        }
+      ]
+    },
+    "Genericus": {
+      "setcode": "0x785",
+      "passcode_range": "192500001-192599999",
+      "cards": [
+        {
+          "name": "Genericus Monstrum the Fusion",
+          "passcode": "192500001",
+          "status": "done",
+          "script": "script/c192500001.lua"
+        },
+        {
+          "name": "Genericus Monstrum the Link",
+          "passcode": "192500002",
+          "status": "done",
+          "script": "script/c192500002.lua"
+        },
+        {
+          "name": "Genericus Monstrum the Pendulum",
+          "passcode": "192500003",
+          "status": "done",
+          "script": "script/c192500003.lua"
+        },
+        {
+          "name": "Genericus Monstrum the Ritual",
+          "passcode": "192500004",
+          "status": "done",
+          "script": "script/c192500004.lua"
+        },
+        {
+          "name": "Genericus Monstrum the Synchro",
+          "passcode": "192500005",
+          "status": "done",
+          "script": "script/c192500005.lua"
+        },
+        {
+          "name": "Genericus Monstrum the Xyz",
+          "passcode": "192500006",
+          "status": "done",
+          "script": "script/c192500006.lua"
         }
       ]
     }

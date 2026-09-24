@@ -18,6 +18,8 @@ SET_X                             = 0x307
 SET_AXL                           = 0x308
 SET_CHRYSOS_HEIRS                 = 0xffa
 SET_VEIDOS                        = 0x784
+SET_GENERICUS                     = 0x785
+SET_GENERICUS_MONSTRUM            = 0x785
 -- Custom counter
 COUNTER_MANA                      = 0x177
 COUNTER_CHRYSOS                   = 0x1ffa

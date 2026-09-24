@@ -1,0 +1,80 @@
+Genericus Monstrum the Fusion
+[DRAGON / FUSION / EFFECT]
+2 monsters
+Must first be either Fusion Summoned, or Special Summoned (from your Extra Deck) by Tributing 2 monsters from either field (at least 1 from your field). If this card is Special Summoned by the effect of a "Genericus Monstrum" monster, its original ATK/DEF become 3000, also its original Attribute(s) and Type(s) become the same as that monster's (if it was Special Summoned by the effect of a "Genericus Monstrum" Link Monster, this card's Attributes also become DIVINE, DARK, LIGHT, WATER, FIRE, WIND, and EARTH). Cannot be destroyed by battle with a monster with the same Attribute.
+① Gains the original Attributes, Types, ATK, and DEF of the materials used for its Summon.
+② (Quick Effect): You can shuffle 1 card from your hand or field into the Deck, then target 1 card your opponent controls or 1 card in their GY; destroy it (if it was on the field) or banish it (if it was in the GY).
+③ You can shuffle 2 cards from your hand and/or field into the Deck; banish 1 random card from your opponent's hand or Extra Deck. If this card was Special Summoned by the effect of a "Genericus Monstrum" Link Monster, this effect becomes a Quick Effect, and you only shuffle 1 card instead.
+④ If this card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Extra Deck, and if you do, Special Summon 1 non-Fusion "Genericus Monstrum" monster from your Deck or Extra Deck, ignoring its Summoning conditions.
+You can only use each effect of "Genericus Monstrum the Fusion" once per turn.
+
+Genericus Monstrum the Ritual
+[FIEND / RITUAL / EFFECT]
+You can Ritual Summon this card with any Ritual Spell, ignoring its Summoning conditions. Must first be Ritual Summoned, or Special Summoned by a "Genericus Monstrum" card effect. If this card is Special Summoned by the effect of a "Genericus Monstrum" monster, its original ATK / DEF become 3000 (if it was Special Summoned by the effect of a "Genericus Monstrum" Link Monster, this card's Attributes also become DIVINE, DARK, LIGHT, WATER, FIRE, WIND, and EARTH). This card can be treated as any Type required for a Ritual Summon.
+① This card gains the original Attribute(s), Type(s), ATK, and DEF of the monsters Tributed for its Ritual Summon.
+② You can banish 1 Ritual Monster face-down from your hand or GY; add this card from your Deck to your hand.
+③ If a monster(s) leaves the Extra Deck (except during the Damage Step): You can negate the effects of all other face-up monsters currently on the field until the end of this turn.
+④ (Quick Effect): You can Tribute 1 monster you control; Tribute 1 monster your opponent controls (if this card was Special Summoned by the effect of a "Genericus Monstrum" Link Monster, you can Tribute up to 2 monsters your opponent controls instead).
+⑤ If this card is Tributed: You can add 1 Ritual Monster or 1 Ritual Spell from your Deck to your hand, then Special Summon this card (from where it is), ignoring its Summoning conditions.
+⑥ If this face-up card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Deck, and if you do, Special Summon 1 non-Ritual "Genericus Monstrum" monster from your Deck or Extra Deck, ignoring its Summoning conditions.
+You can only use each effect of "Genericus Monstrum the Ritual" once per turn.
+
+Genericus Monstrum the Synchro
+[WARRIOR / SYNCHRO / EFFECT]
+1+ Tuner + 1+ non-Tuner monsters
+Must first be Synchro Summoned. If this card is Special Summoned by the effect of a "Genericus Monstrum" monster: Its original ATK/DEF become 3000, also you can choose 1 Attribute; this card gains that original Attribute (if it was Special Summoned by the effect of a "Genericus Monstrum" Link Monster, this card's Attributes instead become DIVINE, DARK, LIGHT, WATER, FIRE, WIND, and EARTH).
+① This card gains the original Attributes, Types, ATK, and DEF of the materials used for its Synchro Summon.
+② Gains these effects based on its Attributes:
+● LIGHT: You can add 1 Tuner monster from your Deck to your hand, but you cannot activate its effects until the end of the next turn, unless it is Summoned.
+● DARK: Cannot be targeted or destroyed by your opponent's card effects.
+● WIND (Quick Effect): When a monster effect is activated: You can banish 1 Tuner monster and 1 non-Tuner monster from your GY; negate the activation, and if you do, destroy that card.
+● WATER (Quick Effect): You can banish 1 card your opponent controls, and if you do, this card gains 1000 ATK.
+● FIRE: Special Summon 1 Tuner monster or 1 Synchro Monster from your GY or banishment, but negate its effects.
+● EARTH (Quick Effect): When a Spell/Trap Card or effect is activated: You can banish the top 2 cards of your Deck; negate the activation, and if you do, destroy that card.
+● DIVINE: Face-up cards you control are unaffected by your opponent's card effects.
+③ If this card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Extra Deck, and if you do, Special Summon 1 non-Synchro "Genericus Monstrum" monster from your Deck or Extra Deck, ignoring its Summoning conditions.
+You can only use each effect of "Genericus Monstrum the Synchro" once per turn.
+
+Genericus Monstrum the Xyz
+[MACHINE / XYZ / EFFECT]
+2 Xyz monsters with the same rank
+Must first be either Xyz Summoned, or Special Summoned during a turn your opponent activated 2 or more monster effects, by using 1 Xyz Monster you control as material. (Transfer its materials to this card.) If this card is Special Summoned by the effect of a "Genericus Monstrum" monster: Its original ATK/DEF become 3000 (if it was Special Summoned by the effect of a "Genericus Monstrum" Link Monster, you can look at your opponent's Deck and attach 10 cards from it to this card as material).
+① This card gains the original Attributes, Types, ATK, and DEF of its materials.
+② If a monster(s) you control leaves the field: You can attach 1 of those monsters to this card as material.
+③ (Quick Effect): You can detach 1 material from this card, then target 1 card on the field; attach it to this card as material.
+④ (Quick Effect): You can detach 5 materials from this card; shuffle all cards on the field, in the GYs, and that are banished into the Decks.
+⑤ While this card has 10 or more materials, negate the effects of all monsters on the field with ATK lower than this card's current ATK, also this card is unaffected by monster effects activated by an opponent's monster with the same Attribute as this card.
+⑥ If this card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Extra Deck, and if you do, Special Summon 1 non-Xyz "Genericus Monstrum" monster from your Deck or Extra Deck, ignoring its Summoning conditions.
+You can only use each effect of "Genericus Monstrum the Xyz" once per turn.
+
+Genericus Monstrum the Pendulum
+[SPELLCASTER / PENDULUM / EFFECT]
+Scale 12 / 12
+[Pendulum Effect]
+You can activate 1 of these effects. You can only use each Pendulum Effect of "Genericus Monstrum the Pendulum" once per turn.
+● During your Main Phase: You can add 1 Pendulum Monster from your Deck to your hand, but for the rest of this turn, unless you Pendulum Summon after this effect resolves, you cannot activate monster effects.
+● You can pay 1000 LP; Change this card's Pendulum Scale to 0 until the end of this turn.
+● You can pay half your LP; during your Main Phase this turn, you can conduct 1 Pendulum Summon of a monster(s) in addition to your Pendulum Summon.
+● If your LP is below 1000: Banish 1 card from your hand or field face-down; gain 8000 LP.
+
+[Monster Effect]
+Must first be Pendulum Summoned, or Special Summoned by a "Genericus Monstrum" card effect. If this card is Special Summoned by the effect of a "Genericus Monstrum" monster, its original ATK/DEF become 3000 (if it was Special Summoned by the effect of a "Genericus Monstrum" Link Monster, this card's Attributes also become DIVINE, DARK, LIGHT, WATER, FIRE, WIND, and EARTH).
+① This card gains the original Attributes, Types, ATK, and DEF of all face-up Pendulum Monsters currently on the field.
+② You can target 2 Spells or 1 monster you control; destroy them, and if you do, Special Summon this card from your hand, or face-up Extra Deck.
+③ If this card is Special Summoned: You can target 1 Pendulum Monster in your GY; Special Summon it.
+④ Cannot be targeted by your opponent's Spell/Trap effects, or by your opponent's monster effects with the same Attribute as this card.
+⑤ (Quick Effect): Banish 1 Pendulum Monster you control or from your GY, then target 1 face-up card on the field; negate the activation. If this card was Special Summoned by the effect of a "Genericus Monstrum" Link Monster, you can banish 1 card your opponent controls instead, also negate the effects of all cards your opponent currently controls.
+⑥ If this face-up card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Deck, and if you do, Special Summon 1 non-Pendulum "Genericus Monstrum" monster from your Deck or Extra Deck, ignoring its Summoning conditions.
+You can only use each monster effect of "Genericus Monstrum the Pendulum" once per turn.
+
+Genericus Monstrum the Link
+[CYBERSE / LINK / EFFECT]
+1+ monsters
+If this card is Special Summoned by the effect of a "Genericus Monstrum" monster: Its original ATK becomes 3000, also you can declare 1 Attribute; this card becomes that Attribute.
+① Gains the original Attributes, Types, ATK, and DEF of the monsters used as material for its Link Summon.
+② Cannot be targeted by the effects of monsters with the same Attribute as this card.
+③ (Quick Effect): You can shuffle both this card and 1 card on the field into the Deck/Extra Deck; Special Summon 1 non-Link "Genericus Monstrum" monster from your Deck or Extra Deck.
+④ If this card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Extra Deck, and if you do, Special Summon 1 non-Link "Genericus Monstrum" monster from your Deck or Extra Deck, ignoring its Summoning conditions.
+You can only use each effect of "Genericus Monstrum the Link" once per turn.
+
+

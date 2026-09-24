@@ -1,0 +1,24 @@
+{
+  "id": 192500001,
+  "ot": 32,
+  "alias": 0,
+  "type": 97,
+  "setcodes": [
+    1925
+  ],
+  "atk": "?",
+  "def": "?",
+  "level": 10,
+  "race": 8192,
+  "attribute": 32,
+  "category": 9437379,
+  "name": "Genericus Monstrum the Fusion",
+  "desc": "2 monsters\nMust first be either Fusion Summoned, or Special Summoned (from your Extra Deck) by Tributing 2 monsters from either field (at least 1 from your field). If this card is Special Summoned by the effect of a \"Genericus Monstrum\" monster, its original ATK/DEF become 3000, also its original Attribute(s) and Type(s) become the same as that monster's (if it was Special Summoned by the effect of a \"Genericus Monstrum\" Link Monster, this card's Attributes also become DIVINE, DARK, LIGHT, WATER, FIRE, WIND, and EARTH). Cannot be destroyed by battle with a monster with the same Attribute.\n① Gains the original Attributes, Types, ATK, and DEF of the materials used for its Summon.\n② (Quick Effect): You can shuffle 1 card from your hand or field into the Deck, then target 1 card your opponent controls or 1 card in their GY; destroy it (if it was on the field) or banish it (if it was in the GY).\n③ You can shuffle 2 cards from your hand and/or field into the Deck; banish 1 random card from your opponent's hand or Extra Deck. If this card was Special Summoned by the effect of a \"Genericus Monstrum\" Link Monster, this effect becomes a Quick Effect, and you only shuffle 1 card instead.\n④ If this card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Extra Deck, and if you do, Special Summon 1 non-Fusion \"Genericus Monstrum\" monster from your Deck or Extra Deck, ignoring its Summoning conditions.\nYou can only use each effect of \"Genericus Monstrum the Fusion\" once per turn.",
+  "strings": [
+    "Special Summon (Contact)",
+    "Destroy or banish 1 opponent's card",
+    "Banish 1 card from opponent's hand",
+    "Banish 1 card from opponent's Extra Deck",
+    "Return to Extra Deck and Special Summon"
+  ]
+}
