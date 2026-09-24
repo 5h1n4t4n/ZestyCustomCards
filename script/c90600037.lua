@@ -95,24 +95,21 @@ function s.lkcon(e,tp,eg,ep,ev,re,r,rp)
     return eg:IsExists(s.cfilter,1,nil,tp)
 end
 
-function s.lkfilter(c,e,tp)
-    return c:IsSetCard(0x115) and c:IsType(TYPE_LINK) and c:IsCanBeSpecialSummoned(e, SUMMON_TYPE_LINK, tp, false, false) 
-        and Duel.IsExistingMatchingCard(aux.LinkSummonableFilter,tp,LOCATION_EXTRA,0,1,nil,c)
+function s.lkfilter(c)
+    return c:IsSetCard(0x115) and c:IsLinkSummonable()
 end
 
 function s.lktg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then 
-        return Duel.IsExistingMatchingCard(s.lkfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp) 
+        return Duel.IsExistingMatchingCard(s.lkfilter,tp,LOCATION_EXTRA,0,1,nil)
     end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
 
 function s.lkop(e,tp,eg,ep,ev,re,r,rp)
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-    local g=Duel.SelectMatchingCard(tp,s.lkfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp)
-    local tc=g:GetFirst()
+    local tc=Duel.SelectMatchingCard(tp,s.lkfilter,tp,LOCATION_EXTRA,0,1,1,nil):GetFirst()
     if tc then
-        Duel.LinkSummon(tp,tc,nil)
+        Duel.LinkSummon(tp,tc)
     end
 end
-```[cite: 30]

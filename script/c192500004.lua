@@ -2,7 +2,7 @@
 -- Card Name: Genericus Monstrum the Ritual
 -- Passcode : 192500004
 -- Type     : Monster / Ritual / Effect
--- Attribute: LIGHT
+-- Attribute: DARK
 -- Level    : 10
 -- ATK/DEF  : ? / ?
 -- Race     : Fiend
@@ -163,7 +163,7 @@ end
 function s.gen_spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local rc=re and re:GetHandler()
-	if (r&REASON_EFFECT)==0 or not re or not re:IsMonsterEffect()
+	if not re or not re:IsMonsterEffect()
 		or not (rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM))
 		or c:IsRitualSummoned() then return end
 	if rc:IsType(TYPE_LINK) then
@@ -332,7 +332,7 @@ end
 function s.sptg5(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter5,tp,LOCATION_DECK,0,1,nil)
-		and c:IsCanBeSpecialSummoned(e,0,tp,true,false)
+		and c:IsCanBeSpecialSummoned(e,0,tp,true,true)
 		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,tp,0)
@@ -344,7 +344,7 @@ function s.spop5(e,tp,eg,ep,ev,re,r,rp)
 	if #g>0 and Duel.SendtoHand(g,nil,REASON_EFFECT)>0 and g:GetFirst():IsLocation(LOCATION_HAND) then
 		Duel.ConfirmCards(1-tp,g)
 		if c:IsRelateToEffect(e) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
-			Duel.SpecialSummon(c,0,tp,tp,true,false,POS_FACEUP)
+			Duel.SpecialSummon(c,0,tp,tp,true,true,POS_FACEUP)
 		end
 	end
 end

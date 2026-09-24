@@ -2,7 +2,7 @@
 -- Card Name: Genericus Monstrum the Pendulum
 -- Passcode : 192500003
 -- Type     : Monster / Pendulum / Effect
--- Attribute: LIGHT
+-- Attribute: DARK
 -- Level    : 10
 -- Scale    : 12 / 12
 -- ATK/DEF  : ? / ?
@@ -56,8 +56,6 @@ local s,id=GetID()
 Duel.LoadScript("constants.lua")
 
 function s.initial_effect(c)
-	c:EnableReviveLimit()
-
 	-- ============================================================
 	-- Summon Procedures & Constraints
 	-- ============================================================
@@ -327,7 +325,7 @@ end
 function s.gen_spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local rc=re and re:GetHandler()
-	if (r&REASON_EFFECT)==0 or not re or not re:IsMonsterEffect()
+	if not re or not re:IsMonsterEffect()
 		or not (rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM))
 		or c:IsSummonType(SUMMON_TYPE_PENDULUM) then return end
 	if rc:IsType(TYPE_LINK) then
@@ -408,8 +406,9 @@ function s.sptg2(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if c:IsLocation(LOCATION_EXTRA) and not c:IsFaceup() then return false end
 	local b_spell=Duel.IsExistingTarget(s.desfilter_spell,tp,LOCATION_ONFIELD,0,2,nil)
 	local b_mon=Duel.IsExistingTarget(s.desfilter_monster,tp,LOCATION_MZONE,0,1,nil)
-	local can_sp=(c:IsLocation(LOCATION_HAND) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0)
-		or (c:IsLocation(LOCATION_EXTRA) and c:IsFaceup() and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0)
+	local can_sp=c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+		and ((c:IsLocation(LOCATION_HAND) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0)
+		or (c:IsLocation(LOCATION_EXTRA) and c:IsFaceup() and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0))
 	if chkc then return false end
 	if chk==0 then return (b_spell or b_mon) and can_sp end
 	local opt=0

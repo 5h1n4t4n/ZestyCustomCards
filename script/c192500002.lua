@@ -2,7 +2,7 @@
 -- Card Name: Genericus Monstrum the Link
 -- Passcode : 192500002
 -- Type     : Monster / Link / Effect
--- Attribute: LIGHT
+-- Attribute: DARK
 -- Link Rating: 5
 -- Link Arrows: Top-Left, Top-Right, Left, Right, Bottom
 -- ATK      : ?
@@ -109,7 +109,7 @@ s.listed_series={SET_GENERICUS_MONSTRUM}
 function s.gen_spcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local rc=re and re:GetHandler()
-	return (r&REASON_EFFECT)~=0 and re and re:IsMonsterEffect()
+	return re and re:IsMonsterEffect()
 		and rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM) and rc~=c
 		and not c:IsLinkSummoned()
 end

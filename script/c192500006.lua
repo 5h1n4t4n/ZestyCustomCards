@@ -2,7 +2,7 @@
 -- Card Name: Genericus Monstrum the Xyz
 -- Passcode : 192500006
 -- Type     : Monster / Xyz / Effect
--- Attribute: LIGHT
+-- Attribute: DARK
 -- Rank     : 10
 -- ATK/DEF  : ? / ?
 -- Race     : Machine
@@ -209,7 +209,7 @@ end
 function s.gen_spcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local rc=re and re:GetHandler()
-	return (r&REASON_EFFECT)~=0 and re and re:IsMonsterEffect()
+	return re and re:IsMonsterEffect()
 		and rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM) and rc~=c
 		and not c:IsXyzSummoned()
 end
@@ -354,7 +354,7 @@ function s.disfilter5(e,c)
 	return c:IsFaceup() and c:GetAttack()<e:GetHandler():GetAttack()
 end
 function s.efilter5(e,te)
-	return te:IsActiveType(TYPE_MONSTER) and te:GetOwnerPlayer()~=e:GetHandlerPlayer()
+	return te:IsActiveType(TYPE_MONSTER) and te:IsActivated() and te:GetOwnerPlayer()~=e:GetHandlerPlayer()
 		and (te:GetHandler():GetAttribute() & e:GetHandler():GetAttribute() ~= 0)
 end
 

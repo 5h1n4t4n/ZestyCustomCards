@@ -2,7 +2,7 @@
 -- Card Name: Genericus Monstrum the Fusion
 -- Passcode : 192500001
 -- Type     : Monster / Fusion / Effect
--- Attribute: LIGHT
+-- Attribute: DARK
 -- Level    : 10
 -- ATK/DEF  : ? / ?
 -- Race     : Dragon
@@ -202,7 +202,7 @@ end
 function s.gen_spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local rc=re and re:GetHandler()
-	if (r&REASON_EFFECT)==0 or not re or not re:IsMonsterEffect()
+	if not re or not re:IsMonsterEffect()
 		or not (rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM) and rc~=c)
 		or c:IsFusionSummoned() then return end
 	if rc:IsType(TYPE_LINK) then

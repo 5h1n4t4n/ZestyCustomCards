@@ -2,7 +2,7 @@
 -- Card Name: Genericus Monstrum the Synchro
 -- Passcode : 192500005
 -- Type     : Monster / Synchro / Effect
--- Attribute: LIGHT
+-- Attribute: DARK
 -- Level    : 10
 -- ATK/DEF  : ? / ?
 -- Race     : Warrior
@@ -201,7 +201,7 @@ s.listed_series={SET_GENERICUS_MONSTRUM}
 function s.gen_spcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local rc=re and re:GetHandler()
-	return (r&REASON_EFFECT)~=0 and re and re:IsMonsterEffect()
+	return re and re:IsMonsterEffect()
 		and rc and rc:IsSetCard(SET_GENERICUS_MONSTRUM) and rc~=c
 		and not c:IsSynchroSummoned()
 end
@@ -402,6 +402,7 @@ end
 -- ============================================================
 function s.spfilter_fire(c,e,tp)
 	return (c:IsType(TYPE_TUNER) or c:IsType(TYPE_SYNCHRO)) and c:IsMonster()
+		and (c:IsLocation(LOCATION_GRAVE) or c:IsFaceup())
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 function s.sptg_fire(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
@@ -438,7 +439,7 @@ end
 function s.discon_earth(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsAttribute(ATTRIBUTE_EARTH)
 		and not e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED)
-		and ep==1-tp and re:IsHasType(EFFECT_TYPE_ACTIVATE) and Duel.IsChainNegatable(ev)
+		and ep==1-tp and re:IsSpellTrapEffect() and Duel.IsChainNegatable(ev)
 end
 function s.discost_earth(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsPlayerCanRemove(tp) and Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=2 end
