@@ -1,4 +1,24 @@
--- Cyberdark Serpent
+-- ============================================================
+-- Card Name: Cyberdark Serpent
+-- Passcode : 16530007
+-- Type     : Monster / Effect / Fusion
+-- Attribute: DARK
+-- Level    : 4
+-- ATK/DEF  : 2000 / 2000
+-- Race     : Dragon
+-- Archetype: Cyberdark (0x4093)
+-- Materials: 1 "Cyberdark" monster + 1 Dragon or Machine monster
+-- ============================================================
+-- Effect 1: Special Summon from Extra Deck by Tributing 1 Dragon/Machine
+--           monster equipped with a Monster Card you control.
+-- Effect 2: If Special Summoned: Special Summon 1 "Cyberdark" monster
+--           from Deck, then equip this card to it.
+-- Effect 3: While equipped: When opponent activates card/effect (Quick):
+--           Immediately Xyz Summon using materials including this card
+--           and equipped monster (this card treated as same Level).
+-- You can only use each effect of "Cyberdark Serpent" once per turn.
+-- ============================================================
+
 local s,id=GetID()
 
 function s.initial_effect(c)
@@ -53,7 +73,7 @@ end
 
 function s.tribfilter(c,tp)
 	return c:IsFaceup() and c:IsControler(tp) and c:IsRace(RACE_DRAGON|RACE_MACHINE)
-		and c:IsReleasable() and c:GetEquipGroup():IsExists(Card.IsType,1,nil,TYPE_MONSTER)
+		and c:IsReleasable() and c:GetEquipGroup():IsExists(Card.IsMonsterCard,1,nil)
 end
 
 function s.spcon(e,c)
@@ -102,17 +122,22 @@ function s.spop2(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.SelectMatchingCard(tp,s.cdfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
 	if tc and Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)>0 then
 		if c:IsRelateToEffect(e) and c:IsFaceup() and Duel.GetLocationCount(tp,LOCATION_SZONE)>0 then
-			if Duel.Equip(tp,c,tc) then
+			if Duel.Equip(tp,c,tc,true) then
 				local e1=Effect.CreateEffect(c)
 				e1:SetType(EFFECT_TYPE_SINGLE)
 				e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
 				e1:SetCode(EFFECT_EQUIP_LIMIT)
-				e1:SetValue(function(e,c) return c==tc end)
 				e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+				e1:SetValue(s.eqlimit)
+				e1:SetLabelObject(tc)
 				c:RegisterEffect(e1)
 			end
 		end
 	end
+end
+
+function s.eqlimit(e,c)
+	return c==e:GetLabelObject()
 end
 
 function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)

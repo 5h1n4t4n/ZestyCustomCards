@@ -1,4 +1,17 @@
--- Prophecy of the Ashened City
+-- ============================================================
+-- Card Name: Prophecy of the Ashened City
+-- Passcode : 42100003
+-- Type     : Spell / Quick-Play
+-- Archetype: Ashened (0x1a5)
+-- ============================================================
+-- Effect 1: Add 1 "Veidos" card from Deck to hand, then if Field Zone
+--           card exists, add 1 "Ashened" card from Deck/GY to hand
+--           and destroy 1 Field Spell.
+-- Effect 2: If Field Spell on field: Banish from GY; Send 1 Pyro monster
+--           from Deck to GY, then destroy 1 card on field.
+-- You can only use each effect of "Prophecy of the Ashened City" once per turn.
+-- ============================================================
+
 local s,id=GetID()
 Duel.LoadScript("constants.lua")
 

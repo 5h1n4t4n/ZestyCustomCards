@@ -1,4 +1,22 @@
--- Knight of the Ashened City
+-- ============================================================
+-- Card Name: Knight of the Ashened City
+-- Passcode : 42100002
+-- Type     : Monster / Effect
+-- Attribute: DARK
+-- Level    : 5
+-- ATK/DEF  : 2000 / 1500
+-- Race     : Pyro
+-- Archetype: Ashened (0x1a5)
+-- ============================================================
+-- Effect 1: Special Summon from hand if "Obsidim, the Ashened City"
+--           is in Field Zone.
+-- Effect 2: If Summoned: Immediately Fusion Summon 1 Pyro Fusion
+--           Monster using materials from hand, Deck, or field.
+-- Effect 3: If used as Fusion material and sent to GY/banished:
+--           Add 1 "Ashened" or "Veidos" card from Deck/GY to hand.
+-- You can only use each effect of "Knight of the Ashened City" once per turn.
+-- ============================================================
+
 local s,id=GetID()
 Duel.LoadScript("constants.lua")
 

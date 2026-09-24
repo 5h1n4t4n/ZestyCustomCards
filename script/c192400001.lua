@@ -1,4 +1,21 @@
--- Veidos's Erupting Egg of Extinction
+-- ============================================================
+-- Card Name: Veidos's Erupting Egg of Extinction
+-- Passcode : 192400001
+-- Type     : Monster / Effect
+-- Attribute: DARK
+-- Level    : 1
+-- ATK/DEF  : 0 / 0
+-- Race     : Pyro
+-- Archetype: Veidos (0x784)
+-- ============================================================
+-- Effect 1: If card in Field Zone (Quick Effect): Discard this card;
+--           Add 1 "Veidos the Eruption Dragon of Extinction" from Deck
+--           to hand and send 1 "Ashened" card from Deck to GY.
+-- Effect 2: If "Veidos the Eruption Dragon of Extinction" leaves field
+--           while this card in GY: Add this card to hand.
+-- You can only use each effect of "Veidos's Erupting Egg of Extinction" once per turn.
+-- ============================================================
+
 local s,id=GetID()
 Duel.LoadScript("constants.lua")
 

@@ -1,10 +1,28 @@
--- Cyberdarkness Nova
+-- ============================================================
+-- Card Name: Cyberdarkness Nova
+-- Passcode : 16530004
+-- Type     : Monster / Effect / Xyz
+-- Attribute: DARK
+-- Rank     : 4
+-- ATK/DEF  : 1000 / 1000
+-- Race     : Machine
+-- Archetype: Cyberdark (0x4093)
+-- Materials: 2+ Level 4 "Cyberdark" monsters
+-- ============================================================
+-- Effect 1: If Xyz Summoned: Target monsters in either GY up to materials
+--           this card has; attach them as material.
+-- Effect 2: Gains ATK/DEF equal to total ATK/DEF of attached monsters.
+-- Effect 3: (Quick Effect): Detach 1 material; attach opponent's
+--           activated card to this card as material.
+-- You can only use each effect of "Cyberdarkness Nova" once per turn.
+-- ============================================================
+
 local s,id=GetID()
 
 function s.initial_effect(c)
 	c:EnableReviveLimit()
 	-- Xyz Materials: 2+ Level 4 "Cyberdark" monsters
-	Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,SET_CYBERDARK),4,2,99)
+	Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,SET_CYBERDARK),4,2,nil,nil,Xyz.InfiniteMats)
 
 	-- Attach monsters from either GY on Xyz Summon
 	local e1=Effect.CreateEffect(c)

@@ -1,4 +1,17 @@
--- Cyberdark Assembling
+-- ============================================================
+-- Card Name: Cyberdark Assembling
+-- Passcode : 16530005
+-- Type     : Spell / Quick-Play
+-- Archetype: Cyberdark (0x4093)
+-- ============================================================
+-- Effect 1: Special Summon 1 "Cyberdark" monster from Deck, then if
+--           opponent controls more cards, destroy opponent's cards
+--           up to the number of "Cyberdark" cards you control.
+-- Effect 2: Banish from GY: Fusion Summon 1 "Cyberdark" Fusion Monster
+--           from Extra Deck by shuffling materials from hand/field/GY/banish.
+-- You can only use each effect of "Cyberdark Assembling" once per turn.
+-- ============================================================
+
 local s,id=GetID()
 
 function s.initial_effect(c)

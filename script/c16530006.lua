@@ -1,4 +1,17 @@
--- Cyberdark Cybernizing
+-- ============================================================
+-- Card Name: Cyberdark Cybernizing
+-- Passcode : 16530006
+-- Type     : Trap / Counter
+-- Archetype: Cyberdark (0x4093)
+-- ============================================================
+-- Effect 1: Can be activated from hand if you control Extra Deck "Cyberdark".
+-- Effect 2: Extra Deck "Cyberdark" monsters cannot be Tributed or used
+--           as material for the rest of this turn.
+-- Effect 3: Banish from GY: For the rest of turn, GY self-summon effects
+--           of "Cyberdark" monsters can be activated as Quick Effects.
+-- You can only use each effect of "Cyberdark Cybernizing" once per turn.
+-- ============================================================
+
 local s,id=GetID()
 
 function s.initial_effect(c)

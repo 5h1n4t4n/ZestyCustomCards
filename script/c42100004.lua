@@ -1,4 +1,17 @@
--- Ruined of the Ashened City
+-- ============================================================
+-- Card Name: Ruined of the Ashened City
+-- Passcode : 42100004
+-- Type     : Trap / Continuous
+-- Archetype: Ashened (0x1a5)
+-- ============================================================
+-- Effect 1: Can be activated the turn it was Set by "Veidos".
+-- Effect 2: Treated as "Obsidim, the Ashened City" while face-up or in GY.
+-- Effect 3: Special Summon 1 "Ashened" monster from hand during either turn.
+-- Effect 4: "Ashened" monsters gain 200 ATK/DEF per Pyro monster, and cannot
+--           be targeted, destroyed by card effects, or Tributed.
+-- Effect 5: Send to GY if no "Ashened" or "Veidos" monster on field.
+-- ============================================================
+
 local s,id=GetID()
 Duel.LoadScript("constants.lua")
 

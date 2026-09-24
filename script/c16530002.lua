@@ -1,4 +1,20 @@
--- Advance Cyberdark Horn
+-- ============================================================
+-- Card Name: Advance Cyberdark Horn
+-- Passcode : 16530002
+-- Type     : Monster / Effect
+-- Attribute: DARK
+-- Level    : 4
+-- ATK/DEF  : 800 / 800
+-- Race     : Machine
+-- Archetype: Cyberdark (0x4093)
+-- ============================================================
+-- Effect 1: Target 1 Dragon/Machine in either GY; Special Summon
+--           this card from hand/GY and equip that monster to it.
+-- Effect 2: If Normal or Special Summoned: Send 1 "Cyberdark" card
+--           from Deck to GY.
+-- You can only use each effect of "Advance Cyberdark Horn" once per turn.
+-- ============================================================
+
 local s,id=GetID()
 
 function s.initial_effect(c)
@@ -81,14 +97,26 @@ end
 function s.equipop(c,e,tp,tc)
 	local atk=tc:GetTextAttack()
 	if atk<0 then atk=0 end
-	if not c:EquipByEffectAndLimitRegister(e,tp,tc) then return end
+	if not Duel.Equip(tp,tc,c,true) then return end
 	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_EQUIP)
-	e1:SetProperty(EFFECT_FLAG_OWNER_RELATE+EFFECT_FLAG_IGNORE_IMMUNE)
-	e1:SetCode(EFFECT_UPDATE_ATTACK)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e1:SetCode(EFFECT_EQUIP_LIMIT)
 	e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-	e1:SetValue(atk)
+	e1:SetValue(s.eqlimit)
+	e1:SetLabelObject(c)
 	tc:RegisterEffect(e1)
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_EQUIP)
+	e2:SetProperty(EFFECT_FLAG_OWNER_RELATE+EFFECT_FLAG_IGNORE_IMMUNE)
+	e2:SetCode(EFFECT_UPDATE_ATTACK)
+	e2:SetReset(RESET_EVENT|RESETS_STANDARD)
+	e2:SetValue(atk)
+	tc:RegisterEffect(e2)
+end
+
+function s.eqlimit(e,c)
+	return c==e:GetLabelObject()
 end
 
 function s.tgfilter(c)

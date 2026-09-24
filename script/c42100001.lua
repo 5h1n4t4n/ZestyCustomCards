@@ -1,4 +1,22 @@
--- Fire Keeper of the Ashened City
+-- ============================================================
+-- Card Name: Fire Keeper of the Ashened City
+-- Passcode : 42100001
+-- Type     : Monster / Effect
+-- Attribute: DARK
+-- Level    : 4
+-- ATK/DEF  : 1300 / 1700
+-- Race     : Pyro
+-- Archetype: Ashened (0x1a5)
+-- ============================================================
+-- Effect 1: Special Summon from hand if "Obsidim, the Ashened City"
+--           is in Field Zone.
+-- Effect 2: (Quick Effect): Discard this card; Place 1 "Obsidim, the
+--           Ashened City" in Field Zone, or add 1 "Ashened"/"Veidos"
+--           card from Deck/GY/banishment to hand.
+-- Effect 3: If a card is destroyed while this card in GY: Add this card to hand.
+-- You can only use each effect of "Fire Keeper of the Ashened City" once per turn.
+-- ============================================================
+
 local s,id=GetID()
 Duel.LoadScript("constants.lua")
 

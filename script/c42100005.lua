@@ -1,4 +1,22 @@
--- Unity of the Ashened City
+-- ============================================================
+-- Card Name: Unity of the Ashened City
+-- Passcode : 42100005
+-- Type     : Monster / Effect / Fusion
+-- Attribute: DARK
+-- Level    : 8
+-- ATK/DEF  : 3000 / 2500
+-- Race     : Pyro
+-- Archetype: Ashened (0x1a5)
+-- Materials: "Veidos the Eruption Dragon of Extinction" + 1 monster
+-- ============================================================
+-- Effect 1: Contact Fusion by sending materials from either field to GY.
+-- Effect 2: If Special Summoned: Add to hand or Special Summon 1
+--           "Ashened" monster from Deck or GY.
+-- Effect 3: Banish from GY: Shuffle this card and 2 other
+--           "Ashened"/"Veidos" cards into Deck/Extra Deck; Draw 2.
+-- You can only use each effect of "Unity of the Ashened City" once per turn.
+-- ============================================================
+
 local s,id=GetID()
 Duel.LoadScript("constants.lua")
 
