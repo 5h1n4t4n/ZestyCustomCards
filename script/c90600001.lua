@@ -72,9 +72,22 @@ end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    if c:IsRelateToEffect(e) then
-        Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+    if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)~=0 then
+        -- Hạn chế Triệu hồi Đặc biệt: chỉ được gọi quái thú "Sky Striker" trong phần còn lại của lượt
+        local e1=Effect.CreateEffect(c)
+        e1:SetType(EFFECT_TYPE_FIELD)
+        e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+        e1:SetDescription(aux.Stringid(id,5))
+        e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+        e1:SetTargetRange(1,0)
+        e1:SetTarget(s.splimit)
+        e1:SetReset(RESET_PHASE+PHASE_END)
+        Duel.RegisterEffect(e1,tp)
     end
+end
+
+function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
+    return not c:IsSetCard(0x115)
 end
 
 --------------------------------------------------------------------------------
@@ -107,6 +120,17 @@ function s.xyztg_operation(e,tp,eg,ep,ev,re,r,rp)
         Duel.SpecialSummon(sc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)
         sc:CompleteProcedure()
         
+        -- Hạn chế Triệu hồi Đặc biệt: chỉ được gọi quái thú "Sky Striker" trong phần còn lại của lượt
+        local e1=Effect.CreateEffect(e:GetHandler())
+        e1:SetType(EFFECT_TYPE_FIELD)
+        e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+        e1:SetDescription(aux.Stringid(id,5))
+        e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+        e1:SetTargetRange(1,0)
+        e1:SetTarget(s.splimit)
+        e1:SetReset(RESET_PHASE+PHASE_END)
+        Duel.RegisterEffect(e1,tp)
+
         if Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_GRAVE,0,nil,TYPE_SPELL)>=3 
             and sc:IsLocation(LOCATION_MZONE) then
             local mg=Duel.GetMatchingGroup(aux.NecroValleyFilter(function(c)

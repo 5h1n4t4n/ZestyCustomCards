@@ -2,7 +2,6 @@
 -- ID: 02772337
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Kích hoạt: Gửi 1 lá "Sky Striker" từ Deck vào Mộ
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TOGRAVE)
@@ -13,7 +12,6 @@ function s.initial_effect(c)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 	
-	-- Trong Main Phase của bạn: Chọn 1 Phép "Sky Striker" từ Mộ thêm lên tay
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND)
@@ -25,7 +23,6 @@ function s.initial_effect(c)
 	e2:SetOperation(s.thoperation)
 	c:RegisterEffect(e2)
 	
-	-- Khi quái thú "Sky Striker" bạn điều khiển giao chiến + có từ 3 Phép trở lên trong Mộ: Chọn tiêu diệt 1 lá đối thủ điều khiển
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetCategory(CATEGORY_DESTROY)
@@ -41,9 +38,6 @@ function s.initial_effect(c)
 end
 s.listed_series={SET_SKY_STRIKER}
 
---------------------------------------------------------------------------------
--- HIỆU ỨNG 1: Gửi 1 lá "Sky Striker" từ Deck xuống Mộ khi kích hoạt
---------------------------------------------------------------------------------
 function s.tgfilter(c)
 	return c:IsSetCard(SET_SKY_STRIKER) and c:IsAbleToGrave()
 end
@@ -59,11 +53,23 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	if #g>0 then
 		Duel.SendtoGrave(g,REASON_EFFECT)
 	end
+
+	-- Giới hạn Triệu hồi Đặc biệt: chỉ được gọi quái thú "Sky Striker" trong phần còn lại của lượt
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+	e1:SetDescription(aux.Stringid(id,3))
+	e1:SetTargetRange(1,0)
+	e1:SetTarget(s.splimit)
+	e1:SetReset(RESET_PHASE+PHASE_END)
+	Duel.RegisterEffect(e1,tp)
 end
 
---------------------------------------------------------------------------------
--- HIỆU ỨNG 2: Thêm 1 Phép "Sky Striker" từ Mộ lên tay (Main Phase)
---------------------------------------------------------------------------------
+function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
+	return not c:IsSetCard(SET_SKY_STRIKER)
+end
+
 function s.thfilter(c)
 	return c:IsSetCard(SET_SKY_STRIKER) and c:IsSpell() and c:IsAbleToHand()
 end
@@ -85,9 +91,6 @@ function s.thoperation(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---------------------------------------------------------------------------------
--- HIỆU ỨNG 3: Phá hủy 1 lá của đối thủ khi quái thú "Sky Striker" giao chiến (có >= 3 Phép trong Mộ)
---------------------------------------------------------------------------------
 function s.descon(e,tp,eg,ep,ev,re,r,rp)
 	local ac=Duel.GetAttacker()
 	local bc=Duel.GetAttackTarget()

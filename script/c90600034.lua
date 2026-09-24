@@ -3,7 +3,6 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-    -- HIỆU ỨNG: Special Summon từ Deck -> Link/Xyz Summon ngay lập tức -> Phá hủy 1 lá của đối thủ nếu có từ 3 Phép trở lên trong Mộ
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DESTROY)
@@ -16,9 +15,6 @@ function s.initial_effect(c)
     c:RegisterEffect(e1)
 end
 
---------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG
---------------------------------------------------------------------------------
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
     return Duel.GetFieldGroupCount(tp,LOCATION_MMZONE,0)==0
 end
@@ -33,7 +29,6 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
         and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp) end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
     
-    -- Kiểm tra nếu có từ 3 Phép trở lên trong Mộ thì cho phép chọn mục tiêu phá hủy của đối thủ
     local ct=Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_GRAVE,0,nil,TYPE_SPELL)
     if ct>=3 and Duel.IsExistingTarget(aux.TRUE,tp,0,LOCATION_ONFIELD,1,nil) then
         Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
@@ -48,7 +43,6 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
     local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
     local tc=g:GetFirst()
     if tc and Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)~=0 then
-        -- Ngay sau khi Special Summon thành công, tiến hành Triệu hồi Link hoặc Xyz ngay lập tức
         Duel.BreakEffect()
         local g_link=Duel.GetMatchingGroup(aux.LinkSummonableFilter,tp,LOCATION_EXTRA,0,nil,nil)
         local g_xyz=Duel.GetMatchingGroup(Card.IsXyzSummonable,tp,LOCATION_EXTRA,0,nil,nil)
@@ -75,10 +69,24 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
         end
     end
     
-    -- Xử lý hiệu ứng bổ sung: Nếu có từ 3 Phép trở lên trong Mộ, phá hủy 1 lá bài đã chọn của đối thủ
     local tc_des=Duel.GetFirstTarget()
     if tc_des and tc_des:IsRelateToEffect(e) and Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_GRAVE,0,nil,TYPE_SPELL)>=3 then
         Duel.BreakEffect()
         Duel.Destroy(tc_des,REASON_EFFECT)
     end
+
+    -- Giới hạn Triệu hồi Đặc biệt: chỉ được gọi quái thú "Sky Striker" trong phần còn lại của lượt
+    local e1=Effect.CreateEffect(e:GetHandler())
+    e1:SetType(EFFECT_TYPE_FIELD)
+    e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+    e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+    e1:SetDescription(aux.Stringid(id,3))
+    e1:SetTargetRange(1,0)
+    e1:SetTarget(s.splimit)
+    e1:SetReset(RESET_PHASE+PHASE_END)
+    Duel.RegisterEffect(e1,tp)
+end
+
+function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
+    return not c:IsSetCard(0x115)
 end

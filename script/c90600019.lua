@@ -2,7 +2,7 @@
 -- ID: 18199611
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Hiệu ứng 1: Kích hoạt (Special Summon từ Deck/GY + vô hiệu hóa + khóa Extra Deck)
+	-- Hiệu ứng 1: Kích hoạt (Special Summon từ Deck/GY + vô hiệu hóa + khóa triệu hồi)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -64,11 +64,12 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		end
 	end
 	
-	-- Khóa triệu hồi từ Extra Deck (chỉ được quái "Sky Striker")
+	-- Giới hạn Triệu hồi Đặc biệt: chỉ được triệu hồi quái thú "Sky Striker" trong phần còn lại của lượt
 	local e3=Effect.CreateEffect(e:GetHandler())
 	e3:SetType(EFFECT_TYPE_FIELD)
 	e3:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-	e3:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e3:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetTargetRange(1,0)
 	e3:SetTarget(s.splimit)
 	e3:SetReset(RESET_PHASE+PHASE_END)
@@ -76,14 +77,13 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
-	return c:IsLocation(LOCATION_EXTRA) and not c:IsSetCard(SET_SKY_STRIKER)
+	return not c:IsSetCard(SET_SKY_STRIKER)
 end
 
 --------------------------------------------------------------------------------
 -- LOGIC HIỆU ỨNG 2: Banish từ Mộ để gắn nguyên liệu cho Xyz "Sky Striker"
 --------------------------------------------------------------------------------
 function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)
-	-- Kiểm tra có từ 3 Phép "Sky Striker" trở lên trong Mộ
 	return Duel.GetMatchingGroupCount(s.sskspellfilter,tp,LOCATION_GRAVE,0,nil)>=3
 end
 
