@@ -96,4 +96,4 @@ Test trong client/core đúng phiên bản với deck và trạng thái tái hi�
 
 ## 5. Bàn giao
 
-Nêu ID sửa, official reference, hành vi thay đổi, lệnh đã chạy/kết quả và test duel còn thiếu. Review `git diff --check` và `git diff --stat`. Đọc `docs/database-workflow.md` trước khi commit/migrate CDB. Chỉ commit/push khi được yêu cầu. Nhánh chính là `master`; tạo feature branch từ `master` khi mở Pull Request sang `upstream/master`.
+Nêu ID sửa, official reference, hành vi thay đổi, lệnh đã chạy/kết quả và test duel còn thiếu. Review `git diff --check` và `git diff --stat`. Đọc `docs/database-workflow.md` trước khi commit/migrate CDB. Chỉ commit/push khi được yêu cầu. Nhánh chính là `master`; không tạo feature branch, push thẳng lên `origin/master` và mở Pull Request sang `upstream/master` từ `LeDoanh:master`.

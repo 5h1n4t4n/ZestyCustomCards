@@ -4,7 +4,7 @@
 
 ## Nguồn dữ liệu và ranh giới
 
-- Nhánh chính của repo là **`master`** (đồng bộ với `upstream/master`). Tạo feature branch từ `master` khi làm card/tính năng mới.
+- Nhánh chính của repo là **`master`** (đồng bộ với `upstream/master`). Không tạo feature branch: commit rồi push thẳng lên `origin/master` (đang ở worktree thì `git push origin HEAD:master`). Pull Request sang repo gốc mở từ `LeDoanh:master`, nên commit mới trên `master` tự vào PR đang mở.
 - `card-data/c<ID>.json`: nguồn dữ liệu cho card được quản lý bằng specs; compiler sinh **`card-data.cdb`**.
 - `script/c<ID>.lua`: code chạy trong game. `tools/`: công cụ phát triển và templates, không phải script game.
 - `custom_cards_zesty.cdb`, `mycard.cdb` và các CDB cộng đồng (`Chrysos Heirs.cdb`, `FlowerSpirit.cdb`, `Madoka.cdb`, `Mecha Three Kingdom.cdb`): dữ liệu của dev khác. Không compile đè, dump đè specs hoặc giải quyết conflict bằng chọn cả file ours/theirs.
