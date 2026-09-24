@@ -13,7 +13,7 @@ function s.initial_effect(c)
 	--Cannot be Set
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_CANNOT_SSET)
+	e1:SetCode(EFFECT_CANNOT_SET)
 	c:RegisterEffect(e1)
 
 	--Activate (Field Spell)
@@ -26,9 +26,8 @@ function s.initial_effect(c)
 	e2:SetOperation(s.activate)
 	c:RegisterEffect(e2)
 
-	--Quick hand effect during opponent's turn: Send to GY, banish 1 Field Spell until end of turn
+	--Quick hand effect during opponent's turn
 	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,0))
 	e3:SetCategory(CATEGORY_REMOVE)
 	e3:SetType(EFFECT_TYPE_QUICK_O)
 	e3:SetCode(EVENT_FREE_CHAIN)
@@ -40,9 +39,8 @@ function s.initial_effect(c)
 	e3:SetOperation(s.rmop)
 	c:RegisterEffect(e3)
 
-	--If destroyed on field and sent to GY by opponent's card effect: Neither player can activate Traps until end of next turn
+	--Destroyed by opponent's card effect
 	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,1))
 	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
 	e4:SetCode(EVENT_TO_GRAVE)
 	e4:SetCondition(s.trapcon)
@@ -50,10 +48,8 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 
---Activation Cost: You cannot use cards in your Deck, except Spell Cards, during the turn you activate this card
-function s.actcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	local e1=Effect.CreateEffect(e:GetHandler())
+function s.lock_deck(c,tp)
+	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 	e1:SetCode(EFFECT_CANNOT_ACTIVATE)
@@ -64,9 +60,39 @@ function s.actcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	end)
 	e1:SetReset(RESET_PHASE+PHASE_END)
 	Duel.RegisterEffect(e1,tp)
+
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e2:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e2:SetTargetRange(1,0)
+	e2:SetTarget(function(e,tc) return tc:IsLocation(LOCATION_DECK) end)
+	e2:SetReset(RESET_PHASE+PHASE_END)
+	Duel.RegisterEffect(e2,tp)
+
+	local e3=Effect.CreateEffect(c)
+	e3:SetType(EFFECT_TYPE_FIELD)
+	e3:SetProperty(EFFECT_FLAG_SET_AVAILABLE+EFFECT_FLAG_IGNORE_RANGE)
+	e3:SetCode(EFFECT_CANNOT_TO_GRAVE)
+	e3:SetTargetRange(LOCATION_DECK,0)
+	e3:SetTarget(function(e,tc) return not tc:IsType(TYPE_SPELL) end)
+	e3:SetReset(RESET_PHASE+PHASE_END)
+	Duel.RegisterEffect(e3,tp)
+
+	local e4=e3:Clone()
+	e4:SetCode(EFFECT_CANNOT_REMOVE)
+	Duel.RegisterEffect(e4,tp)
+
+	local e5=e3:Clone()
+	e5:SetCode(EFFECT_CANNOT_TO_HAND)
+	Duel.RegisterEffect(e5,tp)
 end
 
---Search on Activation: Add 1 "Flower Spirit" or "Nightbloom" Spell from Deck to hand
+function s.actcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	s.lock_deck(e:GetHandler(),tp)
+end
+
 function s.thfilter(c)
 	return (c:IsSetCard(0x702) or c:IsSetCard(0xb24)) and c:IsType(TYPE_SPELL) and not c:IsCode(id) and c:IsAbleToHand()
 end
@@ -81,7 +107,6 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---Quick hand effect
 function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetTurnPlayer()~=tp
 end
@@ -105,7 +130,6 @@ function s.rmop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
 	local tc=Duel.SelectMatchingCard(tp,s.rmfilter,tp,LOCATION_FZONE,LOCATION_FZONE,1,1,nil):GetFirst()
 	if tc and Duel.Remove(tc,POS_FACEUP,REASON_EFFECT+REASON_TEMPORARY)>0 then
-		--Return to field at the end of this turn
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 		e1:SetCode(EVENT_PHASE+PHASE_END)
@@ -121,7 +145,6 @@ function s.retop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.ReturnToField(e:GetLabelObject())
 end
 
---Trap lock effect
 function s.trapcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	return c:IsPreviousLocation(LOCATION_FZONE) and c:IsReason(REASON_DESTROY)
@@ -129,7 +152,6 @@ function s.trapcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.trapop(e,tp,eg,ep,ev,re,r,rp)
-	--Neither player can activate Trap Cards until the end of the next turn
 	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
