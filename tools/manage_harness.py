@@ -6,6 +6,7 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8')
+import os
 import re
 import shutil
 import subprocess
@@ -40,6 +41,14 @@ PASSCODE_BLOCK = 100000
 MAX_PASSCODE = 999999999
 # Khóa archetype trùng tên thư mục docs/queues/<archetype>/
 ARCHETYPE_KEY_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*$")
+# Archetype fan-made của repo dùng dải 0x780 trở lên (0x780-0x785, 0x789 đã có);
+# 'archetype add' không truyền setcode thì chọn setcode trống đầu tiên từ đây.
+FANMADE_SETCODE_START = 0x780
+# EDOPro so setcode theo 12 bit thấp (archetype gốc) cộng 4 bit cao (archetype con):
+# 0x1004 được coi là archetype con của 0x4, nên trùng 12 bit thấp là trùng archetype.
+SETCODE_BASE_MASK = 0xFFF
+SETCODE_DEF_RE = re.compile(r"^\s*(SET_[A-Z0-9_]+)\s*=\s*0x([0-9a-fA-F]+)", re.M)
+SETNAME_RE = re.compile(r"^!setname\s+0x([0-9a-fA-F]+)\s+(.+?)\s*$", re.M)
 
 MONSTER_TEMPLATES = {
     "effect_monster", "fusion_monster", "synchro_monster", "xyz_monster",
@@ -65,7 +74,9 @@ def get_project_paths():
         "template_dir": project_root / "tools" / "templates",
         "card_data": project_root / "card-data",
         "queues_dir": project_root / "docs" / "queues",
-        "pics_dir": project_root / "pics"
+        "pics_dir": project_root / "pics",
+        "constants": project_root / "script" / "constants.lua",
+        "strings": project_root / "strings.conf",
     }
 
 
@@ -98,8 +109,9 @@ def find_archetype_by_passcode(fl_data, passcode):
     return "Common", fl_data.get("archetypes", {}).get("Common", {})
 
 def normalize_archetype_key(name):
-    """Khóa so sánh tên archetype, khớp cách scan dò thư mục queue."""
-    return name.lower().replace("_", "")
+    """Khóa so sánh tên archetype: bỏ hoa/thường, '_' và khoảng trắng
+    ('White_Forest' = 'White Forest' = 'SET_WHITE_FOREST' bỏ tiền tố)."""
+    return re.sub(r"[^a-z0-9]", "", name.lower())
 
 
 def parse_setcode(raw):
@@ -138,11 +150,127 @@ def derive_passcode_range(setcode):
     return (start, end), None
 
 
-def add_archetype(name, setcode_raw, range_raw=None):
+def overlapping_archetype(archetypes, start, end):
+    """(tên, range) của archetype có passcode range chồng lên start-end, hoặc None.
+
+    Range chồng nhau nghĩa là hai archetype cùng tranh một passcode khi 'scan'
+    hoặc 'start' cấp ID.
+    """
+    for existing_name, info in archetypes.items():
+        other, _ = parse_passcode_range(info.get("passcode_range", ""))
+        if other and start <= other[1] and other[0] <= end:
+            return existing_name, other
+    return None
+
+
+def read_text_file(path):
+    """Nội dung file, giữ nguyên kiểu xuống dòng; '' khi file không tồn tại."""
+    try:
+        with open(path, encoding="utf-8", newline="") as f:
+            return f.read()
+    except FileNotFoundError:
+        return ""
+
+
+def insert_line(path, line, before):
+    """Chèn line trước dòng đầu tiên bắt đầu bằng before (không có thì cuối file)."""
+    text = read_text_file(path)
+    eol = "\r\n" if "\r\n" in text else "\n"
+    lines = text.splitlines()
+    index = next((i for i, existing in enumerate(lines) if existing.lower().startswith(before.lower())), len(lines))
+    lines.insert(index, line)
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(eol.join(lines) + eol)
+
+
+def official_setcodes():
+    """{setcode: 'SET_X'} của archetype official trong bản cài game, None khi không đọc được."""
+    game_dir = Path(os.environ.get("EDOPRO_DIR") or manage_db.DEFAULT_EDOPRO_DIR)
+    text = read_text_file(game_dir / "repositories" / "delta-bagooska" / "script" / "archetype_setcode_constants.lua")
+    if not text:
+        return None
+    return {int(value, 16): const for const, value in SETCODE_DEF_RE.findall(text)}
+
+
+def repo_setcodes(paths):
+    """Setcode fan-made đã khai báo trong repo.
+
+    Trả về (names, constants): names = {setcode: {tên}} gộp script/constants.lua
+    (bỏ tiền tố SET_) và strings.conf; constants = {'SET_X': setcode}.
+    """
+    names, constants = {}, {}
+    for const, value in SETCODE_DEF_RE.findall(read_text_file(paths["constants"])):
+        constants[const] = int(value, 16)
+        names.setdefault(int(value, 16), set()).add(const[len("SET_"):])
+    for value, setname in SETNAME_RE.findall(read_text_file(paths["strings"])):
+        names.setdefault(int(value, 16), set()).add(setname)
+    return names, constants
+
+
+def fanmade_setcode_conflict(setcode, key, official, repo_names, repo_constants):
+    """Lý do setcode không dùng được cho archetype fan-made có khóa key, hoặc None."""
+    base = setcode & SETCODE_BASE_MASK
+    for code, const in (official or {}).items():
+        if code & SETCODE_BASE_MASK == base:
+            return (f"setcode {hex(setcode)} trùng archetype official {const} ({hex(code)}) — EDOPro coi card "
+                    "mang setcode này là một phần của archetype đó")
+    names = repo_names.get(setcode, set())
+    if names and key not in {normalize_archetype_key(n) for n in names}:
+        return (f"setcode {hex(setcode)} đã được dùng cho {', '.join(sorted(names))} "
+                "trong script/constants.lua hoặc strings.conf")
+    for const, value in repo_constants.items():
+        if normalize_archetype_key(const[len("SET_"):]) == key and value != setcode:
+            return f"{const} đã khai báo setcode {hex(value)} trong script/constants.lua"
+    return None
+
+
+def pick_fanmade_setcode(key, official, repo_names, repo_constants, registered, archetypes):
+    """Setcode cho archetype fan-made khi 'archetype add' không truyền setcode.
+
+    Tên đã có setcode trong constants.lua/strings.conf (archetype của dev khác
+    chưa vào feature_list) thì dùng lại; không thì lấy setcode trống đầu tiên từ
+    FANMADE_SETCODE_START có passcode range không chồng archetype nào.
+    """
+    for code, names in repo_names.items():
+        if key in {normalize_archetype_key(n) for n in names}:
+            return code
+    for setcode in range(FANMADE_SETCODE_START, SETCODE_BASE_MASK + 1):
+        if setcode in registered or setcode in repo_names:
+            continue
+        if fanmade_setcode_conflict(setcode, key, official, repo_names, repo_constants):
+            continue
+        bounds, error = derive_passcode_range(setcode)
+        if error is None and overlapping_archetype(archetypes, *bounds) is None:
+            return setcode
+    return None
+
+
+def register_fanmade_setcode(paths, name, setcode, repo_constants):
+    """Ghi SET_ vào constants.lua và !setname vào strings.conf nếu còn thiếu.
+
+    Trả về (tên hằng dùng trong Lua, danh sách file đã ghi).
+    """
+    key = normalize_archetype_key(name)
+    const = next((c for c, v in repo_constants.items()
+                  if v == setcode and normalize_archetype_key(c[len("SET_"):]) == key), None)
+    written = []
+    if const is None:
+        const = "SET_" + re.sub(r"[^A-Z0-9]+", "_", name.upper()).strip("_")
+        insert_line(paths["constants"], f"{const:<34}= 0x{setcode:x}", "-- Custom counter")
+        written.append("script/constants.lua")
+    if setcode not in {int(v, 16) for v, _ in SETNAME_RE.findall(read_text_file(paths["strings"]))}:
+        insert_line(paths["strings"], f"!setname 0x{setcode:x} {name.replace('_', ' ')}", "#Custom Counter")
+        written.append("strings.conf")
+    return const, written
+
+
+def add_archetype(name, setcode_raw=None, range_raw=None):
     """Đăng ký archetype mới vào feature_list.json.
 
     AGENTS.md cấm sửa tay feature_list.json, nên đây là đường duy nhất để mở
-    một archetype mới trước khi 'start' cấp passcode cho card của nó.
+    một archetype mới trước khi 'start' cấp passcode cho card của nó. Setcode
+    official (có trong bản cài game) chỉ được đăng ký; setcode fan-made được
+    kiểm tra trùng rồi ghi luôn vào script/constants.lua và strings.conf.
     """
     paths = get_project_paths()
 
@@ -151,24 +279,49 @@ def add_archetype(name, setcode_raw, range_raw=None):
               "(vd Icejade, White_Forest).", file=sys.stderr)
         return False
 
-    setcode, error = parse_setcode(setcode_raw)
-    if error:
-        print(f"Error: {error}", file=sys.stderr)
-        return False
-
     fl_data = load_feature_list(paths)
     if fl_data is None:
         return False
     archetypes = fl_data.setdefault("archetypes", {})
 
     key = normalize_archetype_key(name)
+    registered = {}
     for existing_name, info in archetypes.items():
         if normalize_archetype_key(existing_name) == key:
             print(f"Error: archetype '{existing_name}' đã tồn tại trong feature_list.json.", file=sys.stderr)
             return False
         existing_setcode, _ = parse_setcode(info.get("setcode", "0"))
-        if existing_setcode == setcode:
-            print(f"Error: setcode {hex(setcode)} đã thuộc archetype '{existing_name}'.", file=sys.stderr)
+        if existing_setcode:
+            registered[existing_setcode] = existing_name
+
+    official = official_setcodes()
+    if official is None:
+        print("Warning: không đọc được archetype_setcode_constants.lua của bản cài EDOPro ($EDOPRO_DIR) — "
+              "không phân biệt được archetype official với fan-made.", file=sys.stderr)
+    repo_names, repo_constants = repo_setcodes(paths)
+
+    if setcode_raw is None:
+        if official is None:
+            print("Error: cần bản cài game để chọn setcode trống; truyền setcode thủ công.", file=sys.stderr)
+            return False
+        setcode = pick_fanmade_setcode(key, official, repo_names, repo_constants, registered, archetypes)
+        if setcode is None:
+            print(f"Error: không còn setcode fan-made trống từ {hex(FANMADE_SETCODE_START)}.", file=sys.stderr)
+            return False
+    else:
+        setcode, error = parse_setcode(setcode_raw)
+        if error:
+            print(f"Error: {error}", file=sys.stderr)
+            return False
+
+    if setcode in registered:
+        print(f"Error: setcode {hex(setcode)} đã thuộc archetype '{registered[setcode]}'.", file=sys.stderr)
+        return False
+    official_const = (official or {}).get(setcode)
+    if official_const is None:
+        error = fanmade_setcode_conflict(setcode, key, official, repo_names, repo_constants)
+        if error:
+            print(f"Error: {error}.", file=sys.stderr)
             return False
 
     if range_raw:
@@ -179,26 +332,26 @@ def add_archetype(name, setcode_raw, range_raw=None):
         print(f"Error: {error}", file=sys.stderr)
         return False
     start, end = bounds
+    overlap = overlapping_archetype(archetypes, start, end)
+    if overlap:
+        other_name, other = overlap
+        print(f"Error: range {start}-{end} chồng lên '{other_name}' ({other[0]}-{other[1]}).", file=sys.stderr)
+        return False
 
-    # Range chồng nhau nghĩa là hai archetype cùng tranh một passcode khi 'scan'
-    # hoặc 'start' cấp ID.
-    for existing_name, info in archetypes.items():
-        other, _ = parse_passcode_range(info.get("passcode_range", ""))
-        if other and start <= other[1] and other[0] <= end:
-            print(f"Error: range {start}-{end} chồng lên '{existing_name}' ({other[0]}-{other[1]}).", file=sys.stderr)
-            return False
-
+    if official_const is None:
+        const, written = register_fanmade_setcode(paths, name, setcode, repo_constants)
     archetypes[name] = {"setcode": f"0x{setcode:x}", "passcode_range": f"{start}-{end}", "cards": []}
     fl_data["last_updated"] = datetime.now().strftime("%Y-%m-%d")
     save_feature_list(paths, fl_data)
 
     print(f"Registered archetype '{name}': setcode 0x{setcode:x}, passcode range {start}-{end}.")
-    print("\n=== Việc cần làm tiếp theo ===")
-    print("1. Archetype official: tra setcode trong archetype_setcode_constants.lua của bản cài game và KHÔNG thêm vào "
-          "script/constants.lua (EDOPro đã có sẵn).")
-    print(f"2. Archetype fan-made: thêm 'SET_{name.upper()} = 0x{setcode:x}' vào script/constants.lua và "
-          f"'!setname 0x{setcode:x} {name.replace('_', ' ')}' vào strings.conf (docs/agent-rules.md §2.2).")
-    print(f"3. Ảnh queue đặt trong docs/queues/{name}/ với tiền tố p_ rồi chạy 'scan', hoặc tạo card trực tiếp:")
+    if official_const:
+        print(f"Archetype official: dùng {official_const} trong Lua; EDOPro đã có tên hiển thị, "
+              "không thêm vào script/constants.lua hay strings.conf.")
+    else:
+        done = f"đã ghi {', '.join(written)}" if written else "script/constants.lua và strings.conf đã có sẵn"
+        print(f"Archetype fan-made: dùng {const} trong Lua kèm Duel.LoadScript(\"constants.lua\") ({done}).")
+    print(f"Tạo card: đặt ảnh p_<tên>.jpg vào docs/queues/{name}/ rồi chạy 'scan', hoặc")
     print(f"   python tools/manage_harness.py start {start} \"<name>\" <template>")
     return True
 
@@ -334,7 +487,7 @@ def print_next_steps(passcode, template_type):
     print(f"1. card-data/c{passcode}.json — điền:")
     print(f"   - desc: effect text thật (placeholder '{PLACEHOLDER_DESC}' bị chặn)")
     if t in MONSTER_TEMPLATES:
-        print("   - race / attribute: bắt buộc khác 0, đúng 1 bit")
+        print("   - race / attribute: ghi tên, vd \"Warrior\", \"LIGHT\" (đúng 1 giá trị)")
         if t == "link_monster":
             print("   - level: Link rating; linkmarkers: tên marker (vd [\"Bottom-Left\",\"Bottom\"])")
             print("   - atk (Link không có def)")
@@ -342,9 +495,9 @@ def print_next_steps(passcode, template_type):
             print("   - level (Rank nếu Xyz), atk, def (\"?\" nếu ATK/DEF ?)")
         if t == "pendulum_monster":
             print("   - lscale / rscale: Pendulum Scale")
-    print("   - category: bitmask theo docs/agent-rules.md; strings: hint cho aux.Stringid")
+    print("   - category: danh sách tên, vd [\"Search\", \"Send to Hand\"]; strings: prompt cho aux.Stringid")
     print(f"2. script/c{passcode}.lua — thay hết placeholder <<...>>, viết logic effect")
-    print("   (tham khảo official qua python tools/read_official.py <passcode>)")
+    print("   (tìm official cùng cơ chế: python tools/read_official.py --text \"<cụm trong effect>\")")
     print(f"3. Artwork pics/{passcode}.jpg|.png — verify tự copy từ queue image nếu còn;")
     print("   tự thêm thì KHÔNG dùng .jpeg (EDOPro không nạp)")
     print(f"4. Chạy: python .\\tools\\manage_harness.py verify {passcode}")
@@ -403,7 +556,7 @@ def start_card(passcode, card_name, template_type):
 
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(spec_data, f, ensure_ascii=False, indent=2)
-    print(f"Created specs spec JSON: {json_path.relative_to(paths['root'])}")
+    print(f"Created spec JSON: {json_path.relative_to(paths['root'])}")
 
     # 5. Copy template Lua script (lỗi thì dọn JSON vừa tạo để không để lại trạng thái nửa vời)
     try:
@@ -581,12 +734,19 @@ def verify_card(passcode):
         ["powershell", "-ExecutionPolicy", "Bypass", "-File", "tools/validate_scripts.ps1",
          "-Path", f"script/c{passcode}.lua"], paths["root"])
 
+    # Validator in dòng trạng thái kèm tên file, các dòng lý do (CONST:, API:...) thụt lề
+    # ngay bên dưới; phải in cả hai thì agent mới biết sửa gì.
     file_failed = False
+    in_block = False
     for line in (stdout or "").splitlines():
         if f"c{passcode}.lua" in line:
             print(f"  Validator output: {line.strip()}")
-            if "FAIL" in line:
-                file_failed = True
+            file_failed = file_failed or "FAIL" in line
+            in_block = True
+        elif in_block and line.startswith(" ") and line.strip():
+            print(f"    {line.strip()}")
+        else:
+            in_block = False
 
     if rc != 0 or file_failed:
         print("Error: Script validation failed for this passcode. Please fix errors before declaring success.", file=sys.stderr)
@@ -699,6 +859,11 @@ def scan_pending_cards():
             registered_passcodes.add(card["passcode"])
 
     queues_dir = paths["queues_dir"]
+    if not queues_dir.is_dir():
+        # Git không lưu thư mục rỗng nên clone mới chưa có docs/queues/
+        print(f"{queues_dir.relative_to(paths['root']).as_posix()}/ chưa tồn tại — tạo "
+              "docs/queues/<Archetype>/ rồi đặt ảnh p_<tên card>.jpg vào đó.")
+        return True
     found_pending = [
         p for ext in QUEUE_EXTS for p in queues_dir.rglob(f"*{ext}")
         if p.name.startswith("p_") and strip_queue_prefix(p.stem).lower() not in registered_stems
@@ -889,7 +1054,9 @@ def main():
     archetype_sub = archetype_parser.add_subparsers(dest="archetype_command", required=True)
     archetype_add = archetype_sub.add_parser("add", help="Register a new archetype with its setcode and passcode range")
     archetype_add.add_argument("name", type=str, help="Archetype key, e.g. Icejade or White_Forest")
-    archetype_add.add_argument("setcode", type=str, help="Setcode in hex (0x16e) or decimal")
+    archetype_add.add_argument("setcode", type=str, nargs="?",
+                               help="Setcode in hex (0x16e) or decimal; omit for a new fan-made archetype "
+                                    "to pick a free one and write it to script/constants.lua and strings.conf")
     archetype_add.add_argument("--range", dest="passcode_range", type=str,
                                help="Override the derived passcode range, e.g. 36600001-36699999")
 

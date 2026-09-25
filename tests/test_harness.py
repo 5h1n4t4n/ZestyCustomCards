@@ -52,23 +52,60 @@ class HarnessRegressionTests(unittest.TestCase):
                 spec = harness.build_spec_skeleton(12345678, "Test", template, 0)
                 self.assertEqual(spec["type"], expected)
 
+    def archetype_fixture(self, root):
+        features = root / "feature_list.json"
+        features.write_text(json.dumps({"archetypes": {"Common": {"cards": []}}}), encoding="utf-8")
+        constants = root / "constants.lua"
+        constants.write_bytes(b"-- Custom Archetype\r\nSET_TTF = 0x789\r\nSET_ATERMIS = 0x780\r\n"
+                              b"-- Custom counter\r\nCOUNTER_MANA = 0x177\r\n")
+        strings = root / "strings.conf"
+        strings.write_bytes(b"#Custom Archetype\r\n!setname 0x789 TTF\r\n!setname 0x781 Cat\r\n"
+                            b"#Custom Counter\r\n!counter 0x177 Mana Counter\r\n")
+        paths = {"root": root, "feature_list": features, "constants": constants, "strings": strings}
+        return paths, features, constants, strings
+
     def test_archetype_add_derives_range_and_rejects_conflicts(self):
+        official = {0x16e: "SET_ICEJADE", 0x4: "SET_AMAZONESS"}
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            features = root / "feature_list.json"
-            features.write_text(json.dumps({"archetypes": {"Common": {"cards": []}}}), encoding="utf-8")
-            paths = {"root": root, "feature_list": features}
-            with patch.object(harness, "get_project_paths", return_value=paths), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            paths, features, constants, strings = self.archetype_fixture(Path(directory))
+            before = (constants.read_bytes(), strings.read_bytes())
+            with patch.object(harness, "get_project_paths", return_value=paths), \
+                    patch.object(harness, "official_setcodes", return_value=official), \
+                    contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                 self.assertTrue(harness.add_archetype("Icejade", "0x16e"))
                 self.assertFalse(harness.add_archetype("ice_jade", "0x999"), "trùng tên sau khi chuẩn hóa")
                 self.assertFalse(harness.add_archetype("Other", "0x16e"), "trùng setcode")
                 self.assertFalse(harness.add_archetype("Other", "0x999", "36600050-36600060"), "chồng range")
                 self.assertFalse(harness.add_archetype("TooBig", "0xffff"), "passcode vượt 9 chữ số")
                 self.assertFalse(harness.add_archetype("2Bad", "0x999"), "tên không hợp lệ")
+                self.assertFalse(harness.add_archetype("Sub", "0x1004"), "cùng 12 bit thấp với SET_AMAZONESS")
+                self.assertFalse(harness.add_archetype("Other", "0x789"), "setcode của SET_TTF trong constants.lua")
             archetypes = json.loads(features.read_text(encoding="utf-8"))["archetypes"]
             self.assertEqual(archetypes["Icejade"],
                              {"setcode": "0x16e", "passcode_range": "36600001-36699999", "cards": []})
             self.assertEqual(set(archetypes), {"Common", "Icejade"})
+            # Archetype official đã có trong game nên không được ghi vào constants.lua/strings.conf.
+            self.assertEqual((constants.read_bytes(), strings.read_bytes()), before)
+
+    def test_archetype_add_picks_and_writes_fanmade_setcode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths, features, constants, strings = self.archetype_fixture(Path(directory))
+            with patch.object(harness, "get_project_paths", return_value=paths), \
+                    patch.object(harness, "official_setcodes", return_value={0x4: "SET_AMAZONESS"}), \
+                    contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertTrue(harness.add_archetype("Flow_Test"))
+                self.assertTrue(harness.add_archetype("TTF"), "archetype đã có trong constants.lua thì dùng lại setcode")
+            archetypes = json.loads(features.read_text(encoding="utf-8"))["archetypes"]
+            # 0x780 (Atermis) và 0x781 (Cat) đã có người dùng nên setcode trống đầu tiên là 0x782.
+            self.assertEqual(archetypes["Flow_Test"]["setcode"], "0x782")
+            self.assertEqual(archetypes["TTF"]["setcode"], "0x789")
+            self.assertEqual(constants.read_bytes(),
+                             b"-- Custom Archetype\r\nSET_TTF = 0x789\r\nSET_ATERMIS = 0x780\r\n"
+                             + b"SET_FLOW_TEST".ljust(34) + b"= 0x782\r\n"
+                             b"-- Custom counter\r\nCOUNTER_MANA = 0x177\r\n")
+            self.assertEqual(strings.read_bytes(),
+                             b"#Custom Archetype\r\n!setname 0x789 TTF\r\n!setname 0x781 Cat\r\n"
+                             b"!setname 0x782 Flow Test\r\n#Custom Counter\r\n!counter 0x177 Mana Counter\r\n")
 
     def test_start_rewrites_name_of_pending_card(self):
         with tempfile.TemporaryDirectory() as directory:
