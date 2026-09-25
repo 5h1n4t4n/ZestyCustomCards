@@ -1,0 +1,28 @@
+{
+  "id": 192500002,
+  "ot": 32,
+  "alias": 0,
+  "type": 67108897,
+  "setcodes": [
+    1925
+  ],
+  "atk": "?",
+  "def": 0,
+  "level": 5,
+  "race": 16777216,
+  "attribute": 32,
+  "category": 135266368,
+  "linkmarkers": [
+    "Top-Left",
+    "Top-Right",
+    "Left",
+    "Right",
+    "Bottom"
+  ],
+  "name": "Genericus Monstrum the Link",
+  "desc": "1+ monsters\nIf this card is Special Summoned by the effect of a \"Genericus Monstrum\" monster: Its original ATK becomes 3000, also you can declare 1 Attribute; this card becomes that Attribute.\n① Gains the original Attributes, Types, ATK, and DEF of the monsters used as material for its Link Summon.\n② Cannot be targeted by the effects of monsters with the same Attribute as this card.\n③ (Quick Effect): You can shuffle both this card and 1 card on the field into the Deck/Extra Deck; Special Summon 1 non-Link \"Genericus Monstrum\" monster from your Deck or Extra Deck.\n④ If this card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Extra Deck, and if you do, Special Summon 1 non-Link \"Genericus Monstrum\" monster from your Deck or Extra Deck, ignoring its Summoning conditions.\nYou can only use each effect of \"Genericus Monstrum the Link\" once per turn.",
+  "strings": [
+    "Special Summon 1 non-Link 'Genericus Monstrum'",
+    "Return to Extra Deck and Special Summon"
+  ]
+}

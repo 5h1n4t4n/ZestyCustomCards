@@ -1,0 +1,31 @@
+{
+  "id": 192500003,
+  "ot": 32,
+  "alias": 0,
+  "type": 16777249,
+  "setcodes": [
+    1925
+  ],
+  "atk": "?",
+  "def": "?",
+  "level": 10,
+  "lscale": 12,
+  "rscale": 12,
+  "race": 2,
+  "attribute": 32,
+  "category": 1769667,
+  "name": "Genericus Monstrum the Pendulum",
+  "desc": "[Pendulum Effect]\nYou can activate 1 of these effects. You can only use each Pendulum Effect of \"Genericus Monstrum the Pendulum\" once per turn.\n● During your Main Phase: You can add 1 Pendulum Monster from your Deck to your hand, but for the rest of this turn, unless you Pendulum Summon after this effect resolves, you cannot activate monster effects.\n● You can pay 1000 LP; Change this card's Pendulum Scale to 0 until the end of this turn.\n● You can pay half your LP; during your Main Phase this turn, you can conduct 1 Pendulum Summon of a monster(s) in addition to your Pendulum Summon. (You can only gain this effect once per turn.)\n● If your LP is below 1000: Banish 1 card from your hand or field face-down; gain 8000 LP.\n\n[Monster Effect]\nMust first be Pendulum Summoned, or Special Summoned by a \"Genericus Monstrum\" card effect. If this card is Special Summoned by the effect of a \"Genericus Monstrum\" monster, its original ATK/DEF become 3000 (if it was Special Summoned by the effect of a \"Genericus Monstrum\" Link Monster, this card's Attributes also become DIVINE, DARK, LIGHT, WATER, FIRE, WIND, and EARTH).\n① This card gains the original Attributes, Types, ATK, and DEF of all face-up Pendulum Monsters currently on the field.\n② You can target 2 Spells or 1 monster you control; destroy them, and if you do, Special Summon this card from your hand, or face-up Extra Deck.\n③ If this card is Special Summoned: You can target 1 Pendulum Monster in your GY; Special Summon it.\n④ Cannot be targeted by your opponent's Spell/Trap effects, or by your opponent's monster effects with the same Attribute as this card.\n⑤ (Quick Effect): Banish 1 Pendulum Monster you control or from your GY, then target 1 face-up card on the field; negate the activation. If this card was Special Summoned by the effect of a \"Genericus Monstrum\" Link Monster, you can banish 1 card your opponent controls instead, also negate the effects of all cards your opponent currently controls.\n⑥ If this face-up card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Deck, and if you do, Special Summon 1 non-Pendulum \"Genericus Monstrum\" monster from your Deck or Extra Deck, ignoring its Summoning conditions.\nYou can only use each monster effect of \"Genericus Monstrum the Pendulum\" once per turn.",
+  "strings": [
+    "Add 1 Pendulum Monster from Deck to hand",
+    "Change Scale to 0",
+    "Conduct 1 additional Pendulum Summon",
+    "Gain 8000 LP",
+    "Destroy 2 Spells to Special Summon",
+    "Destroy 1 Monster to Special Summon",
+    "Special Summon 1 Pendulum Monster from GY",
+    "Negate activation/effects",
+    "Return to Deck and Special Summon",
+    "Banish 1 card opponent controls"
+  ]
+}

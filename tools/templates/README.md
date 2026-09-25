@@ -3,9 +3,9 @@
 Hướng dẫn cách dùng template trong thư mục này để sinh script card.
 
 Tham khảo đầy đủ:
-- **API & effect types**: `docs/card-scripting-guide.md`
-- **Categories, CDB schema & Critical Rules**: `docs/agent-rules.md`
-- **Workflow & Testing Guide**: `docs/agent-workflow.md`
+- **Quy tắc Lua, CDB schema, bitmask và tài liệu API**: `docs/agent-rules.md`
+- **Quy trình tạo card**: `docs/agent-workflow.md`
+- **Test card trong game**: `docs/game-testing-workflow.md`
 
 ---
 
@@ -47,7 +47,7 @@ Mỗi template có comment `<< Effect 1 >>`, `<< Effect 2 >>` đánh dấu slot.
 
 - **Thêm effect**: Copy block `Effect.CreateEffect` → `c:RegisterEffect(eN)` + các hàm filter/target/operation. Đổi tên biến (`e2` → `e3`) và `aux.Stringid(id,N)` (N tăng dần).
 - **Bớt effect**: Xóa block effect + tất cả hàm liên quan.
-- **Đổi loại effect**: Xem bảng effect types trong `docs/card-scripting-guide.md` mục 3.
+- **Đổi loại effect**: Lấy official card cùng cơ chế làm mẫu (`python tools/read_official.py <ID|"Tên">`).
 
 ## 4. Đặt tên file
 
@@ -59,6 +59,7 @@ Ví dụ: script/c192200001.lua
 ## 5. Validate
 
 ```powershell
-.\tools\validate_scripts.ps1
-.\tools\lint_scripts.ps1
+python tools/manage_harness.py verify <passcode>
 ```
+
+`verify` chạy `validate_scripts.ps1` cho đúng script của card, cùng các bước kiểm tra dữ liệu (`docs/agent-workflow.md` §4).

@@ -1,0 +1,26 @@
+{
+  "id": 192500005,
+  "ot": 32,
+  "alias": 0,
+  "type": 8225,
+  "setcodes": [
+    1925
+  ],
+  "atk": "?",
+  "def": "?",
+  "level": 10,
+  "race": 1,
+  "attribute": 32,
+  "category": 34670275,
+  "name": "Genericus Monstrum the Synchro",
+  "desc": "1+ Tuner + 1+ non-Tuner monsters\nMust first be Synchro Summoned. If this card is Special Summoned by the effect of a \"Genericus Monstrum\" monster: Its original ATK/DEF become 3000, also you can choose 1 Attribute; this card gains that original Attribute (if it was Special Summoned by the effect of a \"Genericus Monstrum\" Link Monster, this card's Attributes instead become DIVINE, DARK, LIGHT, WATER, FIRE, WIND, and EARTH).\n① This card gains the original Attributes, Types, ATK, and DEF of the materials used for its Synchro Summon.\n② Gains these effects based on its Attributes:\n● LIGHT: You can add 1 Tuner monster from your Deck to your hand, but you cannot activate its effects until the end of the next turn, unless it is Summoned.\n● DARK: Cannot be targeted or destroyed by your opponent's card effects.\n● WIND (Quick Effect): When a monster effect is activated: You can banish 1 Tuner monster and 1 non-Tuner monster from your GY; negate the activation, and if you do, destroy that card.\n● WATER (Quick Effect): You can banish 1 card your opponent controls, and if you do, this card gains 1000 ATK.\n● FIRE: Special Summon 1 Tuner monster or 1 Synchro Monster from your GY or banishment, but negate its effects.\n● EARTH (Quick Effect): When a Spell/Trap Card or effect is activated: You can banish the top 2 cards of your Deck; negate the activation, and if you do, destroy that card.\n● DIVINE: Face-up cards you control are unaffected by your opponent's card effects.\n③ If this card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Extra Deck, and if you do, Special Summon 1 non-Synchro \"Genericus Monstrum\" monster from your Deck or Extra Deck, ignoring its Summoning conditions.\nYou can only use each effect of \"Genericus Monstrum the Synchro\" once per turn.",
+  "strings": [
+    "Choose 1 Attribute",
+    "LIGHT: Search 1 Tuner",
+    "WIND: Negate monster effect",
+    "WATER: Banish 1 card opponent controls",
+    "FIRE: Special Summon 1 Tuner or Synchro",
+    "EARTH: Negate Spell/Trap",
+    "Return to Extra Deck and Special Summon"
+  ]
+}

@@ -19,7 +19,7 @@ function s.initial_effect(c)
     c:EnableReviveLimit()  -- Must be properly Fusion Summoned first
 
     -- ============================================================
-    -- Summon Procedure — Contact Fusion using setcode materials
+    -- Summon Procedure — Fusion Summon using <<MIN_MATERIAL>> setcode materials
     -- ============================================================
     Fusion.AddProcFunRep(c,s.mfilter,<<MIN_MATERIAL>>,false)
 
@@ -41,8 +41,8 @@ end
 -- ============================================================
 -- Fusion Material filter — Cards that can be used as material
 -- ============================================================
-function s.mfilter(c)
-    return c:IsFusionSetCard(0x<<SETCODE>>)
+function s.mfilter(c,fc,sumtype,tp)
+    return c:IsSetCard(0x<<SETCODE>>,fc,sumtype,tp)
 end
 
 -- ============================================================

@@ -1,25 +1,30 @@
 # TTF Custom Cards — Agent Guide
 
-Đọc file này trước, rồi chỉ đọc tài liệu liên quan. Repo dùng Lua (EDOPro), Python và PowerShell; chạy lệnh từ thư mục gốc.
+Đọc file này trước, rồi chỉ mở tài liệu của bước đang làm. Repo dùng Lua (EDOPro), Python và PowerShell; chạy lệnh từ thư mục gốc.
+
+## Git
+
+- Nhánh chính của repo là **`master`** (đồng bộ với `upstream/master`). Không tạo feature branch: commit rồi push thẳng lên `origin/master` (đang ở worktree thì `git push origin HEAD:master`). Chỉ mở Pull Request sang repo gốc khi được yêu cầu; PR mở từ `LeDoanh:master`, nên commit mới trên `master` tự vào PR đang mở.
+- Chỉ commit/push khi được yêu cầu. Gom JSON, Lua, artwork và `card-data.cdb` của cùng một thay đổi. Format: `[<Git user>] [Fix|Feature|Refactor|Chore]: <English description>`.
+- Git diff/log là lịch sử thay đổi; không viết nhật ký phiên.
 
 ## Nguồn dữ liệu và ranh giới
 
-- Nhánh chính của repo là **`master`** (đồng bộ với `upstream/master`). Tạo feature branch từ `master` khi làm card/tính năng mới.
-- `card-data/c<ID>.json`: nguồn dữ liệu cho card được quản lý bằng specs; compiler sinh **`card-data.cdb`**.
+- `card-data/c<ID>.json`: nguồn dữ liệu cho card được quản lý bằng specs; compiler sinh **`card-data.cdb`**. Sửa JSON rồi compile, không sửa CDB bằng editor.
 - `script/c<ID>.lua`: code chạy trong game. `tools/`: công cụ phát triển và templates, không phải script game.
-- `custom_cards_zesty.cdb`, `mycard.cdb` và các CDB cộng đồng (`Chrysos Heirs.cdb`, `FlowerSpirit.cdb`, `Madoka.cdb`, `Mecha Three Kingdom.cdb`): dữ liệu của dev khác. Không compile đè, dump đè specs hoặc giải quyết conflict bằng chọn cả file ours/theirs.
-- `feature_list.json`: hàng đợi và trạng thái; dùng Harness CLI để thay đổi, không chỉnh thủ công.
-- Git diff/log là lịch sử thay đổi. Nhật ký phiên cũ nằm trong `docs/archive/`, chỉ đọc khi điều tra lịch sử; không tạo lại nhật ký bắt buộc.
+- Mọi `*.cdb` khác ở gốc repo (`custom_cards_zesty.cdb`, `mycard.cdb` và các CDB cộng đồng) là dữ liệu của dev khác. Không ghi đè hoặc giải quyết conflict bằng chọn cả file ours/theirs.
+- Không sửa card của dev khác trừ khi được yêu cầu. Quét toàn bộ `script/` sẽ gặp FAIL ở script của họ; lỗi đó không chặn card đang làm.
+- `feature_list.json`: hàng đợi và trạng thái; dùng `tools/manage_harness.py` để thay đổi, không chỉnh thủ công.
 
-## Quy trình tối thiểu
+## Luồng tạo card và test card
 
-1. Đọc `docs/agent-workflow.md`; chốt effect text, passcode chưa dùng trong tất cả CDB, và các tình huống cần kiểm tra.
-2. Tra setcode tại `docs/archetype_setcode_constants.lua`. Đọc official reference từ game bằng `python tools/read_official.py <ID>` (hoặc `tools/read_official.ps1 <ID>`, hỗ trợ tra cứu theo tên hoặc dùng `tools/fetch_official.ps1` làm fallback online); ghi card ID, effect/function tham khảo và phần khác biệt. Không lấy custom card cũ làm bằng chứng API đúng.
-3. Card mới: `python tools/manage_harness.py start <ID> "<name>" <template>`. Archetype chưa đăng ký thì chạy `archetype add <Name> <setcode>` trước. Dùng template như khung, không giữ hiệu ứng mẫu không thuộc yêu cầu.
+1. Chốt effect text và các tình huống cần test (`docs/agent-workflow.md` §1).
+2. Tìm official card cùng cơ chế: `python tools/read_official.py <ID|"Tên card">`. Ghi card ID, effect/function tham khảo và phần khác biệt. Không lấy custom card cũ làm bằng chứng API đúng.
+3. Archetype chưa đăng ký: `python tools/manage_harness.py archetype add <Name> <setcode>` (setcode official tra trong `repositories/delta-bagooska/script/archetype_setcode_constants.lua` của bản cài game). Tạo card: `python tools/manage_harness.py start <ID> "<name>" <template>`. Template chỉ là khung, xóa hiệu ứng mẫu không thuộc yêu cầu.
 4. Sửa JSON và Lua; đối chiếu từng effect với `docs/agent-rules.md`. Không bịa API, không suy ra timing từ tên hàm.
-5. `python tools/manage_harness.py verify <ID>`; kiểm tra exit code. Đây là kiểm tra **tĩnh**, không chứng minh hiệu ứng chạy đúng.
-6. Kiểm thử duel theo kịch bản trong workflow; báo rõ những gì chưa chạy. Trạng thái queue `done` chỉ có nghĩa hoàn tất pipeline hiện có, không là chứng nhận runtime.
-7. Review diff; khi được yêu cầu commit, gom JSON, Lua, artwork liên quan và `card-data.cdb`. Format: `[<Git user>] [Fix|Feature|Refactor|Chore]: <English description>`.
+5. `python tools/manage_harness.py verify <ID>`; exit code phải là 0. Đây là kiểm tra **tĩnh**, không chứng minh hiệu ứng chạy đúng.
+6. `powershell -File tools/sync_game.ps1 -CardId <ID>`, rồi duel bằng deck `test_<ID>` theo ma trận kịch bản trong `docs/game-testing-workflow.md`.
+7. Báo cáo: ID, official reference, lệnh đã chạy và kết quả, kịch bản duel với kết quả thực tế. Chưa duel thì ghi "kiểm tra tĩnh đạt, runtime chưa kiểm thử"; trạng thái queue `done` không phải chứng nhận runtime.
 
 ## Ràng buộc viết card
 
@@ -28,13 +33,13 @@
 - Nếu dùng hằng/helper custom trong `script/constants.lua`, load bằng `Duel.LoadScript("constants.lua")`.
 - `ot=32`; không thay ID card hiện hữu. ID cũ có độ dài khác nhau: không đổi ID chỉ để đủ 9 chữ số.
 - Không áp đặt `IsRelateToEffect` lên mọi operation: chỉ kiểm tra đối tượng cần còn liên hệ để thực hiện phần hiệu ứng đó, theo official reference.
-- Không chỉnh code gameplay ngoài yêu cầu, không coi lint hoặc mock là test duel.
+- Không chỉnh code gameplay ngoài yêu cầu, không coi kiểm tra tĩnh hoặc mock là test duel.
 
 ## Điều hướng
 
-- `docs/agent-workflow.md`: trình tự làm card, bằng chứng và QA.
-- `docs/agent-rules.md`: quy tắc Lua và schema/bitmask.
-- `docs/database-workflow.md`: ownership, compile, migration và conflict CDB.
-- `docs/card-scripting-guide.md`: tham khảo mở rộng; đối chiếu với official script thực tế.
+- `docs/agent-workflow.md`: tạo card — yêu cầu, official reference, harness, kiểm tra tĩnh, artwork.
+- `docs/game-testing-workflow.md`: test card — sync sang game, deck test, duel, error log, ma trận kịch bản.
+- `docs/agent-rules.md`: quy tắc Lua, passcode/setcode, schema CDB và bitmask.
+- `docs/database-workflow.md`: ownership, compile và conflict CDB.
 
 Kiểm tra công cụ: `python -m unittest discover -s tests -v`.

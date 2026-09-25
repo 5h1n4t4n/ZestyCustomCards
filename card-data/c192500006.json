@@ -1,0 +1,25 @@
+{
+  "id": 192500006,
+  "ot": 32,
+  "alias": 0,
+  "type": 8388641,
+  "setcodes": [
+    1925
+  ],
+  "atk": "?",
+  "def": "?",
+  "level": 10,
+  "race": 32,
+  "attribute": 32,
+  "category": 68288576,
+  "name": "Genericus Monstrum the Xyz",
+  "desc": "2 Xyz monsters with the same rank\nMust first be either Xyz Summoned, or Special Summoned during a turn your opponent activated 2 or more monster effects, by using 1 Xyz Monster you control as material. (Transfer its materials to this card.) If this card is Special Summoned by the effect of a \"Genericus Monstrum\" monster: Its original ATK/DEF become 3000 (if it was Special Summoned by the effect of a \"Genericus Monstrum\" Link Monster, you can look at your opponent's Deck and attach 10 cards from it to this card as material).\n① This card gains the original Attributes, Types, ATK, and DEF of its materials.\n② If a monster(s) you control leaves the field: You can attach 1 of those monsters to this card as material.\n③ (Quick Effect): You can detach 1 material from this card, then target 1 card on the field; attach it to this card as material.\n④ (Quick Effect): You can detach 5 materials from this card; shuffle all cards on the field, in the GYs, and that are banished into the Decks.\n⑤ While this card has 10 or more materials, negate the effects of all monsters on the field with ATK lower than this card's current ATK, also this card is unaffected by monster effects activated by an opponent's monster with the same Attribute as this card.\n⑥ If this card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Extra Deck, and if you do, Special Summon 1 non-Xyz \"Genericus Monstrum\" monster from your Deck or Extra Deck, ignoring its Summoning conditions.\nYou can only use each effect of \"Genericus Monstrum the Xyz\" once per turn.",
+  "strings": [
+    "Special Summon (Xyz)",
+    "Attach 10 cards from opponent's Deck",
+    "Attach leaving monster",
+    "Attach 1 card on field",
+    "Shuffle all into Decks",
+    "Return to Extra Deck and Special Summon"
+  ]
+}

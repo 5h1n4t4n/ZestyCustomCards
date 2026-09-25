@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Đọc thông tin và script card official trực tiếp từ bản cài EDOPro/ProjectIgnis.
 
-Thay vì tải qua mạng bằng `fetch_official.ps1`, công cụ này đọc dữ liệu và script
-đã có sẵn trong thư mục cài EDOPro:
+Đọc dữ liệu và script đã có sẵn trong thư mục cài EDOPro (thêm --fetch để tải
+script từ GitHub khi bản cài không có):
   - Script Lua: tìm trong repositories/delta-bagooska/script/ (ưu tiên) và script/
   - Metadata & Effect text: đọc từ các file CDB của game (cards.delta.cdb, cards.cdb...)
   - Tự động sao chép script vào docs/official-reference/c<ID>.lua để làm mẫu phát triển.
@@ -31,8 +31,12 @@ if hasattr(sys.stderr, "reconfigure"):
 DEFAULT_GAME_DIR = "F:/Game/ProjectIgnis"
 OFFICIAL_REPO_PREFIX = "https://github.com/ProjectIgnis/"
 
-# ===== Bitmask Constants =====
-# Types
+# manage_db nằm cùng thư mục; thêm vào sys.path để import được cả khi file
+# này được nạp theo đường dẫn (test) chứ không qua `python tools/...`.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from manage_db import ATTRIBUTES, LINK_MARKERS, RACES  # noqa: E402
+
+# Type bitmask dùng cho format_card_type
 TYPE_MONSTER = 0x1
 TYPE_SPELL = 0x2
 TYPE_TRAP = 0x4
@@ -40,13 +44,11 @@ TYPE_NORMAL = 0x10
 TYPE_EFFECT = 0x20
 TYPE_FUSION = 0x40
 TYPE_RITUAL = 0x80
-TYPE_TRAPMONSTER = 0x100
 TYPE_SPIRIT = 0x200
 TYPE_UNION = 0x400
 TYPE_DUAL = 0x800  # Gemini
 TYPE_TUNER = 0x1000
 TYPE_SYNCHRO = 0x2000
-TYPE_TOKEN = 0x4000
 TYPE_QUICKPLAY = 0x10000
 TYPE_CONTINUOUS = 0x20000
 TYPE_EQUIP = 0x40000
@@ -56,61 +58,7 @@ TYPE_FLIP = 0x200000
 TYPE_TOON = 0x400000
 TYPE_XYZ = 0x800000
 TYPE_PENDULUM = 0x1000000
-TYPE_SPSUMMON = 0x2000000
 TYPE_LINK = 0x4000000
-
-# Attributes
-ATTRIBUTES = {
-    0x01: "EARTH",
-    0x02: "WATER",
-    0x04: "FIRE",
-    0x08: "WIND",
-    0x10: "LIGHT",
-    0x20: "DARK",
-    0x40: "DIVINE",
-}
-
-# Races
-RACES = {
-    0x1: "Warrior",
-    0x2: "Spellcaster",
-    0x4: "Fairy",
-    0x8: "Fiend",
-    0x10: "Zombie",
-    0x20: "Machine",
-    0x40: "Aqua",
-    0x80: "Pyro",
-    0x100: "Rock",
-    0x200: "Winged Beast",
-    0x400: "Plant",
-    0x800: "Insect",
-    0x1000: "Thunder",
-    0x2000: "Dragon",
-    0x4000: "Beast",
-    0x8000: "Beast-Warrior",
-    0x10000: "Dinosaur",
-    0x20000: "Fish",
-    0x40000: "Sea Serpent",
-    0x80000: "Reptile",
-    0x100000: "Psychic",
-    0x200000: "Divine-Beast",
-    0x400000: "Creator God",
-    0x800000: "Wyrm",
-    0x1000000: "Cyberse",
-    0x2000000: "Illusion",
-}
-
-# Link Markers
-LINK_MARKERS = [
-    (0x001, "Bottom-Left"),
-    (0x002, "Bottom"),
-    (0x004, "Bottom-Right"),
-    (0x008, "Left"),
-    (0x020, "Right"),
-    (0x040, "Top-Left"),
-    (0x080, "Top"),
-    (0x100, "Top-Right"),
-]
 
 
 def resolve_game_dir(explicit_dir=None):
@@ -454,7 +402,7 @@ def format_card_stats(card_info):
     # DEF or Link Markers
     if ctype & TYPE_LINK:
         marker_bits = card_info["def"]
-        active_markers = [name for bit, name in LINK_MARKERS if marker_bits & bit]
+        active_markers = [name for bit, name in LINK_MARKERS.items() if marker_bits & bit]
         markers_str = ", ".join(active_markers) if active_markers else "None"
         stat_parts.append(f"ATK: {atk_val}  Markers: [{markers_str}]")
     else:

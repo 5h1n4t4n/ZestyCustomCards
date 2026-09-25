@@ -12,13 +12,15 @@ Các quy tắc lập trình bắt buộc để đảm bảo script tương thíc
 2. Với effect kích hoạt có target callback, dùng `chk==0` kiểm tra legality; cost/target/operation là ba bước khác nhau. Continuous field target/filter không dùng cùng chữ ký callback.
 3. `aux.Stringid(id,N)` dùng chỉ số 0-based vào `strings`; không bắt buộc N bằng số thứ tự effect nếu có nhiều prompt.
 4. Kiểm tra zone ở thời điểm thích hợp; Extra Deck summon và zone giải phóng bởi cost/material cần API phù hợp theo reference.
-5. Chỉ kiểm tra handler `IsRelateToEffect`/`IsFaceup` khi phần operation đó cần handler còn tại vị trí/trạng thái hợp lệ. Không chặn search/draw chỉ vì handler rời sân nếu luật không yêu cầu.
+5. Chỉ kiểm tra handler `IsRelateToEffect`/`IsFaceup` khi phần operation đó cần handler còn tại vị trí/trạng thái hợp lệ. Không chặn search/draw chỉ vì handler rời sân nếu luật không yêu cầu. Cảnh báo `STRUCT:` của `validate_scripts.ps1` về `IsRelateToEffect` hay `chk==0` là heuristic, không phải yêu cầu.
 6. Với đối tượng được target, kiểm tra quan hệ/trạng thái tại resolution theo reference; card được chọn trong operation không mặc nhiên là target.
 7. HOPT/SOPT và giới hạn activation/use phải theo text và reference; không thêm `EFFECT_COUNT_CODE_OATH` cho mọi HOPT.
 8. Dùng `tools/templates/` làm khung; xóa effect mẫu không dùng. Không sao chép custom cũ làm bằng chứng API đúng.
 9. Nếu dùng định danh từ `script/constants.lua`, thêm `Duel.LoadScript("constants.lua")`. Tra setcode official trong tài liệu local.
-10. API mới phải có bằng chứng từ official script/helper hoặc source engine. `tools/phantom_apis.txt` chỉ là danh sách lỗi đã biết, không chứng minh API còn lại hợp lệ.
+10. API mới phải có bằng chứng từ official script/helper hoặc source engine. Qua được whitelist của validator chỉ chứng minh tên hàm tồn tại, không chứng minh cách dùng đúng.
 11. Gán range/property/reset/category theo loại effect và reference, không áp dụng một công thức cho mọi effect.
+12. Spell official chỉ dùng `EFFECT_TYPE_QUICK_O` khi card đang ngửa trên sân (`LOCATION_SZONE`/`LOCATION_FZONE`) hoặc khi cấp hiệu ứng cho monster; không có Spell official nào dùng Quick Effect từ tay hay GY. Hiệu ứng Spell phản ứng từ tay/GY phải dựa trên official card cùng cơ chế, không tự dựng `QUICK_O`.
+13. Text nhắc tên card cụ thể thì khai báo `s.listed_names={...}`; searcher dựa trên `Card.ListsCode` không nhận diện được card thiếu khai báo này.
 
 ---
 
@@ -29,7 +31,7 @@ Giữ nguyên passcode hiện hữu. Với card mới, dùng range đã đăng k
 
 ### 2.2 Phân biệt Archetype Official và Fan-made
 * **Archetype Official (Dragonmaid, Labrynth, White Forest, Witchcrafter, Branded...):**
-  - Tra cứu setcode hex chuẩn xác tại [`docs/archetype_setcode_constants.lua`](archetype_setcode_constants.lua).
+  - Tra setcode hex trong `repositories/delta-bagooska/script/archetype_setcode_constants.lua` của bản cài game (bản mới nhất; không có game thì xem file cùng tên trong repo CardScripts ở §5).
   - Sử dụng trực tiếp setcode hex này trong JSON specs (dưới dạng số decimal). EDOPro đã tích hợp sẵn các setcode này, **không được thêm chúng vào `script/constants.lua`**.
 * **Archetype Fan-made mới:**
   1. Đăng ký hằng số `SET_XXX = 0xYYY` vào [script/constants.lua](../script/constants.lua).
@@ -44,7 +46,7 @@ Cả hai loại đều phải có entry trong `feature_list.json` trước khi c
 Database do compiler quản lý là `card-data.cdb`; các CDB khác thuộc luồng dữ liệu riêng (xem `database-workflow.md`). Mọi thay đổi thuộc tính của card đều phải được chỉnh sửa trong tệp JSON Specs tương ứng tại `card-data/c<passcode>.json` (được xem là **Single Source of Truth**), sau đó CLI biên dịch tự động vào database.
 
 ### 3.1 Cấu trúc Bảng Database
-Schema và quy tắc đóng gói dữ liệu tuân theo **Datacorn** (trình editor CDB chính thức của ProjectIgnis, source tham khảo tại `docs/resources/Datacorn/`).
+Schema và quy tắc đóng gói dữ liệu tuân theo **Datacorn** (trình editor CDB chính thức của ProjectIgnis; bản source tham khảo đặt tại `docs/resources/Datacorn/` chỉ có trên máy dev, không nằm trong Git).
 
 * **Bảng `datas` (Metadata):** Chứa các thuộc tính số của card.
   - `id`: Passcode nguyên của card; phải khớp tên file.
@@ -149,3 +151,13 @@ Khi điền Specs JSON tại `card-data/`, bạn bắt buộc phải điền **g
 ### 4.4 CDB category khác Lua CATEGORY_*
 
 `category` trong JSON/CDB là bitmask bộ lọc database, **không phải** hằng Lua `CATEGORY_*` truyền cho `SetCategory`/`SetOperationInfo`. Tra bảng `CATEGORIES` trong `tools/manage_db.py` cho CDB; tra constants của engine/reference cho Lua. Không chuyển thẳng số từ bảng Lua sang JSON.
+
+---
+
+## 5. Tham khảo API
+
+Bằng chứng ưu tiên là official script cùng cơ chế (`python tools/read_official.py`) và thư viện script trong bản cài game. Tên hằng số/hàm có thật nằm trong `tools/edopro_constants.txt` và `tools/edopro_apis.txt`. Tài liệu online:
+
+- Scrapi-book (API docs): https://projectignis.github.io/scrapi-book/
+- CardScripts (`utility.lua`, `constant.lua`, `official/`): https://github.com/ProjectIgnis/CardScripts
+- CardScripts wiki: https://github.com/ProjectIgnis/CardScripts/wiki

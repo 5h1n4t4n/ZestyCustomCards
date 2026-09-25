@@ -1,0 +1,24 @@
+{
+  "id": 192500004,
+  "ot": 32,
+  "alias": 0,
+  "type": 161,
+  "setcodes": [
+    1925
+  ],
+  "atk": "?",
+  "def": "?",
+  "level": 10,
+  "race": 8,
+  "attribute": 32,
+  "category": 17957584,
+  "name": "Genericus Monstrum the Ritual",
+  "desc": "You can Ritual Summon this card with any Ritual Spell, ignoring its Summoning conditions. Must first be Ritual Summoned, or Special Summoned by a \"Genericus Monstrum\" card effect. If this card is Special Summoned by the effect of a \"Genericus Monstrum\" monster, its original ATK / DEF become 3000 (if it was Special Summoned by the effect of a \"Genericus Monstrum\" Link Monster, this card's Attributes also become DIVINE, DARK, LIGHT, WATER, FIRE, WIND, and EARTH). This card can be treated as any Type required for a Ritual Summon.\n① This card gains the original Attribute(s), Type(s), ATK, and DEF of the monsters Tributed for its Ritual Summon.\n② You can banish 1 Ritual Monster face-down from your hand or GY; add this card from your Deck to your hand.\n③ If a monster(s) leaves the Extra Deck (except during the Damage Step): You can negate the effects of all other face-up monsters currently on the field until the end of this turn.\n④ (Quick Effect): You can Tribute 1 monster you control; Tribute 1 monster your opponent controls (if this card was Special Summoned by the effect of a \"Genericus Monstrum\" Link Monster, you can Tribute up to 2 monsters your opponent controls instead).\n⑤ If this card is Tributed: You can add 1 Ritual Monster or 1 Ritual Spell from your Deck to your hand, then Special Summon this card (from where it is), ignoring its Summoning conditions.\n⑥ If this face-up card in its owner's possession leaves the field because of an opponent's card effect: Return this card to the Deck, and if you do, Special Summon 1 non-Ritual \"Genericus Monstrum\" monster from your Deck or Extra Deck, ignoring its Summoning conditions.\nYou can only use each effect of \"Genericus Monstrum the Ritual\" once per turn.",
+  "strings": [
+    "Add this card from Deck to hand",
+    "Negate effects of all other face-up monsters",
+    "Tribute opponent's monster(s)",
+    "Search and Special Summon",
+    "Return to Deck and Special Summon"
+  ]
+}

@@ -109,6 +109,26 @@ class HarnessRegressionTests(unittest.TestCase):
                     errors, _ = harness.preflight_card(paths, 12345678)
                     self.assertTrue(any(placeholder in error for error in errors), errors)
 
+    def test_preflight_rejects_artwork_whose_extension_hides_its_format(self):
+        # EDOPro đọc .jpg bằng libjpeg: ảnh PNG đặt đuôi .jpg làm game văng JPEG FATAL ERROR.
+        png_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 16
+        jpeg_bytes = b"\xff\xd8\xff\xe0" + b"\x00" * 16
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("card-data", "script", "pics"):
+                (root / name).mkdir()
+            paths = {"card_data": root / "card-data", "script_dir": root / "script", "pics_dir": root / "pics"}
+            (paths["card_data"] / "c12345678.json").write_text(json.dumps({"desc": "Real effect text"}), encoding="utf-8")
+            (paths["script_dir"] / "c12345678.lua").write_text("local s,id=GetID()", encoding="utf-8")
+            artwork = paths["pics_dir"] / "12345678.jpg"
+            with patch.object(harness.normalize_images, "HAS_PIL", False):
+                artwork.write_bytes(png_bytes)
+                errors, _ = harness.preflight_card(paths, 12345678)
+                self.assertTrue(any("12345678.jpg" in error and "PNG" in error for error in errors), errors)
+                artwork.write_bytes(jpeg_bytes)
+                errors, _ = harness.preflight_card(paths, 12345678)
+                self.assertEqual(errors, [])
+
     def test_sync_failure_prevents_status_and_queue_changes(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -118,10 +138,10 @@ class HarnessRegressionTests(unittest.TestCase):
             features.write_text(json.dumps({"archetypes": {"Test": {"cards": [{"passcode": "12345678", "status": "working", "queue_file": queue.name}]}}}), encoding="utf-8")
             original = features.read_bytes()
             # No output text to parse: the nonzero process exit status alone must block.
-            responses = [(0, "", ""), (0, "", ""), (0, "", ""), (1, "", "sync failed")]
+            responses = [(0, "", ""), (0, "", ""), (1, "", "sync failed")]
             with patch.object(harness, "get_project_paths", return_value={"root": root, "feature_list": features}), patch.object(harness, "preflight_card", return_value=([], [])), patch.object(harness, "run_command", side_effect=responses) as run, contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                 self.assertFalse(harness.verify_card(12345678))
-                self.assertEqual(run.call_count, 4)
+                self.assertEqual(run.call_count, 3)
             self.assertEqual(features.read_bytes(), original)
             self.assertTrue(queue.exists())
             self.assertFalse((root / "d_test.png").exists())

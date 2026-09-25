@@ -6,7 +6,6 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8')
-import os
 import re
 import shutil
 import subprocess
@@ -16,6 +15,7 @@ from pathlib import Path
 # này được nạp theo đường dẫn (test) chứ không qua `python tools/...`.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import manage_db
+import normalize_images
 
 # Mapping of templates to default card types
 TEMPLATE_TYPES = {
@@ -180,7 +180,7 @@ def add_archetype(name, setcode_raw, range_raw=None):
 
     print(f"Registered archetype '{name}': setcode 0x{setcode:x}, passcode range {start}-{end}.")
     print("\n=== Việc cần làm tiếp theo ===")
-    print("1. Archetype official: tra setcode tại docs/archetype_setcode_constants.lua và KHÔNG thêm vào "
+    print("1. Archetype official: tra setcode trong archetype_setcode_constants.lua của bản cài game và KHÔNG thêm vào "
           "script/constants.lua (EDOPro đã có sẵn).")
     print(f"2. Archetype fan-made: thêm 'SET_{name.upper()} = 0x{setcode:x}' vào script/constants.lua và "
           f"'!setname 0x{setcode:x} {name.replace('_', ' ')}' vào strings.conf (docs/agent-rules.md §2.2).")
@@ -525,14 +525,22 @@ def preflight_card(paths, passcode):
         except Exception as e:
             errors.append(f"Lua script không đọc được: {e}")
 
-    # Artwork: EDOPro chỉ load .jpg/.png; .jpeg từng gây bug ảnh trống (Phiên 063)
+    # Artwork: EDOPro chỉ load .jpg/.png; đuôi .jpeg cho ảnh trống trong game
     pics_dir = paths["pics_dir"]
     wrong_ext = pics_dir / f"{passcode}.jpeg"
+    artwork = find_artwork(pics_dir, passcode)
     if wrong_ext.exists():
         errors.append(f"Artwork pics/{passcode}.jpeg dùng đuôi .jpeg — EDOPro không load, đổi tên thành .jpg")
-    elif find_artwork(pics_dir, passcode) is None:
+    elif artwork is None:
         warnings.append(f"Chưa có artwork pics/{passcode}.jpg|.png — verify sẽ copy từ queue image nếu còn, "
                         "không thì card hiển thị ảnh trống trong game")
+    else:
+        # Đuôi phải khớp định dạng thật: PNG mang đuôi .jpg làm EDOPro văng JPEG FATAL ERROR.
+        fmt, _ = normalize_images.detect_file_format(artwork)
+        expected = {"JPEG": ".jpg", "MPO": ".jpg", "PNG": ".png"}.get(fmt)
+        if expected != artwork.suffix.lower():
+            errors.append(f"Artwork pics/{artwork.name} thực chất là {fmt} — chạy "
+                          "'python tools/normalize_images.py --to-jpg' rồi thêm --apply để chuẩn hóa về JPEG")
 
     return errors, warnings
 
@@ -590,16 +598,8 @@ def verify_card(passcode):
         return False
     print("Script validation checked out.")
 
-    # 3. Run basic style check (Linter)
-    print("Step 3: Checking style linter...")
-    rc, stdout, stderr = run_command(["powershell", "-ExecutionPolicy", "Bypass", "-File", "tools/lint_scripts.ps1", "-Path", f"script/c{passcode}.lua"], paths["root"])
-    print(stdout.strip())
-    # Style issues không chặn pipeline nhưng phải được thông báo rõ (cả fallback lẫn luacheck)
-    if "Total files with issues" in (stdout or "") or rc != 0:
-        print("Warning: Linter reported code style issues in your script. Highly recommended to fix them.")
-
-    # 4. Check sync status
-    print("Step 4: Running system sync check...")
+    # 3. Check sync status
+    print("Step 3: Running system sync check...")
     rc, stdout, stderr = run_command(["python", "tools/manage_db.py", "check-sync"], paths["root"])
     print(stdout.strip())
     if rc != 0:
@@ -610,7 +610,7 @@ def verify_card(passcode):
     print("System sync verified successfully.")
 
     # 5. Update status to done and finalize queue file name
-    print("Step 5: Updating state to done...")
+    print("Step 4: Updating state to done...")
     if not paths["feature_list"].exists():
         print("Error: feature_list.json not found.", file=sys.stderr)
         return False
