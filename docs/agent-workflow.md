@@ -8,12 +8,12 @@ Với từng effect, ghi ngắn trong mô tả công việc/PR: vị trí kích 
 
 ## 2. Official reference
 
-Tìm official card cùng cơ chế và đọc trực tiếp từ bản cài game:
+Tìm official card cùng cơ chế và đọc trực tiếp từ bản cài game. Chưa biết tên card thì tìm theo effect text bằng `--text`: mỗi tham số là một cụm phải có trong text, text ngắn đứng trước:
 
 ```powershell
+python tools/read_official.py --text "If this card is Normal or Special Summoned" "Spell/Trap from your Deck"
 python tools/read_official.py <official-ID>
-python tools/read_official.py "<Card Name>"
-python tools/read_official.py --search "<từ khóa>"
+python tools/read_official.py --search "<tên card>"
 ```
 
 Tool hiển thị effect/stats và lưu script mẫu vào `docs/official-reference/c<ID>.lua` (thư mục chỉ có trên máy dev, không commit); `--view` in script ra màn hình, `--fetch` tải script từ GitHub khi bản cài không có. Ghi ID và hàm/effect dùng làm mẫu, phần nào khác yêu cầu. Đọc constants/helper mà script đó gọi nếu cần. Không coi template hay custom cũ là bằng chứng engine hỗ trợ.
@@ -23,18 +23,18 @@ Tool hiển thị effect/stats và lưu script mẫu vào `docs/official-referen
 Archetype chưa có trong `feature_list.json` thì đăng ký trước, đừng sửa tay file đó:
 
 ```powershell
-python tools/manage_harness.py archetype add <Name> <setcode>
-python tools/manage_harness.py archetype add <Name> <setcode> --range <start>-<end>
+python tools/manage_harness.py archetype add <Name>             # fan-made mới: tool chọn setcode trống
+python tools/manage_harness.py archetype add <Name> <setcode>   # archetype official hoặc setcode đã chốt
 ```
 
-Range mặc định suy từ setcode theo quy ước sẵn có (`setcode * 100000 + 1` đến `+ 99999`, vd `0x16e` -> `36600001-36699999`); lệnh từ chối khi trùng tên, trùng setcode hoặc chồng range. `--range` dùng khi setcode lớn làm passcode vượt 9 chữ số. Archetype fan-made còn cần hằng `SET_*` và `!setname` (`docs/agent-rules.md` §2.2).
+Tool đối chiếu setcode với `archetype_setcode_constants.lua` của bản cài game: setcode official chỉ được đăng ký; setcode fan-made được kiểm tra trùng (12 bit thấp với official, tên khác trong `script/constants.lua`/`strings.conf`) rồi tự ghi `SET_*` và `!setname` vào hai file đó. Output ghi rõ hằng `SET_*` dùng trong Lua. Range mặc định là `setcode * 100000 + 1` đến `+ 99999` (vd `0x16e` -> `36600001-36699999`); lệnh từ chối khi trùng tên, trùng setcode hoặc chồng range. `--range <start>-<end>` dùng khi passcode vượt 9 chữ số.
 
 Tạo card theo một trong hai cách:
 
-- Có ảnh card: đặt ảnh tên `p_<tên card>.<ext>` vào `docs/queues/<Archetype>/`, chạy `python tools/manage_harness.py scan` để cấp passcode chưa dùng và ghi card `pending`, rồi `start` với passcode đó.
+- Có ảnh card: đặt ảnh tên `p_<tên card>.<ext>` vào `docs/queues/<Archetype>/` (clone mới chưa có thư mục này, tự tạo), chạy `python tools/manage_harness.py scan` để cấp passcode chưa dùng và ghi card `pending`, rồi `start` với passcode đó.
 - Tạo trực tiếp: `python tools/manage_harness.py start <ID> "<name>" <template>` với passcode trong range của archetype. Danh sách template: `python tools/manage_harness.py start --help`.
 
-`start` tạo JSON/Lua từ template và cập nhật queue; không ghi đè file cũ. Nó tự thay `<<CARD_NAME>>`, `<<PASSCODE>>`, `<<SETCODE>>`, `<<ARCHETYPE_NAME>>`; mọi `<<...>>` còn lại (`<<ATK>>`, `<<LEVEL>>`, `<<RACE>>`...) phải thay tay, `verify` chặn nếu sót. Điền stats và effect text trong JSON theo `docs/agent-rules.md`. Extra Deck effect monster phải có bit Effect trong `type`. `aux.Stringid(id,N)` phải có phần tử `strings[N]` (chỉ số bắt đầu từ 0).
+`start` tạo JSON/Lua từ template và cập nhật queue; không ghi đè file cũ. Nó tự thay `<<CARD_NAME>>`, `<<PASSCODE>>`, `<<SETCODE>>`, `<<ARCHETYPE_NAME>>`; mọi `<<...>>` còn lại (`<<ATK_VALUE>>`, `<<RANK>>`...) phải thay tay, `verify` chặn nếu sót. Stats chỉ điền trong JSON; `type`, `race`, `attribute`, `category` ghi bằng tên (`docs/agent-rules.md` §3.2). Extra Deck effect monster phải có bit Effect trong `type`. `aux.Stringid(id,N)` phải có phần tử `strings[N]` (chỉ số bắt đầu từ 0).
 
 Template chỉ là khung: xóa block effect mẫu không dùng cùng các hàm filter/target/operation của nó. Thêm effect thì copy từ `Effect.CreateEffect` đến `c:RegisterEffect(eN)` kèm các hàm liên quan, đổi tên biến và chỉ số `Stringid`. Đổi loại effect thì lấy official card cùng cơ chế làm mẫu, không tự sửa template.
 

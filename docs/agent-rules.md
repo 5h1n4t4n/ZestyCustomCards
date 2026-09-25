@@ -23,10 +23,11 @@ Giữ nguyên passcode hiện hữu. Card mới dùng range đã đăng ký tron
 
 ### 2.2 Archetype official và fan-made
 
-- **Official** (Dragonmaid, Labrynth, White Forest, Witchcrafter, Branded...): tra setcode hex trong `repositories/delta-bagooska/script/archetype_setcode_constants.lua` của bản cài game (không có game thì xem file cùng tên trong CardScripts, §5). Ghi setcode vào JSON dưới dạng decimal. EDOPro đã có sẵn các setcode này, **không thêm vào `script/constants.lua`**.
-- **Fan-made**: thêm `SET_XXX = 0xYYY` vào [script/constants.lua](../script/constants.lua) và `!setname 0xYYY TênArchetype` vào [strings.conf](../strings.conf).
+Cả hai loại phải được đăng ký bằng `python tools/manage_harness.py archetype add` trước khi cấp passcode (`docs/agent-workflow.md` §3).
 
-Cả hai loại phải được đăng ký bằng `python tools/manage_harness.py archetype add <Name> <setcode>` trước khi cấp passcode.
+- **Official** (Dragonmaid, Labrynth, White Forest, Witchcrafter, Branded...): truyền setcode tra trong `repositories/delta-bagooska/script/archetype_setcode_constants.lua` của bản cài game (không có game thì xem file cùng tên trong CardScripts, §5). Dùng hằng `SET_*` official trong Lua; EDOPro đã có sẵn, **không thêm vào `script/constants.lua`**.
+- **Fan-made**: bỏ trống setcode để tool chọn setcode trống và ghi `SET_XXX = 0xYYY` vào [script/constants.lua](../script/constants.lua), `!setname 0xYYY TênArchetype` vào [strings.conf](../strings.conf). Script dùng `SET_XXX` phải có `Duel.LoadScript("constants.lua")`.
+- EDOPro so setcode theo 12 bit thấp: `0x1004` là archetype con của `0x4` (Amazoness). Setcode fan-made không được trùng 12 bit thấp với archetype official.
 
 ## 3. CDB
 
@@ -43,7 +44,7 @@ Cả hai loại phải được đăng ký bằng `python tools/manage_harness.p
   - `atk`, `def`: -2 nghĩa là `?`.
   - `level`: Level/Rank/Link rating (0–13). Pendulum scale đóng gói vào cột này: `(base_level & 0x800000FF) | (left_scale << 24) | (right_scale << 16)`.
   - `race`, `attribute`: bitmask, monster phải có **đúng 1 bit** mỗi cột.
-  - `category`: bitmask bộ lọc database (§4.4).
+  - `category`: bitmask bộ lọc database (§4).
   - **Link Monster:** cột `def` là bitfield link marker: `0x1` Bottom-Left, `0x2` Bottom, `0x4` Bottom-Right, `0x8` Left, `0x20` Right, `0x40` Top-Left, `0x80` Top, `0x100` Top-Right (`0x10` không dùng).
   - **Spell/Trap:** `atk`, `def`, `level`, `race`, `attribute` phải bằng 0.
 - **Bảng `texts`:** `name`, `desc`, `str1`–`str16` (prompt cho `aux.Stringid`).
@@ -58,6 +59,7 @@ Nên dùng khi viết card mới; compiler tự đóng gói và validate. Không
 | `"lscale"` / `"rscale"` | Pendulum Scale (đóng gói vào `level`) | `"lscale": 4, "rscale": 4` |
 | `"linkmarkers": [...]` | Tên link marker (đóng gói vào `def`) | `"linkmarkers": ["Top", "Bottom"]` |
 | `"atk"` / `"def"`: `"?"` | ATK/DEF `?` (chuyển thành -2) | `"atk": "?"` |
+| `"type"`, `"race"`, `"attribute"`, `"category"` | Tên hoặc danh sách tên thay cho số (§4) | `"race": "Warrior"`, `"category": ["Search", "Send to Hand"]` |
 
 ### 3.3 Lệnh CDB
 
@@ -78,75 +80,16 @@ python tools/manage_db.py query <ID-or-name>
 - Chuyển card từ CDB khác vào `card-data/`: thống nhất ownership, viết spec, rồi bỏ ID đó khỏi CDB cũ. Không trông vào thứ tự nạp của client để giải quyết trùng ID.
 - Bỏ một card phải xóa rõ ràng ở cả JSON và CDB đích.
 
-## 4. Bảng bitmask (decimal)
+## 4. Tên bitfield trong JSON
 
-JSON trong `card-data/` dùng giá trị **thập phân**.
+`type`, `race`, `attribute` và `category` nhận tên (không phân biệt hoa thường), danh sách tên, hoặc số; compiler OR các giá trị lại. Tên sai là lỗi validate. Spec cũ ghi số vẫn hợp lệ; đọc số thành tên bằng `python tools/manage_db.py query <ID>`. Danh sách đầy đủ là các bảng `TYPES`, `RACES`, `ATTRIBUTES`, `CATEGORIES` trong `tools/manage_db.py`.
 
-### 4.1 Card type (`type`)
+- `type`: Monster, Spell, Trap, Normal, Effect, Fusion, Ritual, Spirit, Union, Gemini, Tuner, Synchro, Token, Quick-Play, Continuous, Equip, Field, Counter, Flip, Toon, Xyz, Pendulum, Link. Vd Synchro Tuner `["Monster", "Synchro", "Tuner", "Effect"]`, Continuous Trap `["Trap", "Continuous"]`.
+- `race`: Warrior, Spellcaster, Fairy, Fiend, Zombie, Machine, Aqua, Pyro, Rock, Winged Beast, Plant, Insect, Thunder, Dragon, Beast, Beast-Warrior, Dinosaur, Fish, Sea Serpent, Reptile, Psychic, Divine-Beast, Wyrm, Cyberse, Illusion.
+- `attribute`: EARTH, WATER, FIRE, WIND, LIGHT, DARK, DIVINE.
+- `category`: vd Search, Send to Hand, Draw, Special Summon, Destroy Monster, Destroy S/T, Banish, Send to GY, Negate Activation, Negate Effect, Damage LP, Recover LP.
 
-| Loại Card | Hex | Dec |
-|-----------|-----|-----|
-| Normal Monster | `0x11` | **17** |
-| Effect Monster | `0x21` | **33** |
-| Fusion Effect Monster | `0x61` | **97** |
-| Synchro Monster | `0x2021` | **8225** |
-| Xyz Monster | `0x800021` | **8388641** |
-| Link Monster | `0x4000021` | **67108897** |
-| Pendulum Effect Monster | `0x1000021` | **16777249** |
-| Tuner Effect Monster | `0x1021` | **4129** |
-| Normal Spell | `0x2` | **2** |
-| Quick-Play Spell | `0x10002` | **65538** |
-| Continuous Spell | `0x20002` | **131074** |
-| Field Spell | `0x80002` | **524290** |
-| Equip Spell | `0x40002` | **262146** |
-| Normal Trap | `0x4` | **4** |
-| Continuous Trap | `0x20004` | **131076** |
-| Counter Trap | `0x100004` | **1048580** |
-
-### 4.2 Race (`race`)
-
-| Race | Hex | Dec |
-|------|-----|-----|
-| Warrior | `0x1` | **1** |
-| Spellcaster | `0x2` | **2** |
-| Fairy | `0x4` | **4** |
-| Fiend | `0x8` | **8** |
-| Zombie | `0x10` | **16** |
-| Machine | `0x20` | **32** |
-| Aqua | `0x40` | **64** |
-| Pyro | `0x80` | **128** |
-| Rock | `0x100` | **256** |
-| Winged Beast | `0x200` | **512** |
-| Plant | `0x400` | **1024** |
-| Insect | `0x800` | **2048** |
-| Thunder | `0x1000` | **4096** |
-| Dragon | `0x2000` | **8192** |
-| Beast | `0x4000` | **16384** |
-| Beast-Warrior | `0x8000` | **32768** |
-| Dinosaur | `0x10000` | **65536** |
-| Fish | `0x20000` | **131072** |
-| Sea Serpent | `0x40000` | **262144** |
-| Reptile | `0x80000` | **524288** |
-| Psychic | `0x100000` | **1048576** |
-| Wyrm | `0x800000` | **8388608** |
-| Cyberse | `0x1000000` | **16777216** |
-| Illusion | `0x2000000` | **33554432** |
-
-### 4.3 Attribute (`attribute`)
-
-| Attribute | Hex | Dec |
-|-----------|-----|-----|
-| EARTH | `0x1` | **1** |
-| WATER | `0x2` | **2** |
-| FIRE | `0x4` | **4** |
-| WIND | `0x8` | **8** |
-| LIGHT | `0x10` | **16** |
-| DARK | `0x20` | **32** |
-| DIVINE | `0x40` | **64** |
-
-### 4.4 CDB category khác Lua CATEGORY_*
-
-`category` trong JSON/CDB là bitmask bộ lọc database, **không phải** hằng Lua `CATEGORY_*` truyền cho `SetCategory`/`SetOperationInfo`. Tra bảng `CATEGORIES` trong `tools/manage_db.py` cho CDB; tra constants của engine/reference cho Lua. Không chuyển thẳng số từ bảng Lua sang JSON.
+`category` là bộ lọc tìm kiếm của database, **không phải** hằng Lua `CATEGORY_*` truyền cho `SetCategory`/`SetOperationInfo`; hai bộ bit khác nhau, không chuyển thẳng số từ Lua sang JSON.
 
 ## 5. Tham khảo API
 
