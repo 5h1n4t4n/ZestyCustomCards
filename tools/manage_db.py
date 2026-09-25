@@ -2,7 +2,7 @@
 """TTF Card Database CLI Manager.
 
 Compiler/validator cho card-data.cdb, mô phỏng theo chuẩn của
-Datacorn (docs/resources/Datacorn) - trình editor CDB chính thức của
+Datacorn (https://github.com/ProjectIgnis/Datacorn) - trình editor CDB chính thức của
 ProjectIgnis - về schema, bitfield và cách đóng gói dữ liệu:
   - Schema datas/texts + PRAGMA page_size=4096 giống Datacorn tạo DB mới.
   - setcode: tối đa 4 setcode 16-bit đóng gói trong 1 số 64-bit.
@@ -150,7 +150,7 @@ DEFAULT_EDOPRO_DIR = "F:/Game/ProjectIgnis"
 
 
 def sibling_cdb_paths(root: Path):
-    """CDB ở gốc repo thuộc luồng dữ liệu khác (docs/database-workflow.md).
+    """CDB ở gốc repo thuộc luồng dữ liệu khác (docs/agent-rules.md §3.4).
 
     Là mọi *.cdb trừ CDB do compiler sinh, để CDB cộng đồng mới thêm vào repo
     tự được đối chiếu passcode mà không phải sửa danh sách.

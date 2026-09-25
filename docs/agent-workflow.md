@@ -34,7 +34,9 @@ Tạo card theo một trong hai cách:
 - Có ảnh card: đặt ảnh tên `p_<tên card>.<ext>` vào `docs/queues/<Archetype>/`, chạy `python tools/manage_harness.py scan` để cấp passcode chưa dùng và ghi card `pending`, rồi `start` với passcode đó.
 - Tạo trực tiếp: `python tools/manage_harness.py start <ID> "<name>" <template>` với passcode trong range của archetype. Danh sách template: `python tools/manage_harness.py start --help`.
 
-`start` tạo JSON/Lua từ template và cập nhật queue; không ghi đè file cũ. Điền hết placeholder, stats và effect text; xem `docs/agent-rules.md`. Extra Deck effect monster phải có bit Effect trong `type`. `aux.Stringid(id,N)` phải có phần tử `strings[N]` (chỉ số bắt đầu từ 0).
+`start` tạo JSON/Lua từ template và cập nhật queue; không ghi đè file cũ. Nó tự thay `<<CARD_NAME>>`, `<<PASSCODE>>`, `<<SETCODE>>`, `<<ARCHETYPE_NAME>>`; mọi `<<...>>` còn lại (`<<ATK>>`, `<<LEVEL>>`, `<<RACE>>`...) phải thay tay, `verify` chặn nếu sót. Điền stats và effect text trong JSON theo `docs/agent-rules.md`. Extra Deck effect monster phải có bit Effect trong `type`. `aux.Stringid(id,N)` phải có phần tử `strings[N]` (chỉ số bắt đầu từ 0).
+
+Template chỉ là khung: xóa block effect mẫu không dùng cùng các hàm filter/target/operation của nó. Thêm effect thì copy từ `Effect.CreateEffect` đến `c:RegisterEffect(eN)` kèm các hàm liên quan, đổi tên biến và chỉ số `Stringid`. Đổi loại effect thì lấy official card cùng cơ chế làm mẫu, không tự sửa template.
 
 ## 4. Kiểm tra tĩnh
 
@@ -57,18 +59,11 @@ CDB trong game trùng tên file với CDB của repo bị bỏ qua — đó là 
 
 ### Danh sách tham chiếu EDOPro
 
-Lua trả về `nil` cho tên không tồn tại thay vì báo lỗi, nên hằng số gõ sai (`CATEGORY_SET`) hay hàm bịa (`Card.IsAbleToHandOrExtra`) vẫn qua được bước kiểm tra cú pháp rồi mới crash trong duel. `validate_scripts.ps1` chặn bằng hai danh sách trắng sinh từ bản cài game:
+Lua trả về `nil` cho tên không tồn tại, nên hằng số gõ sai hay hàm bịa vẫn qua được parser rồi mới crash trong duel. `validate_scripts.ps1` chặn bằng hai danh sách trắng sinh từ bản cài game: `tools/edopro_constants.txt` (hằng số) và `tools/edopro_apis.txt` (`Namespace.Function`, gồm cả method `c:Method()`). Sai tên thì sửa theo tên thật; hằng số riêng của card khai báo `local` trong file, hằng số dùng chung thêm vào `script/constants.lua` kèm `Duel.LoadScript("constants.lua")`.
 
-| File | Nội dung |
-| :--- | :--- |
-| `tools/edopro_constants.txt` | hằng số ALL_CAPS do thư viện script EDOPro định nghĩa |
-| `tools/edopro_apis.txt` | cặp `Namespace.Function` có thật, gồm cả hàm chỉ gọi dạng `c:Method()` |
+Không sửa tay hai file này. Sau mỗi lần cập nhật EDOPro, chạy `python tools/sync_edopro_refs.py --check` (exit 1 khi lệch); lệch thì chạy lại không có `--check` rồi commit hai file. Thêm `--game-dir "<đường dẫn>"` nếu game không ở `$EDOPRO_DIR`/`F:/Game/ProjectIgnis`.
 
-Sai tên thì sửa theo tên thật; hằng số riêng của card thì khai báo `local` ngay trong file, hằng số dùng chung thì thêm vào `script/constants.lua` kèm `Duel.LoadScript("constants.lua")`.
-
-Sau mỗi lần cập nhật EDOPro, chạy `python tools/sync_edopro_refs.py --check` (exit 1 khi lệch); lệch thì chạy lại không có `--check` để sinh lại và commit hai file. Thêm `--game-dir "<đường dẫn>"` nếu game không ở `$EDOPRO_DIR`/`F:/Game/ProjectIgnis`. Đừng sửa tay hai file này. Chỉ hằng số khai báo trong file thư viện của game mới vào danh sách; biến `local` trong script từng card không tính, vì gộp vào sẽ khiến một tên gõ sai lọt qua chỉ nhờ trùng biến cục bộ của card khác.
-
-EDOPro chạy Lua 5.4.7 (chuỗi trong `ocgcore.dll`), còn `validate_scripts.ps1` gọi `lua` trong PATH. Nếu script qua được parser máy mình mà EDOPro từ chối, kiểm tra lệch phiên bản trước tiên.
+EDOPro chạy Lua 5.4.7, còn validator gọi `lua` trong PATH: script qua parser máy mình mà EDOPro từ chối thì kiểm tra lệch phiên bản trước tiên.
 
 ## 5. Artwork và dọn queue
 
@@ -87,4 +82,4 @@ Sau khi các bước tĩnh đạt, `verify` copy ảnh queue thành `pics/<ID>.j
 
 ## 6. Trước khi commit
 
-Review `git diff --check` và `git diff --stat`. Đọc `docs/database-workflow.md` trước khi commit thay đổi CDB. Quy tắc nhánh, commit và PR nằm trong `AGENTS.md`.
+Review `git diff --check` và `git diff --stat`. Thay đổi CDB theo `docs/agent-rules.md` §3.4. Quy tắc nhánh, commit và PR nằm trong `AGENTS.md`.

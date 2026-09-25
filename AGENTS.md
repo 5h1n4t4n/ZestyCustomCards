@@ -39,7 +39,6 @@
 
 - `docs/agent-workflow.md`: tạo card — yêu cầu, official reference, harness, kiểm tra tĩnh, artwork.
 - `docs/game-testing-workflow.md`: test card — sync sang game, deck test, duel, error log, ma trận kịch bản.
-- `docs/agent-rules.md`: quy tắc Lua, passcode/setcode, schema CDB và bitmask.
-- `docs/database-workflow.md`: ownership, compile và conflict CDB.
+- `docs/agent-rules.md`: quy tắc Lua, passcode/setcode, schema CDB, bitmask, ownership và conflict CDB.
 
 Kiểm tra công cụ: `python -m unittest discover -s tests -v`.

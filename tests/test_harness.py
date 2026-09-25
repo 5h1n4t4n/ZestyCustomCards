@@ -16,8 +16,6 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
-if not (TOOLS / "manage_harness.py").exists():
-    TOOLS = ROOT / "tools"
 _spec = importlib.util.spec_from_file_location("harness_under_test", TOOLS / "manage_harness.py")
 harness = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(harness)
@@ -95,6 +93,33 @@ class HarnessRegressionTests(unittest.TestCase):
             self.assertEqual(card["status"], "working")
             spec = json.loads((root / "card-data" / "c36600001.json").read_text(encoding="utf-8"))
             self.assertEqual(spec["name"], "Icejade Tremora")
+
+    def test_scan_registers_queue_images_with_free_passcodes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            queues = root / "queues"
+            (queues / "ice_jade").mkdir(parents=True)
+            (queues / "ice_jade" / "p_icejade_and_the_pillar_of_ice.jpg").write_bytes(b"art")
+            (queues / "ice_jade" / "p_already_known.jpg").write_bytes(b"art")
+            (queues / "p_lone_card.png").write_bytes(b"art")
+            features = root / "feature_list.json"
+            features.write_text(json.dumps({"archetypes": {
+                "Common": {"cards": []},
+                "IceJade": {"setcode": "0x16e", "passcode_range": "36600001-36600003", "cards": [
+                    {"name": "Known", "passcode": "36600001", "status": "working",
+                     "queue_file": "queues/ice_jade/w_already_known.jpg"}]}}}), encoding="utf-8")
+            paths = {"root": root, "feature_list": features, "queues_dir": queues}
+            # 36600002 đã có trong CDB khác nên scan phải bỏ qua dù feature_list chưa ghi.
+            with patch.object(harness, "get_project_paths", return_value=paths), \
+                    patch.object(harness.manage_db, "external_passcodes", return_value=({36600002}, None)), \
+                    contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertTrue(harness.scan_pending_cards())
+            archetypes = json.loads(features.read_text(encoding="utf-8"))["archetypes"]
+            self.assertEqual(archetypes["IceJade"]["cards"][1:], [
+                {"name": "Icejade & the Pillar of Ice", "passcode": "36600003", "status": "pending",
+                 "queue_file": "queues/ice_jade/p_icejade_and_the_pillar_of_ice.jpg"}])
+            self.assertEqual(archetypes["Common"]["cards"], [
+                {"name": "Lone Card", "passcode": "79900001", "status": "pending", "queue_file": "queues/p_lone_card.png"}])
 
     def test_preflight_rejects_non_uppercase_placeholders(self):
         with tempfile.TemporaryDirectory() as directory:
