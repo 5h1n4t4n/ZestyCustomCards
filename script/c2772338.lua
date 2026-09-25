@@ -1,5 +1,5 @@
 -- Sky Striker Ace - Violet
--- ID: 2772338
+-- ID: 2772337
 local s,id=GetID()
 function s.initial_effect(c)
 	-- Luôn được xem như "Sky Striker Ace - Roze"
@@ -27,7 +27,7 @@ function s.initial_effect(c)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e2)
 
-	-- HIỆU ỨNG 2: (Quick Effect) Tế lá này -> SS Extra Deck (Xyz Rank 4 hoặc Link 1, 2, 4) + Vô hiệu hóa + Trục xuất úp mặt
+	-- HIỆU ỨNG 2: (Quick Effect) Tế lá này -> SS Extra Deck + Vô hiệu hóa + Trục xuất úp mặt
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DISABLE+CATEGORY_REMOVE)
@@ -95,26 +95,19 @@ function s.spop1(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
+	-- Chỉ cho phép summon các quái thuộc chuỗi "Sky Striker Ace"
 	return not (c:IsSetCard(SET_SKY_STRIKER_ACE) and c:IsType(TYPE_MONSTER))
 end
 
 --------------------------------------------------------------------------------
--- LOGIC HIỆU ỨNG 2 (Giới hạn chỉ gọi Xyz Rank 4 hoặc Link 1, 2, 4)
+-- LOGIC HIỆU ỨNG 2
 --------------------------------------------------------------------------------
-function s.valid_extra_monster(c)
-	return c:IsSetCard(SET_SKY_STRIKER) and (
-		(c:IsType(TYPE_XYZ) and c:GetRank()==4) or
-		(c:IsType(TYPE_LINK) and (c:GetLink()==1 or c:GetLink()==2 or c:GetLink()==4))
-	)
-end
-
 function s.spchkfilter2(c,e,tp)
-	return s.valid_extra_monster(c) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-		and (c:IsType(TYPE_XYZ) and Duel.GetLocationCountFromEx(tp,tp,e:GetHandler(),c)>0
-			or c:IsType(TYPE_LINK) and Duel.GetLocationCountFromEx(tp,tp,e:GetHandler(),c)>0)
+	return c:IsSetCard(SET_SKY_STRIKER) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+		and Duel.GetLocationCountFromEx(tp,tp,e:GetHandler(),c)>0
 end
 function s.spfilter2(c,e,tp)
-	return s.valid_extra_monster(c) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	return c:IsSetCard(SET_SKY_STRIKER) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 		and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
 end
 function s.sptg2(e,tp,eg,ep,ev,re,r,rp,chk)
